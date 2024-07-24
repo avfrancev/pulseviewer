@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "no-undef": true,
+  "noUnusedLocals": true,
+  "exclude": ["node_modules", "dist"]
+}
