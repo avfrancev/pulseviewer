@@ -71,7 +71,7 @@ export default defineStore("ESP32RMT", () => {
       if (event.data instanceof ArrayBuffer) {
         const parsedRMT = parse_rmt_message_t(event.data)
         // console.log({length, delta, rssi, buf, parsed_buf});
-        console.log({ ...parsedRMT })
+        // console.log({ ...parsedRMT })
         // wsData.push(parsedRMT)
         store.addWSData(parsedRMT)
       }
@@ -82,18 +82,18 @@ export default defineStore("ESP32RMT", () => {
   watch(
     () => [configStore.storage.useESP32Api, configStore.storage.esp32ApiEndpint],
     () => {
-      console.log(configStore.storage.useESP32Api, configStore.storage.esp32ApiEndpint)
+      // console.log(configStore.storage.useESP32Api, configStore.storage.esp32ApiEndpint)
       if (configStore.storage.useESP32Api) {
         ws?.close()
         ws = useWebSocket(configStore.storage.esp32ApiEndpint, wsOptions)
         ws.ws.value = new WebSocket(configStore.storage.esp32ApiEndpint)
-        console.log('open ws');
-        console.log("url",ws.ws.value?.url);
+        // console.log('open ws');
+        // console.log("url",ws.ws.value?.url);
         // ws.ws.value.url = configStore.storage.esp32ApiEndpint
         // console.log(ws.ws.value);
         ws.open()
       } else if (!configStore.storage.useESP32Api) {
-        console.log('close ws');
+        // console.log('close ws');
         ws?.close()
       }
     },

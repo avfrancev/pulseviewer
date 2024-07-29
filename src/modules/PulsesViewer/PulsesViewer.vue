@@ -1,4 +1,5 @@
 <template lang="pug">
+//- TEST
 dialog.modal(id="helpDialog")
   .modal-box.p-12(class="h-full w-full max-w-5xl")
     .flex.flex-col.h-full.space-y-4.text-sm
@@ -105,7 +106,7 @@ dialog.modal(id="settingsDialog")
           :key="tick"
           )
           path(
-            class="stroke-base-content/30"
+            class="stroke-base-content/20"
             stroke-dasharray="8 10"
             stroke-width="1"
             :d="`M ${viewStore.xScale(tick)*ZT.k} 20 V${viewStore.wrapperBounds.height || 0}`")
@@ -220,7 +221,7 @@ const wrapperBounds = useElementBounding(wrapper)
 const { ZT } = viewStore.state
 
 const ticks = computed(() => {
-  return ZT.rescaleX(viewStore.xScale).ticks(3)
+  return ZT.rescaleX(viewStore.xScale).ticks(6)
 })
 
 const addingPulses = ref("")
@@ -242,7 +243,7 @@ const addPulses = () => {
 }
 
 const ESP32RMTStore = useESP32RMTStore()
-console.log(ESP32RMTStore);
+// console.log(ESP32RMTStore);
 
 ESP32RMTStore.$onAction(({name, args}) => {
   let data = args[0]

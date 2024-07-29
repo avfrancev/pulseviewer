@@ -68,21 +68,23 @@ const defaultProtocols = [
     zero: { high: 1, low: 2 }, // the high and low multiple of the pulses that represent a zero
     one: { high: 1, low: 1 }, // the high and low multiple of the pulses that represent a one
   },
+  { name: 'protocol XXX', pulseLength: 220, syncFactor: { high: 1, low: 5 }, zero: { high: 1, low: 1.5 }, one: { high: 2, low: 2.3 }, invertedSignal: false },
+  // { name: 'protocol XXX222', pulseLength: 200, syncFactor: { high: 1, low: 5 }, zero: { high: 1, low: 1 }, one: { high: 2, low: 2.5 }, invertedSignal: false },
 ]
 
 defaultProtocols.push(
-  { name: 'protocol 1', pulseLength: 350, syncFactor: { high: 1, low: 31 }, zero: { high: 1, low: 3 }, one: { high: 3, low: 1 }, invertedSignal: false },
-  { name: 'protocol 2', pulseLength: 650, syncFactor: { high: 1, low: 10 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: false },
-  { name: 'protocol 3', pulseLength: 100, syncFactor: { high: 30, low: 71 }, zero: { high: 4, low: 11 }, one: { high: 9, low: 6 }, invertedSignal: false },
-  { name: 'protocol 4', pulseLength: 380, syncFactor: { high: 1, low: 6 }, zero: { high: 1, low: 3 }, one: { high: 3, low: 1 }, invertedSignal: false },
-  { name: 'protocol 5', pulseLength: 500, syncFactor: { high: 6, low: 14 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: false },
-  { name: 'protocol 6', pulseLength: 450, syncFactor: { high: 23, low: 1 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: true },
-  { name: 'protocol 7', pulseLength: 150, syncFactor: { high: 2, low: 62 }, zero: { high: 1, low: 6 }, one: { high: 6, low: 1 }, invertedSignal: false },
-  { name: 'protocol 8', pulseLength: 200, syncFactor: { high: 130, low: 3 }, zero: { high: 16, low: 7 }, one: { high: 3, low: 16 }, invertedSignal: false },
-  { name: 'protocol 9', pulseLength: 200, syncFactor: { high: 3, low: 130 }, zero: { high: 7, low: 16 }, one: { high: 16, low: 3 }, invertedSignal: true },
-  { name: 'protocol 10', pulseLength: 365, syncFactor: { high: 18, low: 1 }, zero: { high: 3, low: 1 }, one: { high: 1, low: 3 }, invertedSignal: true },
-  { name: 'protocol 11', pulseLength: 270, syncFactor: { high: 36, low: 1 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: true },
-  { name: 'protocol 12', pulseLength: 320, syncFactor: { high: 36, low: 1 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: true },
+  // { name: 'protocol 1', pulseLength: 350, syncFactor: { high: 1, low: 31 }, zero: { high: 1, low: 3 }, one: { high: 3, low: 1 }, invertedSignal: false },
+  // { name: 'protocol 2', pulseLength: 650, syncFactor: { high: 1, low: 10 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: false },
+  // { name: 'protocol 3', pulseLength: 100, syncFactor: { high: 30, low: 71 }, zero: { high: 4, low: 11 }, one: { high: 9, low: 6 }, invertedSignal: false },
+  // { name: 'protocol 4', pulseLength: 380, syncFactor: { high: 1, low: 6 }, zero: { high: 1, low: 3 }, one: { high: 3, low: 1 }, invertedSignal: false },
+  // { name: 'protocol 5', pulseLength: 500, syncFactor: { high: 6, low: 14 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: false },
+  // { name: 'protocol 6', pulseLength: 450, syncFactor: { high: 23, low: 1 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: true },
+  // { name: 'protocol 7', pulseLength: 150, syncFactor: { high: 2, low: 62 }, zero: { high: 1, low: 6 }, one: { high: 6, low: 1 }, invertedSignal: false },
+  // { name: 'protocol 8', pulseLength: 200, syncFactor: { high: 130, low: 3 }, zero: { high: 16, low: 7 }, one: { high: 3, low: 16 }, invertedSignal: false },
+  // { name: 'protocol 9', pulseLength: 200, syncFactor: { high: 3, low: 130 }, zero: { high: 7, low: 16 }, one: { high: 16, low: 3 }, invertedSignal: true },
+  // { name: 'protocol 10', pulseLength: 365, syncFactor: { high: 18, low: 1 }, zero: { high: 3, low: 1 }, one: { high: 1, low: 3 }, invertedSignal: true },
+  // { name: 'protocol 11', pulseLength: 270, syncFactor: { high: 36, low: 1 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: true },
+  // { name: 'protocol 12', pulseLength: 320, syncFactor: { high: 36, low: 1 }, zero: { high: 1, low: 2 }, one: { high: 2, low: 1 }, invertedSignal: true },
 )
 
 function diff(a, b) {
@@ -113,13 +115,14 @@ export function decodeProtocol(protocol, pulses) {
   // Search for a sync pulse anywhere in the array
   for (let i = 0; i < pulses.length; i++) {
     if (pulses[i] >= syncDurationMin && pulses[i] <= syncDurationMax) {
-      console.log(`[ ${protocol.name} ]decodePulses: found sync pulse at index=${i}`, pulses[i])
       let syncLengthInPulses = syncFactorLow > syncFactorHigh ? syncFactorLow : syncFactorHigh
       let delay = pulses[i] / syncLengthInPulses
+      // let delay = pulseLength * syncLengthInPulses
       let delayTolerance = delay * 0.6
-      console.log(
-        `syncLengthInPulses=${syncLengthInPulses}, decodePulses: delay=${delay}, delayTolerance=${delayTolerance}`,
-      )
+      console.log(`[ ${protocol.name} ]decodePulses: found sync pulse at index=${i}`, pulses[i], {syncLengthInPulses, delay, delayTolerance})
+      // console.log(
+      //   `syncLengthInPulses=${syncLengthInPulses}, decodePulses: delay=${delay}, delayTolerance=${delayTolerance}`,
+      // )
       // console.log(pulses.slice(i))
       let o = {
         data: "",
@@ -127,7 +130,6 @@ export function decodeProtocol(protocol, pulses) {
         endIdx: i,
       }
       // let binaryData = ""
-      // let s = "1111010101010101101010100101101010100110100101100110"
       for (let j = i + 1; j < pulses.length; j += 1) {
         if (
           diff(pulses[j], delay * zeroHigh) < delayTolerance &&
@@ -159,12 +161,21 @@ export function decodeProtocol(protocol, pulses) {
 
       if (o.data.length > 0) {
         decodedData.push(o)
-        console.log(`!!!!decodePulses: decoded binary data=${o.data}`)
+        // console.log(`!!!!decodePulses: decoded binary data=${o.data}`)
       }
       // return binaryData
     }
   }
   return decodedData
+}
+// make function that takes string with binary data and returns hex readable string
+// split output with '0x' every 8 bits 
+export function binaryToHex(binaryData) {
+  const hex = parseInt(binaryData, 2)
+    .toString(16)
+    // .padStart(2, "0")
+    .toUpperCase();
+  return "0x" + hex.match(/.{1,2}/g).join("0x");
 }
 
 export function decodePulses(pulses, protocols = [...defaultProtocols]) {
@@ -172,14 +183,26 @@ export function decodePulses(pulses, protocols = [...defaultProtocols]) {
   // let decodedProtocols = []
   // let o = decodeProtocol(protocols[0], pulses)
   // console.log(o);
-  console.log(pulses, protocols);
+  // console.log(pulses, protocols);
   let decodedProtocols = protocols.map((protocol) => {
-    return {
-      decodedData: decodeProtocol(protocol, pulses),
+    let dp = decodeProtocol(protocol, pulses)
+    console.log({dp});
+    dp.forEach((d) => {
+      // d.data_hex = parseInt(d.data, 2).toString(16).padStart(2, '0').toUpperCase()
+      d.data_hex = binaryToHex(d.data)
+      d.invertedData = d.data.split("").map((bit) => (bit === "0" ? "1" : "0")).join("")
+      // d.invertedData_hex = parseInt(d.invertedData, 2).toString(16).padStart(2, '0').toUpperCase()
+      d.invertedData_hex = binaryToHex(d.invertedData)
+    })
+    let o = {
       protocol,
+      decodedData: dp,
     }
-  })
-  console.log(`decodePulses: decoded protocols=${JSON.stringify(decodedProtocols)}`)
+    if (o.decodedData.length > 0) {
+      return o
+    }
+  }).filter(d => d != null)
+  // console.log(`decodePulses: decoded protocols=${JSON.stringify(decodedProtocols)}`)
   
   return decodedProtocols
 }

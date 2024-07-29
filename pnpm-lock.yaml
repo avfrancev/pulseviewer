@@ -38,6 +38,9 @@ importers:
       popmotion:
         specifier: ^11.0.5
         version: 11.0.5
+      pulseplot:
+        specifier: ^1.0.10
+        version: 1.0.10
       radix-vue:
         specifier: ^1.9.2
         version: 1.9.2(vue@3.4.33)
@@ -54,12 +57,21 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0(vue@3.4.33)
     devDependencies:
+      '@iconify-json/bi':
+        specifier: ^1.1.23
+        version: 1.1.23
       '@iconify-json/fa':
         specifier: ^1.1.8
         version: 1.1.8
       '@iconify-json/fluent-emoji-high-contrast':
         specifier: ^1.1.15
         version: 1.1.15
+      '@iconify-json/ic':
+        specifier: ^1.1.17
+        version: 1.1.17
+      '@iconify-json/line-md':
+        specifier: ^1.1.38
+        version: 1.1.38
       '@iconify-json/lucide':
         specifier: ^1.1.201
         version: 1.1.201
@@ -72,9 +84,18 @@ importers:
       '@iconify-json/ooui':
         specifier: ^1.1.35
         version: 1.1.35
+      '@iconify-json/oui':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@iconify-json/ph':
+        specifier: ^1.1.13
+        version: 1.1.13
       '@iconify-json/tabler':
         specifier: ^1.1.118
         version: 1.1.118
+      '@iconify-json/tdesign':
+        specifier: ^1.1.7
+        version: 1.1.7
       '@iconify-json/twemoji':
         specifier: ^1.1.15
         version: 1.1.15
@@ -524,11 +545,20 @@ packages:
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
     deprecated: Use @eslint/object-schema instead
 
+  '@iconify-json/bi@1.1.23':
+    resolution: {integrity: sha512-1te+g9ZzI+PU1Lv6Xerd3XPXf4DE6g3TvDL2buIopTAfrauPHyXCHPFQMrzoQVNrVPCpN3rv3vBtJMPyBwJ9IA==}
+
   '@iconify-json/fa@1.1.8':
     resolution: {integrity: sha512-he23ZsuDxA6Hx7rnrEpSJnmu7t7RtG/SbrENZhMSPiZ4bNRGHjyPZimtOy10k2/nfwNsW57ECDsO5eK0BkcoMg==}
 
   '@iconify-json/fluent-emoji-high-contrast@1.1.15':
     resolution: {integrity: sha512-ZMwr2RbuM6Zagse2kt5kIvVYKVgzedwRSNb9hoqUCemK3kTL/w+cE/kzY4JtIFvP+maFywVWRJg3P1v+x1RF5w==}
+
+  '@iconify-json/ic@1.1.17':
+    resolution: {integrity: sha512-EvAjZzVESmN36zlyefylePUNaU2BQ3eRKVZ6KQSQ2bG01ppoZaiFZRri74VTyvp5Mlv2yn68ux1fgCoT+etGmA==}
+
+  '@iconify-json/line-md@1.1.38':
+    resolution: {integrity: sha512-W+y4G/7QqO1sTGUypwsm0UUwjbGt/BjRg4kZylek7BwH5EG8f1uUJgcZwRASjsH4xGL+LVQbw6FAGbQ1UHNCow==}
 
   '@iconify-json/lucide@1.1.201':
     resolution: {integrity: sha512-vmbPKT5zRlRGcxdcGBOaFgGNz7q+OWoxpQT336QB30IuL5jabtWhswS30jakWzna4AKr4bNSh1eckqWH77GTDg==}
@@ -542,8 +572,17 @@ packages:
   '@iconify-json/ooui@1.1.35':
     resolution: {integrity: sha512-fhE5PZhVozCHRGL+oxtE7cAjvK1R2RY6Xx1dzrSAagJNMvZcGFlKuGv861pJ7ig6P9b6DRjZi9bNFLBkIn4gSg==}
 
+  '@iconify-json/oui@1.1.2':
+    resolution: {integrity: sha512-Yrf0j4bCgW6X+7jjEx5ltwO7ovwrayIywL69Y8Md04jWtYJ8kxkqABmzmas1eyUgaagS8/oy97M1Dn2r0RZedQ==}
+
+  '@iconify-json/ph@1.1.13':
+    resolution: {integrity: sha512-xtM4JJ63HCKj09WRqrBswXiHrpliBlqboWSZH8odcmqYXbvIFceU9/Til4V+MQr6+MoUC+KB72cxhky2+A6r/g==}
+
   '@iconify-json/tabler@1.1.118':
     resolution: {integrity: sha512-nDOjYG75BlagOe4e+V3K4qVFujdPOeYzi6ZB3sYz0xbdIkpSF/4YvKGdLDr4tmkwGUTV8fhlHVfMpRoDoBnnnA==}
+
+  '@iconify-json/tdesign@1.1.7':
+    resolution: {integrity: sha512-Oq5Olm7ZHPEQZHxTE3fUWx/W41d/Q1630g0JHyTJgBhj4ROzDyPAFEDE81c9l2AZjXyVxRDDDqI6BYjX0OmXkg==}
 
   '@iconify-json/twemoji@1.1.15':
     resolution: {integrity: sha512-ze2CAOwIWBKIP6ih6qMDItasVjRicktl2Qr3/ohZSMToAHm9z3Q6HCwE48eT0+D+uFpGBlNRQ22HHyE5izyhDg==}
@@ -2095,6 +2134,9 @@ packages:
   pug@3.0.3:
     resolution: {integrity: sha512-uBi6kmc9f3SZ3PXxqcHiUZLmIXgfgWooKWXcwSGwQd2Zi5Rb0bT14+8CJjJgI8AB+nndLaNgHGrcc6bPIB665g==}
 
+  pulseplot@1.0.10:
+    resolution: {integrity: sha512-cnYQI0gaYPjdlRV9KBaY6T6e8TF+uKKdQCdKhT27v3l0zKsY1euoob4Z6gdbg+j0rzIkcao/vUAvCPbgHEjInA==}
+
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
@@ -3094,11 +3136,23 @@ snapshots:
 
   '@humanwhocodes/object-schema@2.0.3': {}
 
+  '@iconify-json/bi@1.1.23':
+    dependencies:
+      '@iconify/types': 2.0.0
+
   '@iconify-json/fa@1.1.8':
     dependencies:
       '@iconify/types': 2.0.0
 
   '@iconify-json/fluent-emoji-high-contrast@1.1.15':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/ic@1.1.17':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/line-md@1.1.38':
     dependencies:
       '@iconify/types': 2.0.0
 
@@ -3118,7 +3172,19 @@ snapshots:
     dependencies:
       '@iconify/types': 2.0.0
 
+  '@iconify-json/oui@1.1.2':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/ph@1.1.13':
+    dependencies:
+      '@iconify/types': 2.0.0
+
   '@iconify-json/tabler@1.1.118':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/tdesign@1.1.7':
     dependencies:
       '@iconify/types': 2.0.0
 
@@ -4748,6 +4814,8 @@ snapshots:
       pug-parser: 6.0.0
       pug-runtime: 3.0.1
       pug-strip-comments: 2.0.0
+
+  pulseplot@1.0.10: {}
 
   punycode@2.3.1: {}
 

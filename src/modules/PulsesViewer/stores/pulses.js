@@ -3,7 +3,10 @@ import { extent, fsum, bisector, quantile } from "d3-array"
 import { zoomIdentity } from "d3-zoom"
 import { interpolateRainbow } from "d3-scale-chromatic"
 
-import * as ss from 'simple-statistics'
+import { sliceGuess } from "pulseplot/lib/slicer.js"
+import { Analyzer } from "pulseplot/lib/histogram.js"
+
+import * as ss from "simple-statistics"
 
 import { decodePulses } from "@/RCSwitch.js"
 
@@ -35,192 +38,26 @@ function parsePlainArr(arr, startLevel = 0) {
   })
 }
 
-function parseSaleaeLogicCSV(csv) {
-  let lines = csv.split("\n")
-  let result = []
-  for (let i = 1; i < lines.length - 1; i++) {
-    let currentline = lines[i].split(",")
-    let nextline = lines[i + 1].split(",")
-
-    let width = nextline[0] - currentline[0]
-    if (width >= 0) result.push(+(width * 1000_000).toFixed())
-  }
-  return result
-}
-
-// import digital_csv from '../digital.csv?raw'
-// console.log(parseSaleaeLogicCSV(digital_csv));
-// import data_bin from '/src/data.bin?arraybuffer'
-// import data_bin from '../../../esp32s2_pump/data.bin?arraybuffer'
-// console.log(data_bin);
-
-// console.log(new Uint8Array(data_bin));
-
-function setupPulsesObject(arr) {
-  // let raw =
-  // console.log(arr.join(","));
-  let raw = arr.join(",")
-  arr = reactive(parsePlainArr(arr))
-  arr.raw = raw
-  arr.sum = fsum(arr, (d) => d.width)
-  arr.xOffset = 0
-  arr.cursorX = 0
-  // arr.lala = computed(() => {
-  //   return arr.cursorX +1
+function getDecoder(m) {
+  // console.log(props.measurements[0].pulsesInRangeRaw);
+  const analizer = computedWithControl(
+    () => m.pulsesInRangeRaw.length,
+    () => (m.pulsesInRangeRaw.length > 10 ? new Analyzer(m.pulsesInRangeRaw) : null),
+  )
+  const guess = computed(() => analizer.value?.guess() || null)
+  const sg = computed(() => guess.value && sliceGuess(m.pulsesInRangeRaw, guess.value))
+  // watchEffect(() => {
+  //   guess.value
+  //   // console.log("analizer has changed")
   // })
+  const hasHints = computed(() => sg.value?.hints?.length > 0)
+  // console.log({ analizer: analizer.value, guess: guess.value, sliceGuess: sg.value })
+  // console.log(sg.value?.bits?.toHexString())
 
-  return arr
+  // if (!sg.value.hints?.length)
+  //   return null
+  return { analizer, guess, sliceGuess: sg, hasHints }
 }
-
-/**
- * Decode OOK_MC_ZEROBIT signal
- * @param {Array<number>} signal - array of pulse durations (in microseconds)
- * @returns {Array<number>} - array of decoded bits (0 or 1)
- */
-function decodeOOK_MC_ZEROBIT(signal) {
-  const decoded = []
-  let lastBit = 1 // assume logic 1 as the initial state
-
-  for (let i = 0; i < signal.length; i++) {
-    const pulseDuration = signal[i]
-
-    // check if pulse duration is within the range of a valid bit pulse
-    if (pulseDuration >= 200 && pulseDuration <= 800) {
-      const bit =
-        // check for Manchester encoding of zero bit
-        pulseDuration <= 375 && lastBit === 1 ? 0 : pulseDuration > 375 && lastBit === 0 ? 1 : null
-
-      if (bit === null) {
-        // push a null value for invalid bit transitions
-        decoded.push(null)
-      } else {
-        decoded.push(bit)
-        lastBit = bit
-      }
-    }
-  }
-
-  // check if the last bit is the same as the bit before it
-  if (decoded.length > 0 && decoded[decoded.length - 1] === lastBit) {
-    decoded.pop() // pop the last bit if it's the same as the bit before it
-  }
-
-  return decoded
-}
-
-/**
- * Decode OOK_PULSE_RZ signal
- * @param {Array<number>} signal - array of pulse durations (in microseconds)
- * @returns {Array<number>} - array of decoded bits (0 or 1)
- */
-function decodeOOK_PULSE_RZ(signal) {
-  const decoded = []
-  let lastBit = 1 // assume logic 1 as the initial state
-
-  for (let i = 0; i < signal.length; i++) {
-    const pulseDuration = signal[i]
-
-    // check if pulse duration is within the range of a valid bit pulse
-    if (pulseDuration >= 200 && pulseDuration <= 800) {
-      const bit = pulseDuration <= 500 ? 0 : 1
-
-      // check if the current bit is the same as the last bit
-      if (bit !== lastBit) {
-        decoded.push(null) // push a null value for invalid bit transitions
-      }
-
-      decoded.push(bit)
-      lastBit = bit
-    }
-  }
-
-  // check if the last bit is the same as the bit before it
-  if (decoded.length > 0 && decoded[decoded.length - 1] === lastBit) {
-    decoded.pop() // pop the last bit if it's the same as the bit before it
-  }
-
-  return decoded
-}
-
-// { pulselength, Sync bit, "0" bit, "1" bit, invertedSignal }
-//  * {
-//  *    Pulse length,
-//  *    PreambleFactor,
-//  *    Preamble {high,low},
-//  *    HeaderFactor,
-//  *    Header {high,low},
-//  *    "0" bit {high,low},
-//  *    "1" bit {high,low},
-//  *    Inverted Signal,
-//  *    Guard time
-//  * }
-const protocolHeaders = [
-  "pulselength",
-  "preambleFactor",
-  "preamble",
-  "headerFactor",
-  "header",
-  "zerobit",
-  "onebit",
-  "invertedSignal",
-  "guardTime",
-]
-const protocols = [
-  // { 350, { 1, 31 }, { 1, 3 }, { 3, 1 }, false }
-  [350, 0, [0, 0], 1, [1, 31], [1, 3], [3, 1], false, 0], // 01 (Princeton, PT-2240)
-  [400, 11, [1, 1], 1, [0, 9], [2, 1], [1, 2], false, 40], // 12 (Keeloq 64/66)
-]
-
-function getProtocol(p) {
-  return Object.fromEntries(protocolHeaders.map((key, i) => [key, p[i]]))
-}
-// float diff = d1 - d2;
-// float avg = (d1 + d2) / 2;
-// float ratio = diff / avg;
-
-// uint8_t b = ratio < 0.2 ? 1 : 0;
-
-function decodeOOK_PWM(pulses) {
-  const decoded = []
-
-  for (let i = 0; i < pulses.length; i += 2) {
-    let w1 = pulses[i]?.width
-    let w2 = pulses[i + 1]?.width
-    let t1 = pulses[i]?.time
-    let t2 = pulses[i + 1]?.time
-
-    if (!w1 || !w2) continue
-
-    let diff = w1 - w2
-    let avg = (w1 + w2) / 2
-    let ratio = diff / avg
-    let b = ratio < 0.2 ? 1 : 0
-    decoded.push({
-      width: w1 + w2,
-      time: t1,
-      b,
-    })
-  }
-  return decoded
-}
-
-// console.log(getProtocol(protocols[0]));
-
-// export function addPulses(pulses, arr) {
-//   rawPulses.push(pulses)
-// }
-
-// const useMeasurementsStore = defineStore(`measurements`, () => {
-//   const measurements = reactive([])
-//   function addMeasurement(x1,x2,color) {
-//     measurements.push({x1,x2,color})
-//   }
-
-//   return {
-//     measurements,
-//     addMeasurement,
-//   }
-// })
 
 let measurementsCounter = 0
 
@@ -244,14 +81,19 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
       ckmeansClustersCount: 3,
       ckmeans: computed(() => {
         if (m.pulsesInRange.length <= m.statistics.ckmeansClustersCount) return []
-        return ss.ckmeans(m.pulsesInRange.map((d) => d.width), m.statistics.ckmeansClustersCount)
+        return ss.ckmeans(
+          m.pulsesInRange.map((d) => d.width),
+          m.statistics.ckmeansClustersCount,
+        )
       }),
       ckmeans_mean: computed(() => {
         let o = m.statistics.ckmeans.map(ss.mean)
-        o = o.map((d,i) => { return {
-          val: d,
-          percent: Math.round(m.statistics.ckmeans[i].length / m.pulsesInRange.length * 100),
-        }})
+        o = o.map((d, i) => {
+          return {
+            val: d,
+            percent: Math.round((m.statistics.ckmeans[i].length / m.pulsesInRange.length) * 100),
+          }
+        })
         return o
       }),
       // ckmeans_avg: computed(() => m.statistics.ckmeans.map(ss.median)),
@@ -264,12 +106,18 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
       pulses.bisectorRef.left(pulses, m.maxX),
     ])
     m.pulsesInRange = computed(() => pulses.slice(...m.rangeIds))
+    m.rangeWidth = computed(
+      // () => m.pulsesInRange[m.rangeIds[1]].time - m.pulsesInRange[m.rangeIds[0]].time,
+      () => m.pulsesInRange[m.pulsesInRange.length - 1]?.time - m.pulsesInRange[0]?.time,
+    )
+    m.pulsesInRangeRaw = computed(() => pulses.raw_data.slice(...m.rangeIds))
     m.Nfalling = computed(() => m.pulsesInRange.filter((d) => d.level === 0).length)
     m.Nrising = computed(() => m.pulsesInRange.filter((d) => d.level === 1).length)
     m.minmaxFreq = computed(() => extent(m.pulsesInRange, (d) => d.width))
     m.averageTime = computed(
       () => m.pulsesInRange.reduce((acc, curr) => acc + curr.width, 0) / m.pulsesInRange.length,
     )
+    m.decoder = getDecoder(m)
     m.q = computed(() =>
       quantile(
         m.pulsesInRange.map((d) => d.width),
@@ -277,9 +125,14 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
       ),
     )
     m.baud = computed(() => parseInt((1 / m.q) * 1000 * 1000))
-
+    // m.decoders = createDecoders(m)
     m.remove = () => {
       measurements.removeMeasurement(m.id)
+    }
+    m.copyToClipboard = () => {
+      // const pulses = arr.map(d => d.width).map((v,i) => i % 2 ? `${v}\n` : v).join(' ')
+      const o = m.pulsesInRangeRaw.map((v, i) => (i % 2 ? `${v}\n` : `${v}`)).join(" ")
+      navigator.clipboard.writeText(o)
     }
 
     m.locate = () => {
@@ -414,7 +267,7 @@ export default defineStore(`pulses`, () => {
   })
 
   const saveToLocalStorage = () => {
-    console.log("saving to local storage")
+    // console.log("saving to local storage")
     // pulsesStorage.value = []
     pulsesStorage.value = pulses.map((p) => {
       let o = {
@@ -463,8 +316,6 @@ export default defineStore(`pulses`, () => {
     loadPulses(pulsesStorage.value)
   }
 
-
-
   // console.log(ss, pulses[0]?.measurements[0].pulsesInRange[0]);
   // // equalIntervalBreaks
   // let ppp = pulses[0]?.measurements[0].pulsesInRange.map((d) => d.width)
@@ -484,8 +335,6 @@ export default defineStore(`pulses`, () => {
   // // console.log(ss.sampleSkewness(ppp_ck[1]));
   // // console.log(ss.sampleSkewness(ppp_ck[2]));
   // // console.log(ss.sampleSkewness(ppp));
-
-  
 
   return {
     addPulses,

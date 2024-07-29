@@ -1,12 +1,25 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx,vue}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,vue}"],
   theme: {
-    extend: {},
+    extend: {
+      keyframes: {
+        slideDown: {
+          from: { height: 0 },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        slideUp: {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: 0 },
+        },
+      },
+      animation: {
+        slideDown: "slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)",
+        slideUp: "slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)",
+      },
+    },
   },
+  darkMode: ['selector', '[data-theme="dark"]'],
   plugins: [require("daisyui")],
   daisyui: {
     themes: ["cupcake", "dracula"], // false: only light + dark | true: all themes | array: specific themes like this ["light", "dark", "cupcake"]
@@ -19,4 +32,3 @@ export default {
     themeRoot: ":root", // The element that receives theme color CSS variables
   },
 }
-
