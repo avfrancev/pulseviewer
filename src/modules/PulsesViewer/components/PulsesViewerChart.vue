@@ -1,25 +1,31 @@
 <template lang="pug">
 //- pre {{viewStore.xScale(dataUnderCursor?.width + pulses.xOffset)}} {{pixelRatio}} {{pixelRatio/ZT.k}}
-.chart.relative
+.chart.relative(
+  :class="isHovered && `rounded outline-offset-2 outline-1 outline-dashed outline-base-content/40`"
+  )
   dialog.modal.px-2(:id="componentId")
     .modal-box(class="h-full w-full max-w-5xl")
       .flex.flex-col.h-full.space-y-4
         textarea.flex-1.input.w-full( v-wheel="(e) => e.event.stopImmediatePropagation()" v-model="raw_data")
         form(method="dialog")
           button.btn close
-  .relative.rounded.outline-offset-2(ref="chartElWrapper" :class="{'outline outline-1 outline-dashed outline-base-content/40': isHovered}")
-    .join.absolute.left-0.top-0.pr-12s.z-10.shadow-lg(class="-translate-y-1/2" v-show="isHovered")
-      button.join-item.btn.btn-sm.btn-square.drag-handle
-        i-ooui:move
+  .relative.rounded(
+    ref="chartElWrapper",
+    )
+    //- :class="isHovered && `outline-1 outline-dashed outline-base-content/40`"
+    .join.join-verticals.absolute.left-0.top-0.pr-12s.z-10.shadow-lg(class="-translate-y-full -translate-x-full1" v-show="isHovered")
+      button.join-item.btn.btn-sm.btn-square.drag-handle(
+        class="cursor-grab active:cursor-grabbing"
+        )
+        i-ic:round-drag-indicator
       button.join-item.btn.btn-sm.btn-square(:onclick="`${componentId}.showModal()`" title="Edit pulses")
         i-mdi:edit-outline
       button.join-item.btn.btn-sm.btn-square(@click="pulses.measurements.addMeasurement(0,pulses[pulses.length-1].time)" title="Measure all")
         i-fluent-emoji-high-contrast:orange-square
       button.join-item.btn.btn-sm.btn-square(@click.stop="pulses.xOffset = 0" title="Reset offset")
-        i-fluent:list-bar-tree-offset-16-filled
+        i-ph:align-left-fill
       button.join-item.btn.btn-sm.btn-square.btn-error(@click.stop="pulsesStore.removePulses(pulses)" title="Remove pulses")
         i-tabler:trash
-      //- button.btn.btn-sm.join-item(@click="[pulsesStore[0], pulses[1]] = [pulses[1], pulses[0]];") SWAP
 
     .relative.overflow-hidden
       svg.w-full(
@@ -42,7 +48,8 @@
             orient="auto-start-reverse")
             path.fill-base-content(
               :transform="`scale(${1/ZT.k},${1})`"
-              :d='`M 0 0 L 10 5 L 0 10 z`')  
+              :d="`M 0 0 L 10 5 L 0 10 z`"
+              )  
 
 
         PulsesMeasurements(v-bind="{ pulses: props.pulses, pulsesStore, viewStore }")
@@ -51,15 +58,6 @@
           class=" stroke-base-content/50 dark:stroke-accent"
           :d="pulsesLine"
         )
-        //- path.stroke-2.stroke-primary(
-        //-   d="M368,0 L712,0 L712,100 L368,100",
-        //- )
-          //- d="M1000,0 L 0,20 L0,90 L1.003,90L1.003,20L2.157,20L2.157,90L3.114,90",
-        //- circle(:cx="viewStore.xScale(dataUnderCursor?.time)" cy="100" r="10" fill="red" stroke="red" stroke-width="1")
-        //- Measurements(v-bind="{ measurements, pulses: props.pulses, viewStore }")
-        //- Measurements2(v-bind="{ measurements, pulses: props.pulses, viewStore }")
-
-
         g.arrows.pointer-events-none.select-none.touch-none(
           v-if="(dataUnderCursor?.width / viewStore.pixelRatio * ZT.k) > 15 && isHovered && arrows.x1 !== undefined && arrows.x3 !== undefined"
           )
@@ -90,6 +88,26 @@
             marker-end='url(#head)'
             :d="`M${arrows.x1},96 L${arrows.x3},96`")
 
+        //- foreignObject(
+          v-for="m in measurementsWithHints"
+          :key="m.id"
+          :x="m.scaledMinX*ZT.k" y="0"
+          :width="m.scaledWidth*ZT.k" height="100" :transform="`scale(${1/ZT.k},1)`"
+          class="pointer-events-none select-none touch-none"
+          )
+          //- pre {{ measurementsWithHints }} measurementsWithHints
+          div.relative.pointer-events-auto(
+            :style="{ left: `0px`}"
+            v-if="((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length > 9"
+            )
+            //- button.btn asdasd
+            .absolute.text-center.text-xs(
+              class="first:border-l last:border-r border-base-content/40"
+              :class="{'border-none':  m.pixel < 12 }"
+              v-for="h in m.decoder.sliceGuess?.hints" :key="h[0]"
+              :style="{left: `${((props.pulses[m.rangeIds[0]].time - m.minX + h[0] )/(m.width))*100}%`, width: `${((h[1] - h[0]) / m.width) * 100}%`}"
+              ) {{ h[2] }}
+
         //- foreignObject(:x="pulses.measurements[0]?.scaledMinX*ZT.k" y="0" width="100" height="100" :transform="`scale(${1/ZT.k},1)`")
           div.text-center asdasd
           //- path.fill-none.stroke-base-content(
@@ -99,120 +117,94 @@
             stroke-width="1" :d="`M${xScaleOrigin(props.data[pulseIdUnderCursor]?.time)} 0 L${xScaleOrigin(cumsumData[pulseIdUnderCursor])} 0`")
       
 
-      .top-5.absolute(
-        :style="{width: `${chartElBounds.width.value * ZT.k || 1 }px`, transform: `translate3d(${ZT.x + props.viewStore.xScale(props.pulses.xOffset*ZT.k + props.pulsesStore.minX)}px, 0px, 0px)`}"
+      //- pre {{ viewStore.isRangeInView(measurementsWithHints[0].scaledMinX + viewStore.xScale(pulses.xOffset), measurementsWithHints[0].scaledMaxX + viewStore.xScale(pulses.xOffset)) }}
+      //- pre {{ viewStore.xScale(pulses.xOffset) }}
+      //- pre {{ [measurementsWithHints[0].scaledMinX, viewStore.xScale(pulses.xOffset)] }}
+      .top-0.absolute(
+        :style="{width: `${chartElBounds.width.value * ZT.k }px`, transform: `translate3d(${ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}"
         )
-        //- pre asdasda
-        div.absolute.top-0.select-none.transition-opacity.m-2(
-          v-for="m in props.pulses.measurements"
+        div.absolute.top-0.select-none(
+          v-for="m in pulses.measurements"
           :key="m.id"
-          :style="{transform: `translate3d(${m.scaledMinX*ZT.k}px, 0px, 0px)`}"
-          :class="{'opacity-0': !m.isHovered}"
+          :class="[ !m.isHovered && 'opacity-0']"
           v-hover="(e) => {m.isHovered = e.hovering}"
-    
           )
-          button.join-item.btn.btn-xs.btn-error.btn-square(@click="m.remove")
-            i-tabler:trash
-          button.join-item.btn.btn-xs.btn-square(@click="m.copyToClipboard")
-            i-oui:copy-clipboard            
-          PopoverRoot(
-            :modal="false"
-            )
-            PopoverTrigger
-              button.btn.btn-xs ASDAS
-            PopoverPortal
-              PopoverContent.PopoverContent(
-                class="z-20 data-[side=bottom]:animate-slideUpAndFade data-[side=right]:animate-slideLeftAndFade data-[side=left]:animate-slideRightAndFade data-[side=top]:animate-slideDownAndFade w-[300px] rounded-md bg-base-300 p-5 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] data-[state=open]:transition-all"
-                align="end"
-                :side-offset="5"
-                side="bottom"
-                :avoidCollisions="true"
-                sticky="partial"
-                updatePositionStrategy="optimized"
-                :collision-boundary="viewStore.wrapper"
-                )
-                button.btn(@click="console.log(m)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                PopoverArrow
-          //- HoverCardRoot(
-            :open-delay="0"
-            :closeDelay="100"
-            :openDelay="300"
-            )
-            HoverCardTrigger
-              button.btn.btn-xs ASDAS
-            HoverCardPortal
-              HoverCardContent.HoverCardContent(
-                class="z-20 data-[side=bottom]:animate-slideUpAndFade data-[side=right]:animate-slideLeftAndFade data-[side=left]:animate-slideRightAndFade data-[side=top]:animate-slideDownAndFade w-[300px] rounded-md bg-base-300 p-5 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] data-[state=open]:transition-all"
-                align="center"
-                :side-offset="5"
-                side="left"
-                avoidCollisions
-                :collision-boundary="viewStore.wrapper"
-                )
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                div(@click="console.log(viewStore)") CONTENT
-                HoverCardArrow
+          //- :style="{transform: `translate3d(${(m.scaledMinX)*ZT.k}px, 0%, 0px)`, width: `${m.scaledWidth*ZT.k}px`}"
+          //- button.btn(@click="m.showBitsToggle()") {{ m.showBits }}
+          //- button.btn(@click="m.showBitsToggle") {{ m.showBits }}
+          //- pre.relative(
+            :style="`left: ${m.scaledMaxX*ZT.k}px`"
+            ) {{ m.decoder.guess }}
+          div(class="-translate-x-full p-1")
+            PopoverRoot(
+              :modal="false"
+              )
+              PopoverTrigger(
+                :style="`left: ${m.scaledMaxX*ZT.k}px`"
+                class="relative btn btn-sm btn-ghost btn-square")
+                //- i-mdi:more-circle
+                //- i-tabler:wave-sine
+                i-fa6-solid:wave-square
+                //- button. ASDAS
+              PopoverPortal
+                PopoverContent.PopoverContent(
+                  class="text-xs z-20 data-[side=bottom]:animate-slideUpAndFade data-[side=right]:animate-slideLeftAndFade data-[side=left]:animate-slideRightAndFade data-[side=top]:animate-slideDownAndFade min-w-[300px] rounded-md bg-base-300 p-5 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] data-[state=open]:transition-all"
+                  align="end"
+                  :side-offset="-5"
+                  side="top"
+                  :avoidCollisions="true"
+                  sticky="partial"
+                  updatePositionStrategy="optimized"
+                  :style="`max-width: ${viewStore.wrapperBounds.width}px`"
+                  :collision-boundary="viewStore.wrapper"
+                  )
+                  button.btn(@click="console.log(m.decoder)") LOG
+                  button.btn(@click="m.showBitsToggle") show bits {{ m.showBits }}
+                  input.toggle(type="checkbox" v-model="m.showBits")
+                  button.btn(@click="m.copyToClipboard") copyToClipboard
+                  div(v-if="m.decoder.hasHints")
+                  
+                    pre.text-error(v-if="m.showBits && m.decoder.sliceGuess.hints.length > 500") More than 500 bits
+                    pre #[b Modulation]: [ {{ m.decoder.guess.modulation }} ]
+                    pre #[b Guessing modulation]: {{ m.decoder.guess.name }}
+                    pre #[b DC bias (Pulse/Gap skew)]: {{ (m.decoder.analizer?.pulse_gap_skew * 100 || 0).toFixed(1) }}%
+                    p.break-words #[b RfRaw (rx)]: {{ m.decoder.analizer.rfrawB1 }}
+                    p.break-words #[b RfRaw (tx)]: {{ m.decoder.analizer.rfrawB0 }}
+                    pre.text-balance #[b Bits]: {{ m.decoder.sliceGuess.bits?.toHexString() }}
+                    //- pre.text-xs(@click="console.log(m.decoder)") {{ m.decoder }}
+                  PopoverArrow(class="fill-base-300") 
 
-
-        //- :style="{transform: `translate3d(${m.scaledMinX*ZT.k+ZT.x + props.viewStore.xScale(props.pulses.xOffset*ZT.k + props.pulsesStore.minX)}px, 0px, 0px)`}"
-      //- pre.relative.top-0(
-        :style="{transform: `translate3d(${props.viewStore.xScale(props.pulses.xOffset*ZT.k + props.pulsesStore.minX)}px, 0px, 0px)`}"
-        )  asd
-        //- .relative
-        //- .join.p-1.bg-accent.text-accent-content(
-          v-hover="(e) => {m.isHovered = e.hovering}"
-          :class="{'opacity-0': !m.isHovered}"
-          ) lakjsd
-          //- :style="{opacity: !m.isHovered ? 0.005 : 1}"
-          //- v-show="m.isHovered"
-        //- v-if="m.isCursorsInsideMeasurement && !m.isDragging && isHovered"
-        //- .join.p-1.transition.duration-150(
-          v-hover="(e) => {m.isHovered = e.hovering}"
-          :class="{'opacity-0': !m.isHovered || m.isDragging}"
-          )
-          //- button.join-item.btn.btn-xs(@click="m.x1 += 10000")  ДФДФ
-          //- button.join-item.btn.btn-xs(@click="m.x2 += 10000")  ДФДФ
-          //- button.join-item.btn.btn-xs(@click="m.x1 -= 10000")  ДФДФ
-          button.join-item.btn.btn-xs.btn-error.btn-square(@click="props.pulses.measurements.removeMeasurement(m.id)")
-            //- i-eva:close-outline
-            i-tabler:trash
-  //- pre(v-for="d in decoders") {{ d.value }}
-  //- pre {{ decoders }}
-  //- a.btn(@click="console.log(measurementsWithHints)") measurementsWithHints
+  pre {{ measurementsWithHints2.length }}
   .relative.overflow-hidden
     .select-text.touch-auto.pointer-events-auto.text-xs.relative.z-10
       .w-full.flex(
-        :style="{width: `${chartElBounds.width.value * ZT.k || 1 }px`, transform: `translate3d(${ZT.x + props.viewStore.xScale(props.pulses.xOffset*ZT.k + props.pulsesStore.minX)}px, 0px, 0px)`}"
+        :style="{width: `${chartElBounds.width.value * ZT.k || 1 }px`, transform: `translate3d(${ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}"
         )
         .measurements.relative.w-full.h-10
           .absolute(
-            v-for="m in measurementsWithHints" :key="m.id"
-            :style="{width: `${m.scaledWidth*ZT.k}px`}"
+            v-for="m in measurementsWithHints2" :key="m.id"
+            :style="{transform: `translate3d(${(m.scaledMinX)*ZT.k}px, 0%, 0px)`, width: `${m.scaledWidth*ZT.k}px`}"
             )
+            //- :style="{width: `${m.scaledWidth*ZT.k}px`}"
             //- :style="m.decoderStyles"
             //- pre {{ m.pixel }}
-            .hints.divide-x.absolute.inset-0(v-if="m.pixel > 9")
+            .hints.divide-x.absolute.inset-0(
+              v-if="m.decoder.hasHints && m.pixel > 9 && m.decoder?.sliceGuess?.hints.length <= 500"
+              )
+              //- v-if="m.showBits && m.pixel > 9 && m.decoder?.sliceGuess?.hints <= 300"
+              //- v-if="m.pixel > 9 && viewStore.isRangeInView(m.scaledMinX + viewStore.xScale(pulses.xOffset), m.scaledMaxX + viewStore.xScale(pulses.xOffset))"
               .absolute.text-center(
                 class="first:border-l last:border-r border-base-content/40"
-                :class="{'border-none':  m.pixel < 12 }"
+                :class="[m.pixel < 12 && 'border-none' ]"
                 v-for="h in m.decoder.sliceGuess.hints" :key="h[0]"
-                :style="{left: `${((m.t0 + h[0])/m.width)*100}%`, width: `${((h[1] - h[0]) / m.width) * 100}%`}"
+                :style="{left: `${((props.pulses[m.rangeIds[0]].time - m.minX + h[0] )/(m.width))*100}%`, width: `${((h[1] - h[0]) / m.width) * 100}%`}"
                 ) {{ h[2] }}
-            div(
+            //- div(
               class="mt-1"
               :class="{'mt-5': m.pixel > 9 }"
               :style="{transform: `translate3d(${m.scaledMinX*ZT.k}px, 0px, 0px)`}"
               )
-              pre {{ m.decoder?.sliceGuess?.bits?.toHexString() }}
+              // pre {{ m.decoder?.sliceGuess?.bits?.toHexString() }}
       //- /////////////////////////////////////////
       //- .w-full.flex(
         :style="{width: `${chartElBounds.width.value * ZT.k || 1 }px`, transform: `translate3d(${ZT.x + props.viewStore.xScale(props.pulses.xOffset*ZT.k + props.pulsesStore.minX)}px, 0px, 0px)`}"
@@ -253,25 +245,6 @@
             style="transform: translate3d(50%, 0px, 0px)"
             ) {{ m.scaledWidth*ZT.k }}
             //- :style="{transform: `translate3d(${ (m.analize?.sliceGuess?.hints[10][0])/m.width}%, 0px, 0px`}"
-
-  //- .select-text.touch-auto.pointer-events-auto.text-xs
-    div(v-for="m in props.pulses.measurements" :key="m.id")
-      div(v-for="decoder,i in m.decoders" :key="i")
-        .flex.space-x-2.items-center
-          .size-4.rounded-full(:style="{'background-color': m.color}") 
-          .font-bold.text-sm {{ decoder.protocol.name }} [ {{ decoder.protocol.pulseLength }} ]
-        pre(v-for="d,i in decoder.decodedData" :key="i")
-          pre {{ d.data }} {{ parseInt(d.data, 2).toString(16).padStart(2, '0').toUpperCase() }} 
-          //- pre {{ d.data }} {{ parseInt(d.data.split('').map(b => b ? 0 : 1).join(''), 2) }} 
-          pre {{ parseInt( d.data.split('').map(b => +b ? '0' : '1').join(''), 2).toString(16).padStart(2, '0').toUpperCase() }}
-      //- pre {{ m.decoders }}
-
-    //- pre {{ props.pulses.decodedPWM }}
-    //- .relative.h-5.overflow-hidden
-      div.absolute.border(
-        v-for="d in decodedPWM"
-        :style="{width: `${props.viewStore.xScale(d.width)*ZT.k}px`, transform: `translateX(${props.viewStore.xScale(d.time)*ZT.k + ZT.x}px)`}"
-        ) {{ d.b }}
 </template>
 
 <script setup>
@@ -338,35 +311,48 @@ useHover(
   },
 )
 
-const measurementsWithHints = computed(() => {
-  const o = props.pulses.measurements.filter((m) => m.decoder.hasHints)
-  o.forEach((m) => {
-    // m.t0 = computed(() => props.pulses[m.rangeIds[0]].time - m.minX)
-    m.t0 = computed(() => props.pulses[m.rangeIds[0]].time)
-    m.pixel = computed(
-      () =>
-        ((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length,
-    )
-    m.decoderStyles = computed(() => {
-      return {
-        width: `${m.scaledWidth * ZT.k}px`,
-        transform: `translate3d(${m.scaledMinX * ZT.k}px, 0px, 0px)`,
-      }
-    })
-    console.log(">>>>")
-    // m.hints = computed(() => {
-    //   const t0 = props.pulses[m.rangeIds[0]].time - m.minX
-    //   console.log("t0")
-    //   return m.decoder.sliceGuess?.hints?.map((h) => {
-    //     let styles = {
-    //       left: `${((t0 + h[0]) / m.width) * 100}%`,
-    //       width: `${((h[1] - h[0]) / m.width) * 100}%`,
-    //     }
-    //     h.styles = styles
-    //     return h
-    //   })
-    // })
+const measurementsInViewport = computed(() => {
+  return props.pulses.measurements.filter((m) => {
+    let offset = props.viewStore.xScale(props.pulses.xOffset)
+    return props.viewStore.isRangeInView(m.scaledMinX + offset, m.scaledMaxX + offset)
   })
+})
+
+const measurementsWithHints = computed(() => {
+  return props.pulses.measurements
+    .filter((m) => m.showBits)
+    .filter((m) => {
+      let offset = props.viewStore.xScale(props.pulses.xOffset)
+      return props.viewStore.isRangeInView(m.scaledMinX + offset, m.scaledMaxX + offset)
+    })
+})
+
+
+const measurementsWithHints2 = computedWithControl(
+  () => measurementsWithHints.value.length,
+  () => {
+    // console.log("AKJSLKDAS");
+    // return []
+    let o = measurementsWithHints.value
+      .filter((m) => m.decoder.hasHints && m.showBits)
+    o.forEach((m) => {
+        // console.log(m);
+        m.t0 = computed(() => props.pulses[m.rangeIds[0]].time - m.minX)
+        // m.t0 = computed(() => props.pulses[m.rangeIds[0]].time)
+        m.pixel = computed(() => {
+          // console.log(((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length);
+          // console.log({...m.decoder.guess}, props.viewStore.pixelRatio);
+          // console.log(m.decoder.guess.gap / props.viewStore.pixelRatio * ZT.k);
+          return (m.decoder.guess?.gap || m.decoder.guess?.long) / props.viewStore.pixelRatio * ZT.k
+          return ((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length
+        })
+        // m.decoderStyles = computed(() => {
+        //   return {
+        //     width: `${m.scaledWidth * ZT.k}px`,
+        //     transform: `translate3d(${m.scaledMinX * ZT.k}px, 0px, 0px)`,
+        //   }
+        // })
+    })
   return o
 })
 

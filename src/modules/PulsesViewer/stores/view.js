@@ -23,18 +23,25 @@ export default defineStore(`view-store`, () => {
 
   const state = reactive({
     ZT: {k:1, x:0, y:0},
-    mouse: useMouseInElement(wrapper),
-    fullCanvasHeight: computed(() => pulsesStore.pulses.length * state.sizes.pulsesRow),
-    sizes: {
-      ticks: 20,
-      pulsesRow: 200,
-    },
     cursor: {
       x: 10, y: 0,
       xCom: computed(() => state.cursor.x - state.ZT.x),
       xLabel: computed(() => xScale.value.invert((state.cursor.x - state.ZT.x) / state.ZT.k).toFixed(0)),
-    }
+    },
+    viewportLeft: computed(() => -state.ZT.x / state.ZT.k),
+    viewportRight: computed(() => wrapperBounds.value.width / state.ZT.k + state.viewportLeft),
   })
+
+  function isPointInView(x) {
+    // const ZT = state.ZT
+    // let l = - ZT.x/ZT.k
+    // let r = wrapperBounds.value.width/ZT.k + l
+    return x >= state.viewportLeft && x <= state.viewportRight
+  }
+  function isRangeInView(x1,x2) {
+    return state.viewportLeft < x2 && x1 < state.viewportRight
+  }
+
 
   const panZoomStore = usePanZoomStore({ canvas, wrapper, wrapperBounds, viewState: state })()
   state.ZT = panZoomStore.ZT
@@ -76,5 +83,7 @@ export default defineStore(`view-store`, () => {
     state,
     xScale,
     pixelRatio,
+    isPointInView,
+    isRangeInView,
   }
 })

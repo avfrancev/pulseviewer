@@ -11,11 +11,10 @@ ScrollAreaRoot(class="w-[5s00px] overflow-hidden")
     //-   pre.btn asdasdasdasdasdasd  
     //- ScrollAreaScrollbar(class="flex select-none touch-none p-0.5 bg-blackA6 transition-colors duration-[160ms] ease-out hover:bg-blackA8 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5", orientation="vertical")
     //-   ScrollAreaThumb(class="flex-1 bg-mauve10 rounded-[10px] relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]")
-
     .flex.w-full.space-x-3.my-2.p-2
       .bg-base-300.text-sm.box-border.flex.p-3.py-3.rounded(
         :class="{'ring ring-secondary/50': m.isHovered}"
-        v-for="m in props.measurements"
+        v-for="m in measurements"
         :key="m.id"
         v-hover="(e) => {m.isHovered = e.hovering}"
         )
@@ -94,5 +93,6 @@ ScrollAreaRoot(class="w-[5s00px] overflow-hidden")
 <script setup>
 const props = defineProps({
   measurements: Array,
+  viewStore: Object,
 })
 </script>

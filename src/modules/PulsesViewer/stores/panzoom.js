@@ -42,19 +42,21 @@ export default ({ wrapper, wrapperBounds, viewState }) => defineStore(`panzoom-s
 
   }
 
-  ZT.scaleToPointX = function (scaleFactor, p0) {
+  ZT.getScaleToPointX_ZT = function (scaleFactor, p0) {
     let scaleExtent = [1, 1000]
-    // let translateExtent = [[0, 0], [wrapperBounds.width.value, wrapperBounds.height.value]]
-
     let p1 = this.invertX(p0)
     let newZT = this.scale(scaleFactor)
     newZT.k = Math.max(scaleExtent[0], Math.min(scaleExtent[1], newZT.k));
-    Object.assign(this, newZT)
-    this.x = p0 - p1 * ZT.k
+    return {
+      k: newZT.k,
+      x: p0 - p1 * newZT.k
+    }
+  }
+
+  ZT.scaleToPointX = function (scaleFactor, p0) {
+    let newZT = ZT.getScaleToPointX_ZT(scaleFactor, p0)
+    Object.assign(ZT, newZT)
     this.translateBy(0)
-    // let constrained = constrain(this, translateExtent, translateExtent)
-    // Object.assign(this, constrained)
-    // props.xScale.value = ZT.rescaleX(props.xScaleOrigin.value)
   }
 
   ZT.animateTo = function(to) {
@@ -64,6 +66,7 @@ export default ({ wrapper, wrapperBounds, viewState }) => defineStore(`panzoom-s
       ease: easeInOut,
       onUpdate: (v) => {
         Object.assign(ZT, v)
+        this.translateBy(0)
       }
     })
   }

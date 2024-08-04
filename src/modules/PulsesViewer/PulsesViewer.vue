@@ -1,5 +1,4 @@
 <template lang="pug">
-//- TEST
 dialog.modal(id="helpDialog")
   .modal-box.p-12(class="h-full w-full max-w-5xl")
     .flex.flex-col.h-full.space-y-4.text-sm
@@ -16,12 +15,12 @@ dialog.modal(id="helpDialog")
         span +
         kbd.kbd SHIFT
         span while dragging
-      .flex.space-x-2.items-baseline
-        pre Add measurement:
-        span hold #[kbd.kbd SHIFT] while dragging
-      .flex.space-x-2.items-baseline
-        pre Remove measurement:
-        span press #[kbd.kbd d] while measurement hovered
+      //- .flex.space-x-2.items-baseline
+      //-   pre Add measurement:
+      //-   span hold #[kbd.kbd SHIFT] while dragging
+      //- .flex.space-x-2.items-baseline
+      //-   pre Remove measurement:
+      //-   span press #[kbd.kbd d] while measurement hovered
 dialog.modal(id="settingsDialog")
   .modal-box.p-12(class="h-full w-full max-w-5xl")
     .flex.flex-col.h-full.space-y-4
@@ -35,10 +34,7 @@ dialog.modal(id="settingsDialog")
         pre useESP32Api = {{ configStore.storage.useESP32Api }}
         input.toggle(type="checkbox" v-model="configStore.storage.useESP32Api")
         input.input(type="text" v-model="configStore.storage.esp32ApiEndpint")
-      //- textarea.flex-1.input.input-bordered.w-full( v-model="addingPulses")
-      //- form.text-center.space-x-6(method="dialog")
-      //-   button.btn Cencel
-      //-   button.btn.btn-primary(@click="pulsesStore.addPulses(addingPulses.split(',').map(Number))") ADD  
+        
 .navbar.bg-base-300.rounded-box.mb-4
   .flex.items-center.mr-4
     i-twemoji:raccoon.hue-rotate-180.drop-shadow-lg.mx-4.text-3xl(class="transition duration-600 hover:scale-110 hover:hue-rotate-0")
@@ -57,7 +53,7 @@ dialog.modal(id="settingsDialog")
       i-material-symbols:zoom-in-map-rounded
     button.btn.btn-md.join-item.text-secondary.text-lg(
       @click="pulses.forEach(p => p.xOffset = 0)" :disabled="pulses.every(p => p.xOffset === 0)" title="Reset offsets")
-      i-fluent:list-bar-tree-offset-16-filled
+      i-ph:align-left-fill
       //- | reset offsets
     //- button.btn.btn-md.join-item(@click="pulsesStore.pulsesStorage = []") Clear pulsesStorage
     button.btn.btn-md.join-item(@click="loadSampleData") Load sample data
@@ -80,7 +76,7 @@ dialog.modal(id="settingsDialog")
 
   div(v-for="p in pulses" :key="p.iid")
     pre(v-if="p.RCSwitch?.decodedData?.length") {{ p.RCSwitch }}
-  MeasurementsMeta(v-bind="{measurements: pulsesStore.allMeasurements}")
+  MeasurementsMeta(v-bind="{measurements: pulsesStore.allMeasurements, viewStore}")
 
   .flex.w-full.bg-base-300.mb-8.mt-2.ring-4.ring-base-300.rounded-box(v-if="pulses.length")
     div.h-2.text-xs.text-secondary-content.text-center.rounded(
@@ -129,8 +125,8 @@ dialog.modal(id="settingsDialog")
 
     //- LALA
     draggable(
+        :component-data="{ tag: 'div', type: 'transition-group', name: ('flip-list' && !drag) }"
         class="list-group"
-        :component-data="{ tag: 'div', type: 'transition-group', name: !drag ? 'flip-list' : null }"
         :list="pulses"
         v-bind="dragOptions"
         handle=".drag-handle"
@@ -172,7 +168,7 @@ dialog.modal(id="settingsDialog")
                 :disabled="!addingPulsesAreValid"
                 @click="addPulses") ADD
                 //- :disabled="addingPulses.trim().split(',').map(Number).length < 2"
-  </template>
+</template>
 
 <script setup lang="jsx">
 // import PulsesViewerChart from "./PulsesViewerChart.vue"
