@@ -1,9 +1,9 @@
 <template lang="pug">
   //- pre {{viewStore.xScale(dataUnderCursor?.width + pulses.xOffset)}} {{pixelRatio}} {{pixelRatio/ZT.k}}
   .chart.relative(
-    :class="isHovered && `rounded outline-offset-2 outline-1 outline-dashed outline-base-content/40`"
+    :class="pulses.isSelected && `rounded outline-offset-2 outline-1 outline-dashed outline-base-content/40`"
     )
-    dialog.modal.px-2(:id="componentId")
+    //- dialog.modal.px-2(:id="componentId")
       .modal-box(class="h-full w-full max-w-5xl")
         .flex.flex-col.h-full.space-y-4
           textarea.flex-1.input.w-full( v-wheel="(e) => e.event.stopImmediatePropagation()" v-model="raw_data")
@@ -11,6 +11,9 @@
             button.btn close
     .relative.rounded(
       ref="chartElWrapper",
+      @mouseover="isHovered = true",
+      @touchstart="console.log",
+      @mouseleave="isHovered = false",
       )
       //- :class="isHovered && `outline-1 outline-dashed outline-base-content/40`"
       .join.join-verticals.absolute.left-0.top-0.pr-12s.z-10.shadow-lg(class="-translate-y-full -translate-x-full1" v-show="isHovered")
@@ -18,8 +21,26 @@
           class="cursor-grab active:cursor-grabbing"
           )
           i-ic:round-drag-indicator
-        button.join-item.btn.btn-sm.btn-square(:onclick="`${componentId}.showModal()`" title="Edit pulses")
+        //- button.join-item.btn.btn-sm.btn-square(:onclick="`${componentId}.showModal()`" title="Edit pulses")
           i-mdi:edit-outline
+        Modal
+          template(#trigger)
+            DialogTrigger(class="join-item btn btn-sm btn-square")
+              i-mdi:edit-outline
+          template(#content)
+            DialogTitle(class="mb-4 text-lg font-bolds")
+              | Edit pulses
+            //- DialogDescription(class="text-mauve11 mt-[10px] mb-5 text-[15px] leading-normal")
+              pre.text-xs(class="text-base-content/50") Example: 434,394,380,422,379,422,377,421,378,420,377,421
+            textarea.flex-1.input.w-full( v-wheel="(e) => e.event.stopImmediatePropagation()" v-model="raw_data")
+            //- textarea.textarea.textarea-bordered.my-4.flex-1.w-full(
+              v-model="tmpPulsesString" placeholder="434,394,380,422,379,422,377,421,378,420,377,421")
+            div(class="mt-3 flex justify-end")
+              DialogClose(as-child)
+                button(class="btn" )
+                  | OK
+            DialogClose(class="btn btn-square btn-sm text-xs top-0 right-0 absolute m-2" aria-label="Close")
+              i-fa:close          
         button.join-item.btn.btn-sm.btn-square(@click="pulses.measurements.addMeasurement(0,pulses[pulses.length-1].time)" title="Measure all")
           i-fluent-emoji-high-contrast:orange-square
         button.join-item.btn.btn-sm.btn-square(@click.stop="pulses.xOffset = 0" title="Reset offset")
@@ -248,29 +269,29 @@
               ) {{ m.scaledWidth*ZT.k }}
               //- :style="{transform: `translate3d(${ (m.analize?.sliceGuess?.hints[10][0])/m.width}%, 0px, 0px`}"
   </template>
-  
-  <script setup>
-  import { useGesture, useHover } from "@vueuse/gesture"
-  import { line, curveStepAfter } from "d3-shape"
-  import { scaleLinear } from "d3-scale"
-  
-  import { PulsesMeasurements } from "./Measurements"
-  
-  const props = defineProps({
-    pulses: {
-      type: Array,
-      default: [],
-    },
-    viewStore: {
-      type: Object,
-      default: {},
-    },
-    pulsesStore: {
-      type: Object,
-      default: {},
-    },
-  })
-  
+
+<script setup>
+import { useGesture, useHover } from "@vueuse/gesture"
+import { line, curveStepAfter } from "d3-shape"
+import { scaleLinear } from "d3-scale"
+
+import { PulsesMeasurements } from "./Measurements"
+
+const props = defineProps({
+  pulses: {
+    type: Array,
+    default: [],
+  },
+  viewStore: {
+    type: Object,
+    default: {},
+  },
+  pulsesStore: {
+    type: Object,
+    default: {},
+  },
+})
+
 const chartEl = ref(null)
 const chartElWrapper = ref(null)
 const chartElBounds = useElementBounding(chartEl)
@@ -286,18 +307,21 @@ const yScale = scaleLinear([0, 1], [20, 90])
 const { ZT } = props.viewStore.state
 const wrapperBounds = props.viewStore.wrapperBounds
 
-const genLine = computed(() =>
-  line()
+const genLine = computed(() => {
+  return line()
     .x((d) => props.viewStore.xScale(d.time))
     .y((d) => yScale(d.level))
-    // .defined((d) => !isNaN(d.time))
-    .curve(curveStepAfter),
-)
+    .curve(curveStepAfter)
+})
 
-const pulsesLine = computed(() => genLine.value(props.pulses))
+const pulsesLine = computed(() => {
+  let lastPulse = props.pulses[props.pulses.length - 1]
+  let l = genLine.value(props.pulses)
+  l += `L${props.viewStore.xScale(lastPulse.time + lastPulse.width)},${yScale(lastPulse.level)}`
+  return l
+})
 
 const svgViewBox = computed(() => {
-  
   let x = -ZT.x / ZT.k - props.viewStore.xScale(props.pulses.xOffset + props.pulsesStore.minX)
   let w = wrapperBounds.width / ZT.k
   return `${x} -1 ${w} ${chartElBounds.height.value || 0}`
@@ -305,14 +329,14 @@ const svgViewBox = computed(() => {
 
 const isHovered = ref(false)
 
-// useHover(
-//   (s) => {
-//     isHovered.value = s.hovering
-//   },
-//   {
-//     domTarget: chartElWrapper,
-//   },
-// )
+useHover(
+  (s) => {
+    // isHovered.value = s.hovering
+  },
+  {
+    domTarget: chartElWrapper,
+  },
+)
 
 const measurementsInViewport = computed(() => {
   return props.pulses.measurements.filter((m) => {
@@ -330,34 +354,33 @@ const measurementsWithHints = computed(() => {
     })
 })
 
-
 const measurementsWithHints2 = computedWithControl(
   () => measurementsWithHints.value.length,
   () => {
     // console.log("AKJSLKDAS");
     // return []
-    let o = measurementsWithHints.value
-      .filter((m) => m.decoder.hasHints && m.showBits)
+    let o = measurementsWithHints.value.filter((m) => m.decoder.hasHints && m.showBits)
     o.forEach((m) => {
-        // console.log(m);
-        m.t0 = computed(() => props.pulses[m.rangeIds[0]].time - m.minX)
-        // m.t0 = computed(() => props.pulses[m.rangeIds[0]].time)
-        m.pixel = computed(() => {
-          // console.log(((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length);
-          // console.log({...m.decoder.guess}, props.viewStore.pixelRatio);
-          // console.log(m.decoder.guess.gap / props.viewStore.pixelRatio * ZT.k);
-          return (m.decoder.guess?.gap || m.decoder.guess?.long) / props.viewStore.pixelRatio * ZT.k
-          return ((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length
-        })
-        // m.decoderStyles = computed(() => {
-        //   return {
-        //     width: `${m.scaledWidth * ZT.k}px`,
-        //     transform: `translate3d(${m.scaledMinX * ZT.k}px, 0px, 0px)`,
-        //   }
-        // })
+      // console.log(m);
+      m.t0 = computed(() => props.pulses[m.rangeIds[0]].time - m.minX)
+      // m.t0 = computed(() => props.pulses[m.rangeIds[0]].time)
+      m.pixel = computed(() => {
+        // console.log(((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length);
+        // console.log({...m.decoder.guess}, props.viewStore.pixelRatio);
+        // console.log(m.decoder.guess.gap / props.viewStore.pixelRatio * ZT.k);
+        return ((m.decoder.guess?.gap || m.decoder.guess?.long) / props.viewStore.pixelRatio) * ZT.k
+        return ((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length
+      })
+      // m.decoderStyles = computed(() => {
+      //   return {
+      //     width: `${m.scaledWidth * ZT.k}px`,
+      //     transform: `translate3d(${m.scaledMinX * ZT.k}px, 0px, 0px)`,
+      //   }
+      // })
     })
-  return o
-})
+    return o
+  },
+)
 
 const decoders = computed(() => {
   return measurementsWithHints.value.map((m_) => {
@@ -414,9 +437,7 @@ const arrows = computed(() => {
   let next = props.pulses[props.pulses.dataIDUnderCursor + 1]
   let x1 = props.viewStore.xScale(dataUnderCursor.value?.time)
   let x2 = props.viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width)
-  let x3 = props.viewStore.xScale(
-    dataUnderCursor.value?.time + dataUnderCursor.value?.width + next?.width,
-  )
+  let x3 = props.viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width + next?.width)
   return {
     x1,
     x2,
@@ -447,10 +468,6 @@ let tmpMeasurement = null
 
 useGesture(
   {
-    // on: (s) => {
-    //   console.log(s);
-    //   isHovered.value = !isHovered.value
-    // },
     onMove: (s) => {
       if (s.dragging || tmpMeasurement) return
       let x = s.event.clientX - wrapperBounds.left - ZT.x
@@ -459,10 +476,13 @@ useGesture(
     },
     onDrag: (s) => {
       // if (s.tap) {
-      //   s.event.stopPropagation()
-      //   console.log(props.pulsesStore.pulses);
-      //   props.pulsesStore.pulses.forEach((p) => (p.isHovered = false))
-      //   isHovered.value = !isHovered.value
+      //   // s.event.stopImmediatePropagation()
+      //   // console.log(props.pulsesStore.pulses)
+      //   props.pulsesStore.pulses.forEach((p) => (p.isSelected = false))
+      //   props.pulses.isSelected = true
+      //   // isHovered.value = !isHovered.value
+      //   // console.log(props.viewStore.state.gestures)
+      //   props.viewStore.state.gestures.state.drag.cancel()
       //   return
       // }
       if (s.shiftKey && (s.ctrlKey || s.metaKey)) {
@@ -479,6 +499,7 @@ useGesture(
         props.pulses.cursorX = props.viewStore.xScale.invert(x / ZT.k) - props.pulses.xOffset
         if (tmpMeasurement && s.last) {
           tmpMeasurement = null
+          props.viewStore.state.gestures.state.drag.cancel()
           return
         }
         if (tmpMeasurement) {
@@ -487,10 +508,7 @@ useGesture(
         }
         if (!tmpMeasurement && s.delta[0] !== 0) {
           let x = s.event.clientX - wrapperBounds.left - ZT.x
-          tmpMeasurement = props.pulses.measurements.addMeasurement(
-            props.pulses.cursorX,
-            props.pulses.cursorX,
-          )
+          tmpMeasurement = props.pulses.measurements.addMeasurement(props.pulses.cursorX, props.pulses.cursorX)
         }
         return
       }
@@ -502,8 +520,7 @@ useGesture(
       // preventWindowScrollY: true,
       // useTouch: true,
       // filterTaps: true,
-    }
+    },
   },
 )
-  </script>
-  
+</script>

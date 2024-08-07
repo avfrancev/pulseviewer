@@ -6,8 +6,7 @@ import { sliceGuess } from "pulseplot/lib/slicer.js"
 import { Analyzer } from "pulseplot/lib/histogram.js"
 
 // import { useViewStore, useESP32RMTStore, useConfigStore } from "."
-import { useViewStore } from ".";
-
+import { useViewStore } from "."
 
 const colors = Array.from(Array(20)).map((d, i) => {
   return interpolateRainbow(i / 20)
@@ -70,21 +69,16 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
     m.xOffset = computed(() => pulses.xOffset)
     // props.viewStore.xScale(props.pulses.xOffset*ZT.k + props.pulsesStore.minX)
     m.showBits = ref(false)
-    m.showBitsToggle = () => m.showBits = !m.showBits
+    m.showBitsToggle = () => (m.showBits = !m.showBits)
     m.width = computed(() => m.maxX - m.minX)
     m.scaledX1 = computed(() => viewStore.xScale(m.x1))
     m.scaledX2 = computed(() => viewStore.xScale(m.x2))
     m.scaledMinX = computed(() => viewStore.xScale(m.minX))
     m.scaledMaxX = computed(() => viewStore.xScale(m.maxX))
-    m.scaledWidth = computed(() => m.width / viewStore.pixelRatio)
+    m.scaledWidth = computed(() => Math.max(m.width, 1 / viewStore.state.ZT.k) / viewStore.pixelRatio)
     m.statistics = {}
-    m.isCursorsInsideMeasurement = computed(
-      () => m.minX < pulses.cursorX && m.maxX > pulses.cursorX,
-    )
-    m.rangeIds = computed(() => [
-      pulses.bisectorRef.left(pulses, m.minX),
-      pulses.bisectorRef.left(pulses, m.maxX),
-    ])
+    m.isCursorsInsideMeasurement = computed(() => m.minX < pulses.cursorX && m.maxX > pulses.cursorX)
+    m.rangeIds = computed(() => [pulses.bisectorRef.left(pulses, m.minX), pulses.bisectorRef.left(pulses, m.maxX)])
     m.pulsesInRange = computed(() => pulses.slice(...m.rangeIds))
     m.rangeWidth = computed(
       // () => m.pulsesInRange[m.rangeIds[1]].time - m.pulsesInRange[m.rangeIds[0]].time,
@@ -94,9 +88,7 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
     m.Nfalling = computed(() => m.pulsesInRange.filter((d) => d.level === 0).length)
     m.Nrising = computed(() => m.pulsesInRange.filter((d) => d.level === 1).length)
     m.minmaxFreq = computed(() => extent(m.pulsesInRange, (d) => d.width))
-    m.averageTime = computed(
-      () => m.pulsesInRange.reduce((acc, curr) => acc + curr.width, 0) / m.pulsesInRange.length,
-    )
+    m.averageTime = computed(() => m.pulsesInRange.reduce((acc, curr) => acc + curr.width, 0) / m.pulsesInRange.length)
     m.decoder = getDecoder(m)
     m.q = computed(() =>
       quantile(
@@ -158,9 +150,7 @@ export default (uuid = 0) => {
   // const minX = computed(() => Math.min(0,Math.min(...pulses.map(d => d.xOffset))))
   const minX = computed(() => Math.min(0, minOffset.value))
   const maxX = computed(() => maxSum.value)
-  const maxSumWithOffset = computed(() =>
-    Math.max(...pulses.map((d) => maxSum.value - Math.abs(d.xOffset))),
-  )
+  const maxSumWithOffset = computed(() => Math.max(...pulses.map((d) => maxSum.value - Math.abs(d.xOffset))))
 
   function addPulses(data) {
     if (!Array.isArray(data) || data.length === 0) {
@@ -173,36 +163,26 @@ export default (uuid = 0) => {
     arr.raw_data = data
     arr.sum = computed(() => fsum(arr, (d) => d.width))
     arr.xOffset = 0
-    arr.scaledXOffset = computed(() => viewStore.xScale(arr.xOffset*viewStore.state.ZT.k + minX.value))
+    arr.scaledXOffset = computed(() => viewStore.xScale(arr.xOffset * viewStore.state.ZT.k + minX.value))
     arr.cursorX = 0
     arr.rssi = 0
     arr.isHovered = false
+    arr.isSelected = false
     arr.bisectorRef = bisector((d) => d.time)
     arr.dataIDUnderCursor = computed(() => {
       return arr.bisectorRef.left(arr, arr.cursorX) - 1
     })
-    // arr.RCSwitch = computed(() => {
-    //   return decodePulses(arr.raw_data)
-    // })
-    arr.measurements = initMeasurements(arr, viewStore, minX)
-    // arr.measurements.addMeasurement(2000,30000,'red')
 
-    // let dpwm = decodeOOK_PWM(pulses[0])
-    // arr.decodedPWM = computed(() => decodeOOK_PWM(arr))
+    arr.measurements = initMeasurements(arr, viewStore, minX)
+
     watch(
       () => arr.raw_data,
       () => {
         arr.length = 0
         Object.assign(arr, parsePlainArr(arr.raw_data.map(Number)))
-        // Object.assign( arr, parsePlainArr(arr.raw.split(',').map(Number)))
       },
     )
 
-    // arr.setIsHovered = (isHovered) => {
-    //   pul
-    //   arr.isHovered = isHovered
-    // }
-    
     pulses.push(arr)
     return arr
   }
@@ -210,9 +190,8 @@ export default (uuid = 0) => {
   function removePulses(p) {
     pulses.splice(pulses.indexOf(p), 1)
   }
-  
+
   function remove() {
-    console.log(this);
     pulses.forEach(removePulses)
     pulsesStorage.value = null
     localStorage.removeItem(`pulses-${uuid}`)
@@ -229,8 +208,6 @@ export default (uuid = 0) => {
   })
 
   const saveToLocalStorage = () => {
-    // console.log("saving to local storage")
-    // pulsesStorage.value = []
     pulsesStorage.value = pulses.map((p) => {
       let o = {
         raw_data: p.raw_data,
@@ -278,12 +255,10 @@ export default (uuid = 0) => {
     loadPulses(pulsesStorage.value)
   }
 
-
-
-
   return {
     addPulses,
-    removePulses, remove,
+    removePulses,
+    remove,
     loadPulses,
     saveToLocalStorage,
     throttledSaveToLocalStorage,

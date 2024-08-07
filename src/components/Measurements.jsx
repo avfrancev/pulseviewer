@@ -94,13 +94,14 @@ const measurementHandler2 = {
     const x = computed(() => {
       return props.m[props.x] > props.m.minX ? 100 : 0
     })
-    return () =>
+    return () => (
       <path
         ref={rRef}
         d={`M${x.value},0 L${x.value},100`}
         stroke-width="10"
         class="fill-none stroke-transparent cursor-ew-resize"
       ></path>
+    )
   },
 }
 
@@ -162,7 +163,8 @@ const Measurement = {
     // watchEffect(() => {
     //   console.log(props.viewStore.wrapperBounds.width, m.scaledWidth, props.viewStore.wrapperBounds.width / m.scaledWidth);
     // })
-    const k = computed(() => (10 / m.scaledWidth) * 100 / props.viewStore.state.ZT.k) 
+    const k = computed(() => ((10 / m.scaledWidth) * 100) / props.viewStore.state.ZT.k)
+
     return () =>
       h(
         "svg",
@@ -179,7 +181,7 @@ const Measurement = {
           width: m.scaledWidth,
           // width: Math.max(m.scaledWidth, 1 / props.viewStore.pixelRatio),
           // width: Math.max(m.scaledMaxX - m.scaledMinX, 0),
-          "preserveAspectRatio": "none",
+          preserveAspectRatio: "none",
           // viewBox: `0 0 ${m.scaledWidth} 100`,
           viewBox: `0 0 100 100`,
           class: "overflow-visible focus:outline-none",
@@ -209,7 +211,7 @@ const Measurement = {
             class: "cursor-move",
             ref: moveHandlerRef,
           }),
-          // h("g", { 
+          // h("g", {
           //   transform: `scale(${1/props.viewStore.state.ZT.k},1)`,
           // }, [
           //   h("text", {
