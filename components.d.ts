@@ -22,6 +22,7 @@ declare module 'vue' {
     'IFa6Solid:waveSquare': typeof import('~icons/fa6-solid/wave-square')['default']
     'IFluent:phoneSpanOut28Filled': typeof import('~icons/fluent/phone-span-out28-filled')['default']
     'IFluentEmojiHighContrast:orangeSquare': typeof import('~icons/fluent-emoji-high-contrast/orange-square')['default']
+    'IHeroiconsSolid:clipboardCheck': typeof import('~icons/heroicons-solid/clipboard-check')['default']
     'IHeroiconsSolid:clipboardCopy': typeof import('~icons/heroicons-solid/clipboard-copy')['default']
     'IIc:roundDragIndicator': typeof import('~icons/ic/round-drag-indicator')['default']
     'ILucide:locateFixed': typeof import('~icons/lucide/locate-fixed')['default']

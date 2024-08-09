@@ -102,11 +102,12 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
     m.remove = () => {
       measurements.removeMeasurement(m.id)
     }
-    m.copyToClipboard = () => {
-      // const pulses = arr.map(d => d.width).map((v,i) => i % 2 ? `${v}\n` : v).join(' ')
-      const o = m.pulsesInRangeRaw.map((v, i) => (i % 2 ? `${v}\n` : `${v}`)).join(" ")
-      navigator.clipboard.writeText(o)
-    }
+    m.rawPulsesClipboard = useClipboard({ source: computed(() => m.pulsesInRangeRaw.map((v, i) => (i % 2 ? `${v}\n` : `${v}`)).join(" "))})
+    // m.copyToClipboard = () => {
+    //   // const pulses = arr.map(d => d.width).map((v,i) => i % 2 ? `${v}\n` : v).join(' ')
+    //   const o = m.pulsesInRangeRaw.map((v, i) => (i % 2 ? `${v}\n` : `${v}`)).join(" ")
+    //   navigator.clipboard.writeText(o)
+    // }
 
     m.locate = () => {
       let w = m.scaledMaxX - m.scaledMinX
