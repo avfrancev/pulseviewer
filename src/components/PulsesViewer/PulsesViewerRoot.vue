@@ -14,15 +14,16 @@
 //- ScrollAreaRoot(class="overflow-hidden")
   ScrollAreaViewport(class="w-full h-full rounded border")
     pre asdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdj
-
-.sticky.top-2.z-10
+.sticky.top-2.z-20
   .overflow-x-auto
-    .bg-base-300.min-h-0.p-0(class="backdrop-blur-sm bg-base-300/70 rounded-full dark:rounded-lg")
-      .join
+    .bg-base-300.min-h-0.p-0.flex(class="backdrop-blur-sm bg-base-300/70 rounded-full dark:rounded-lg")
+      .join.bg-base-300
         Modal
           template(#trigger)
-            DialogTrigger(class="join-item btn btn-square btn-ghost")
-              i-ph:file-plus-fill
+            DialogTrigger(class="join-item btn btn-square")
+              //- i-ph:file-plus-fill
+              //- i-pajamas:doc-new
+              i-mingcute:file-new-line(class="text-lg")
           template(#content)
             DialogTitle(class="mb-4 text-lg font-bolds")
               | Add new pulses
@@ -39,25 +40,9 @@
 
         button.btn.join-item
           i-fluent:phone-span-out-28-filled
-        button.btn.join-item(@click="zoomIn" title="Zoom in")
+        button.btn.join-item(@click="zoomIn" title="Zoom in" :disabled="ZT.k >= 1000")
           i-bi:zoom-in
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item.mx-24(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
-          i-bi:zoom-out
-        button.btn.join-item(@click="zoomOut" title="Zoom out")
+        button.btn.join-item(@click="zoomOut" title="Zoom out" :disabled="ZT.k <= 1")
           i-bi:zoom-out
         button.btn.btn-md.join-item.text-lg(
           :disabled="viewStore.state.ZT.k === 1"
@@ -67,17 +52,36 @@
         button.btn.btn-md.join-item.text-lg(
           @click="pulses.forEach(p => p.xOffset = 0)" :disabled="pulses.every(p => p.xOffset === 0)" title="Reset offsets")
           i-ph:align-left-fill     
+        button.btn.btn-md.join-item.text-lg(
+          :class="[config.pinMeasurements && 'text-accent1 btn-active']"
+          @click="config.pinMeasurements = !config.pinMeasurements")
+          //- i-fluent:note-pin-20-filled
+          i-clarity:pinned-solid
+      .flex-1
+      button.btn.btn-md.join-item.text-lg(
+        class="hover:btn-error"
+        @click="pulses.length = 0")
+        title="Clear pulses"
+        i-mdi:clear-box
 
-  //- ScrollAreaRoot(class="overflow-hidden")
-    ScrollAreaViewport(class="w-full h-full rounded border")
-      pre asdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdj
-    ScrollAreaScrollbar( orientation="horizontal")
+
+div.h-fulls.flex-1.items-center.flex.justify-center(v-if="!pulses.length")
+  pre Add pulses...
 
 
-.sticky.pt-4.top-14.z-10
-  .size-24.bg-red-400
+//- MeasurementsMeta block
+.pt-2.top-12.z-10.inline-block.max-w-full(
+  v-if="pulses.length"
+  :class="[config.pinMeasurements && 'sticky']")
+  .scroll-ml-6.snap-x.flex.w-auto.space-x-3.p-2.overflow-y-auto.-ml-2
+    MeasurementMeta( 
+      class="snap-start scroll-ml-2"
+      v-for="m in pulsesStore.allMeasurements" :key="m.id" v-bind="{ m }")
 
-.container.fixed.bottom-0.px-2.-ml-2.z-10
+
+.container.fixed.bottom-0.px-2.-ml-2.z-10(
+  v-if="pulses.length"
+  )
   .flex.w-full.bg-base-300.my-4.ring-4.ring-base-300.rounded-box(v-if="pulses.length")
     div.h-2.text-xs.text-secondary-content.text-center.rounded-box(
       class="bg-base-content/20 hover:ring-1 ring-base-content/50 cursor-grab active:cursor-grabbing"
@@ -86,7 +90,7 @@
       )
 
       
-.relative
+.relative.mt-8.mb-12
   div.w-full.relative.select-none(ref="wrapper")
     svg.w-full.absolute.inset-0.pointer-events-none.select-none.touch-none.-z-10.overflow-visible(
       v-if="pulses.length > 0"
@@ -94,7 +98,30 @@
       :viewBox="`${-ZT.x} -1 ${viewStore.wrapperBounds.width} ${viewStore.wrapperBounds.height || 100}`"
       :height="viewStore.wrapperBounds.height"
       )
-    //- PulsesViewerRow(v-bind="{ pulses,  }")
+
+      g.ticks( v-if="ticks" )
+        g( v-for="tick in ticks" :key="tick" )
+          path(
+            class="stroke-base-content/20"
+            stroke-dasharray="8 10"
+            stroke-width="1"
+            :d="`M ${viewStore.xScale(tick)*ZT.k} 20 V${viewStore.wrapperBounds.height || 0}`")
+          text.fill-base-content.text-xs(
+            :x="viewStore.xScale(tick)*ZT.k"
+            :transform-origin="`${viewStore.xScale(tick)} 0`"
+            dy="0"
+            :transform="`scale(${1},1)`"
+            dominant-baseline="hanging"
+            text-anchor="middle"
+            ) {{ tick/1000 }}
+      path(
+        :d="`M ${(viewStore.state.cursor.xCom)   } 0 V${viewStore.wrapperBounds.height || 0}`"
+        stroke-dasharray="8 10"
+        class="stroke-1 stroke-base-content/60"
+        )
+      foreignObject.overflow-visible(:x="viewStore.state.cursor.xCom" y="-29" width="100%" height="100%")
+        div.btn.btn-xs.absolute(class="-translate-x-1/2") {{ viewStore.state.cursor.xLabel/1000 }} ms
+
     draggable(
         :component-data="{ tag: 'div', type: 'transition-group', name: ('flip-list' && !drag) }"
         class="list-group"
@@ -120,6 +147,7 @@ import draggable from "vuedraggable"
 
 import { useElementBounding } from "@vueuse/core"
 import { useViewStore, usePulsesStore } from "@/models"
+import useConfigStore from "@/stores/config";
 
 const props = defineProps({
   session: {
@@ -131,6 +159,8 @@ const props = defineProps({
     default: {},
   },
 })
+
+const { config } = useConfigStore()
 
 const tmpPulsesString = ref(Array.from({ length: 120 }, () => Math.floor(Math.random() * 950) + 50).join(","))
 
@@ -160,6 +190,10 @@ function zoomOut() {
   viewStore.state.ZT.animateTo(newZT)
 }
 
+const ticks = computed(() => {
+  return ZT.rescaleX(viewStore.xScale).ticks(6)
+})
+
 const dragOptions = {
   animation: 250,
   // group: "description",
@@ -168,6 +202,9 @@ const dragOptions = {
 }
 
 const drag = ref(false)
+
+const pinMeasurements = ref(false)
+
 </script>
 
 <style>

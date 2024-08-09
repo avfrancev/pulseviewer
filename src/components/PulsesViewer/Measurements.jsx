@@ -123,8 +123,11 @@ const Measurement = {
     useGesture(
       {
         onDrag: (e) => {
+          if (e.event.pressure === 0) return
+          
           props.viewStore.state.cursor.x = e.event.clientX - props.viewStore.wrapperBounds.left
           e.event.stopImmediatePropagation()
+          props.viewStore.state.gestures.state.drag.cancel()
           // let dx = props.viewStore.xScale.invert(e.delta[0]/props.viewStore.state.ZT.k - props.viewStore.xScale(props.pulses.xOffset + props.pulsesStore.minX))
           let dx = (props.viewStore.pixelRatio * e.delta[0]) / props.viewStore.state.ZT.k
           // console.log(m);
@@ -140,30 +143,35 @@ const Measurement = {
       },
     )
 
-    useHover(
-      (e) => {
+    useGesture({
+      onHover: (e) => {
         let hasClass = e.event.relatedTarget?.classList?.contains("join")
         if (hasClass) return
         m.isHovered = e.hovering
-      },
-      {
-        domTarget: groupRef,
-      },
+      }
+    },
+    {
+      domTarget: groupRef,
+    }
     )
 
-    watchEffect(() => {
-      if (m.isHovered) groupRef.value.focus({ preventScroll: true, focusVisible: false })
-      // console.log(m.isHovered);
-      // if (m.isDragging) {
-      //   m.isHovered = true
-      // }
-    })
+    // watchEffect(() => {
+    //   if (m.isHovered) groupRef.value.focus({ preventScroll: true, focusVisible: false })
+    //   // console.log(m.isHovered);
+    //   // if (m.isDragging) {
+    //   //   m.isHovered = true
+    //   // }
+    // })
 
     // const pixelRatio = computed(() => m.scaledWidth / props.viewStore.wrapperBounds.width)
     // watchEffect(() => {
     //   console.log(props.viewStore.wrapperBounds.width, m.scaledWidth, props.viewStore.wrapperBounds.width / m.scaledWidth);
     // })
     const k = computed(() => ((10 / m.scaledWidth) * 100) / props.viewStore.state.ZT.k)
+
+    watchEffect(() => {
+      m.rectRef = groupRef.value
+    })
 
     return () =>
       h(

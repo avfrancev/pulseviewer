@@ -2,20 +2,26 @@ import { usePulsesStore } from "@/models"
 import { v4 as uuidv4 } from "uuid"
 
 export default defineStore("sessions", () => {
+  
   const sessions = reactive([])
 
-  function addSession(id = null) {
-    let session = {
+  function createSession(id = null) {
+    return {
       // id: sessionsCounter++,
       id: id || uuidv4(),
       remove() {
-        usePulsesStore(session.id).remove()
-        // console.log(usePulsesStore(session.id).$dispose());
+        usePulsesStore(this.id).remove()
         sessions.splice(sessions.indexOf(this), 1)
-        // console.log(sessions.length);
       },
     }
-    sessions.push(session)
+  }
+
+  function addSession(id = null, prepand = false) {
+    const s = sessions.find((s) => s.id === id)
+    if (s) return s
+    let session = createSession(id)
+    if (prepand) sessions.unshift(session)
+    else sessions.push(session)
     return session
   }
 
@@ -29,8 +35,6 @@ export default defineStore("sessions", () => {
 
   if (sessionsStorage.value.length) {
     sessionsStorage.value.forEach((v) => addSession(v.id))
-  } else {
-    addSession()
   }
 
   function clearSessions() {
@@ -38,9 +42,16 @@ export default defineStore("sessions", () => {
     sessions.length = 0
   }
 
+  function removeSessionById(id) {
+    let idx = sessions.indexOf(sessions.find((s) => s.id === id))
+    if (idx === -1) return
+    sessions.splice(idx, 1)
+  }
+
   return {
     sessions,
     addSession,
     clearSessions,
+    removeSessionById,
   }
 })

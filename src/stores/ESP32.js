@@ -1,5 +1,4 @@
-import { defineStore } from "pinia"
-import { useConfigStore } from "./index"
+import useConfigStore from "./config"
 
 function parse_rmt_buffer(data) {
   let arr, dur, i, j, level, ref1, x1, x16_t, x2
@@ -44,18 +43,14 @@ function parse_rmt_message_t(data) {
   }
 }
 
-export default defineStore("ESP32RMT", () => {
-  const configStore = useConfigStore()
+export default defineStore("ESP32", () => {
+  const { config } = useConfigStore()
 
   const wsData = reactive([])
 
-  let ws = null
-
-  // const ws = useWebSocket('ws://192.168.1.145/ws', {
-  // const ws = useWebSocket(configStore.storage.esp32ApiEndpint, {
   const wsOptions = {
     heartbeat: { interval: 5000, pongTimeout: 2000, },
-    immediate: false,
+    immediate: config.useESP32,
     autoReconnect: {
       retries: 5, delay: 1000,
       onFailed() { setTimeout(() => { ws.open() }, 20000) },
@@ -64,41 +59,22 @@ export default defineStore("ESP32RMT", () => {
       console.warn("WebSocket connected!")
       ws.binaryType = "arraybuffer"
     },
-    // onDisconnected: () => console.warn('WebSocket disconnected'),
+    onDisconnected: () => console.warn('WebSocket disconnected'),
     // onError: () => console.warn('WebSocket ERROR'),
     onMessage: (ws, event) => {
-      // console.log({ws, event});
       if (event.data instanceof ArrayBuffer) {
         const parsedRMT = parse_rmt_message_t(event.data)
-        // console.log({length, delta, rssi, buf, parsed_buf});
-        // console.log({ ...parsedRMT })
-        // wsData.push(parsedRMT)
         store.addWSData(parsedRMT)
       }
     },
   }
 
-  // console.log(ws);
-  watch(
-    () => [configStore.storage.useESP32Api, configStore.storage.esp32ApiEndpint],
-    () => {
-      // console.log(configStore.storage.useESP32Api, configStore.storage.esp32ApiEndpint)
-      if (configStore.storage.useESP32Api) {
-        ws?.close()
-        ws = useWebSocket(configStore.storage.esp32ApiEndpint, wsOptions)
-        ws.ws.value = new WebSocket(configStore.storage.esp32ApiEndpint)
-        // console.log('open ws');
-        // console.log("url",ws.ws.value?.url);
-        // ws.ws.value.url = configStore.storage.esp32ApiEndpint
-        // console.log(ws.ws.value);
-        ws.open()
-      } else if (!configStore.storage.useESP32Api) {
-        // console.log('close ws');
-        ws?.close()
-      }
-    },
-    { immediate: true },
-  )
+  const esp32WSEndpoint = computed(() => config.esp32WSEndpoint)
+  let ws = useWebSocket(esp32WSEndpoint, wsOptions)
+
+  watch(() => config.useESP32, () => {
+    config.useESP32 ? ws.open() : ws.close()
+  })
 
   function addWSData(data) {
     wsData.push(data)

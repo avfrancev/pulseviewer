@@ -16,7 +16,8 @@
       @mouseleave="isHovered = false",
       )
       //- :class="isHovered && `outline-1 outline-dashed outline-base-content/40`"
-      .join.join-verticals.absolute.left-0.top-0.pr-12s.z-10.shadow-lg(class="-translate-y-full -translate-x-full1" v-show="isHovered")
+      .join.join-verticals.absolute.left-0.top-0.pr-12s.z-10.shadow-lg(
+        class="-translate-y-full bg-base-300" v-show="isHovered")
         button.join-item.btn.btn-sm.btn-square.drag-handle(
           class="cursor-grab active:cursor-grabbing"
           )
@@ -43,9 +44,30 @@
               i-fa:close          
         button.join-item.btn.btn-sm.btn-square(@click="pulses.measurements.addMeasurement(0,pulses[pulses.length-1].time)" title="Measure all")
           i-fluent-emoji-high-contrast:orange-square
-        button.join-item.btn.btn-sm.btn-square(@click.stop="pulses.xOffset = 0" title="Reset offset")
+        button.join-item.btn.btn-sm.btn-square(
+          :disabled="pulses.xOffset === 0"
+          @click.stop="pulses.xOffset = 0" title="Reset offset")
           i-ph:align-left-fill
-        button.join-item.btn.btn-sm.btn-square.btn-error(@click.stop="pulsesStore.removePulses(pulses)" title="Remove pulses")
+
+        PopoverRoot
+          PopoverTrigger.join-item.btn.btn-square.btn-sm(aria-label="Copy to session" title="Copy to session")
+            i-material-symbols:copy-all
+          PopoverContent(
+            side="bottom"
+            :side-offset="2"
+            class="bg-base-300 menu rounded z-30 p-0 shadow-lg"
+            )
+            //- li: button.btn.btn-xs.text-left(v-for="s in copyToSessionMenu" :key="s.id" @click="s.action") to {{ s.label }}
+            PopoverClose
+              li: a.text-xs.px-2.py-1.rounded(v-for="s in copyToSessionMenu" :key="s.id" @click="s.action") to {{ s.label }}
+            PopoverArrow(class="fill-base-300")
+
+        //- button.join-item.btn.btn-sm.btn-square(@click="copyToSession(pulses)" title="Copy to session")
+          i-material-symbols:copy-all
+          //- pre CP
+        button.join-item.btn.btn-sm.btn-square(
+          class="hover:btn-error"
+          @click.stop="pulsesStore.removePulses(pulses)" title="Remove pulses")
           i-tabler:trash
   
       .relative.overflow-hidden
@@ -143,7 +165,7 @@
         //- pre {{ [measurementsWithHints[0].scaledMinX, viewStore.xScale(pulses.xOffset)] }}
 
         
-        //- .top-0.absolute(
+        .top-0.absolute(
           :style="{width: `${chartElBounds.width.value * ZT.k }px`, transform: `translate3d(${ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}"
           )
           div.absolute.top-0.select-none(
@@ -161,40 +183,53 @@
             div(class="-translate-x-full p-1")
               PopoverRoot(
                 :modal="false"
+                :open="m.tooltipIsOpened"
+                @update:open="(v) => m.tooltipIsOpened"
                 )
+                //- :open="m.tooltipIsOpened"
                 PopoverTrigger(
+                  @click="m.tooltipIsOpened = !m.tooltipIsOpened"
                   :style="`left: ${m.scaledMaxX*ZT.k}px`"
                   class="relative btn btn-sm btn-ghost btn-square")
                   //- i-mdi:more-circle
                   //- i-tabler:wave-sine
-                  i-fa6-solid:wave-square
+                  //- i-fa6-solid:wave-square
+                  i-material-symbols:more-vert
                   //- button. ASDAS
                 PopoverPortal
-                  PopoverContent.PopoverContent(
-                    class="text-xs z-20 data-[side=bottom]:animate-slideUpAndFade data-[side=right]:animate-slideLeftAndFade data-[side=left]:animate-slideRightAndFade data-[side=top]:animate-slideDownAndFade min-w-[300px] rounded-md bg-base-300 p-5 shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] data-[state=open]:transition-all"
-                    align="end"
-                    :side-offset="-5"
+                  PopoverContent(
+                    class="text-xs z-20 bg-base-300 rounded p-2 shadow-lg overflow-y-auto max-h-[200px]"
+                    align="center"
+                    :side-offset="0"
+                    :modal="true"
                     side="top"
                     :avoidCollisions="true"
                     sticky="partial"
                     updatePositionStrategy="optimized"
+                    @interactOutside="m.tooltipIsOpened = false"
                     :style="`max-width: ${viewStore.wrapperBounds.width}px`"
                     :collision-boundary="viewStore.wrapper"
                     )
-                    button.btn(@click="console.log(m.decoder)") LOG
-                    button.btn(@click="m.showBitsToggle") show bits {{ m.showBits }}
-                    input.toggle(type="checkbox" v-model="m.showBits")
-                    button.btn(@click="m.copyToClipboard") copyToClipboard
-                    div(v-if="m.decoder.hasHints")
-                    
-                      pre.text-error(v-if="m.showBits && m.decoder.sliceGuess.hints.length > 500") More than 500 bits
-                      pre #[b Modulation]: [ {{ m.decoder.guess.modulation }} ]
-                      pre #[b Guessing modulation]: {{ m.decoder.guess.name }}
-                      pre #[b DC bias (Pulse/Gap skew)]: {{ (m.decoder.analizer?.pulse_gap_skew * 100 || 0).toFixed(1) }}%
-                      p.break-words #[b RfRaw (rx)]: {{ m.decoder.analizer.rfrawB1 }}
-                      p.break-words #[b RfRaw (tx)]: {{ m.decoder.analizer.rfrawB0 }}
-                      pre.text-balance #[b Bits]: {{ m.decoder.sliceGuess.bits?.toHexString() }}
-                      //- pre.text-xs(@click="console.log(m.decoder)") {{ m.decoder }}
+                    //- @mouseleave="m.tooltipIsOpened = false"
+                    div.flex.-mx-2.-mt-2.join
+                      button.join-item.btn.btn-sm(@click="m.copyToClipboard()")
+                        i-heroicons-solid:clipboard-copy
+                      button.join-item.btn.btn-sm(@click="m.showBitsToggle") show bits {{ m.showBits }}
+                      
+                      //- input.toggle(type="checkbox" v-model="m.showBits")
+                      //- .flex-1
+                      //- button.btn(@click="m.copyToClipboard") copyToClipboard
+                    div(class="mt-2 max-w-lg max-h-full overflow-auto")
+                      div(v-if="m.decoder.hasHints")
+                        pre.text-error(v-if="m.showBits && m.decoder.sliceGuess.hints.length > 500") More than 500 bits
+                        pre #[b Modulation]: [ {{ m.decoder.guess.modulation }} ]
+                        pre #[b Guessing modulation]: {{ m.decoder.guess.name }}
+                        pre #[b DC bias (Pulse/Gap skew)]: {{ (m.decoder.analizer?.pulse_gap_skew * 100 || 0).toFixed(1) }}%
+                        pre #[b RfRaw (rx)]: {{ m.decoder.analizer.rfrawB1 }}
+                        pre #[b RfRaw (tx)]: {{ m.decoder.analizer.rfrawB0 }}
+                        pre.text-balances #[b Bits]: {{ m.decoder.sliceGuess.bits?.toHexString() }}
+                        //- .overflow-x-scroll(class="max-h-[300px] max-w-[300px]")
+                        //- p.break-wordss #[b RfRaw (tx)]: {{ m.decoder.analizer.rfrawB0 }}
                     PopoverArrow(class="fill-base-300") 
   
     //- pre {{ measurementsWithHints2.length }}
@@ -275,7 +310,11 @@ import { useGesture, useHover } from "@vueuse/gesture"
 import { line, curveStepAfter } from "d3-shape"
 import { scaleLinear } from "d3-scale"
 
+import useSessionStore from "@/stores/sessions"
+import useConfigStore from "@/stores/config"
+
 import { PulsesMeasurements } from "./Measurements"
+import { usePulsesStore } from "@/models"
 
 const props = defineProps({
   pulses: {
@@ -297,11 +336,8 @@ const chartElWrapper = ref(null)
 const chartElBounds = useElementBounding(chartEl)
 
 const componentId = "chart_" + props.pulses.iid
-
-// watchEffect(() => {
-//   console.log(props.pulses);
-// })
-
+const sessionsStore = useSessionStore()
+const { config } = useConfigStore()
 const yScale = scaleLinear([0, 1], [20, 90])
 
 const { ZT } = props.viewStore.state
@@ -523,4 +559,25 @@ useGesture(
     },
   },
 )
+
+function copyToSession(_pulses, sessionId) {
+  const ps = usePulsesStore(sessionId)
+  ps.loadPulses([_pulses], false)
+}
+
+const copyToSessionMenu = computed(() => {
+  return sessionsStore.sessions
+    .map((s,i) => {
+      let label = props.pulsesStore.uuid === s.id ? "Current" : `Session #${i + (config.useESP32 ? 0 : 1)}`
+      if (s.id === "ESP32") label = "ESP32"
+      return {
+        id: s.id ,
+        label,
+        action: () => {
+          copyToSession(props.pulses, s.id)
+        },
+      }
+    })
+})
+
 </script>

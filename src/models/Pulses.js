@@ -70,6 +70,7 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
     // props.viewStore.xScale(props.pulses.xOffset*ZT.k + props.pulsesStore.minX)
     m.showBits = ref(false)
     m.showBitsToggle = () => (m.showBits = !m.showBits)
+    m.tooltipIsOpened = false
     m.width = computed(() => m.maxX - m.minX)
     m.scaledX1 = computed(() => viewStore.xScale(m.x1))
     m.scaledX2 = computed(() => viewStore.xScale(m.x2))
@@ -115,6 +116,12 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
       let newX = -((m.scaledMinX - (w * 0.1) / 2) * z.k)
       newX -= viewStore.xScale(pulses.xOffset + pulsesMinX.value) * z.k
       viewStore.state.ZT.animateTo({ k: z.k, x: newX })
+      if (m.rectRef) {
+        // m.rectRef.focus({ preventScroll: true, focusVisible: false })
+        // console.log( m.rectRef.scrollTo());
+        
+        m.rectRef.scrollIntoView({ block: "center" })
+      }
       // animate({
       //   from: {k: viewStore.state.ZT.k, x: viewStore.state.ZT.x},
       //   to: {k: z.k, x: newX},
@@ -239,8 +246,8 @@ export default (uuid = 0) => {
   watchDebounced(pulsesOffsetsX, throttledSaveToLocalStorage, { ...debounceOptions })
   watchDebounced(pulses, throttledSaveToLocalStorage, { ...debounceOptions })
 
-  function loadPulses(_pulses = []) {
-    pulses.length = 0
+  function loadPulses(_pulses = [], resetState = true) {
+    if (resetState) pulses.length = 0
     _pulses.forEach((p) => {
       if (!p.raw_data) return
       let _p = addPulses(p.raw_data)
@@ -256,6 +263,7 @@ export default (uuid = 0) => {
   }
 
   return {
+    uuid,
     addPulses,
     removePulses,
     remove,
