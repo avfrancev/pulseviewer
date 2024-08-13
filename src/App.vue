@@ -82,7 +82,7 @@
               input#esp32WSEndpoint.input.input-sm(type="text" v-model.lazy="config.esp32WSEndpoint")
           PopoverArrow(class="fill-base-300")
 
-  .flex.flex-col.flex-1(v-if="currentSession")
+  div(v-if="currentSession")
     PulsesViewerRoot(v-bind="{session: currentSession, sessionsStore}" :key="currentSession.id")
 </template>
 
@@ -100,10 +100,10 @@ const sessionsStore = useSessions()
 const { sessions } = sessionsStore
 const { config } = useConfig()
 
-const hasESP32Session = computed(() => sessions.some(session => session.id === 'ESP32'))
+const hasESP32Session = computed(() => sessions.some((session) => session.id === "ESP32"))
 
-if ( !sessions.length || sessions.length === 1 && hasESP32Session.value ) {
-  console.log('no sessions');
+if (!sessions.length || (sessions.length === 1 && hasESP32Session.value)) {
+  console.log("no sessions")
   sessionsStore.addSession()
 }
 
@@ -111,17 +111,15 @@ if ( !sessions.length || sessions.length === 1 && hasESP32Session.value ) {
 //   console.log('has ESP32 session');
 //   sessionsStore.addSession()
 // }
-  
-const currentSession = ref(sessions[0])
 
+const currentSession = ref(sessions[0])
 
 watchEffect(() => {
   if (config.useESP32) {
-    sessionsStore.addSession('ESP32', true)
+    sessionsStore.addSession("ESP32", true)
   } else {
-    sessionsStore.removeSessionById('ESP32')
-    if (currentSession.value.id === 'ESP32')
-      currentSession.value = sessions[0] || sessionsStore.addSession()
+    sessionsStore.removeSessionById("ESP32")
+    if (currentSession.value.id === "ESP32") currentSession.value = sessions[0] || sessionsStore.addSession()
   }
 })
 
@@ -136,13 +134,13 @@ function removeSession(session) {
 
 const ESP32Store = useESP32()
 
-const isESP32Paused = useStorage('isESP32Paused', false)
+const isESP32Paused = useStorage("isESP32Paused", false)
 
 ESP32Store.$onAction(({ name, args }) => {
   if (name !== "addWSData" || isESP32Paused.value) return
   let data = args[0]
   // console.log(name, data);
-  const pulsesStore = usePulsesStore('ESP32')
+  const pulsesStore = usePulsesStore("ESP32")
   let p = pulsesStore.pulses[pulsesStore.pulses.length - 1]
   if (data.delta > 200_000) {
     p = pulsesStore.addPulses(data.parsed_buf)
@@ -154,8 +152,6 @@ ESP32Store.$onAction(({ name, args }) => {
   }
   p.raw_data = [...p.raw_data, ...data.parsed_buf]
 })
-
-
 </script>
 
 <style lang="sass">

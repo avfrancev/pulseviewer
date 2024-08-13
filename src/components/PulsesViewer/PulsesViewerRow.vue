@@ -132,6 +132,79 @@
             marker-end='url(#head)'
             :d="`M${arrows.x1},96 L${arrows.x3},96`")
 
+        //- g.bits(
+          v-for="m in measurementsWithHints"
+          :key="m.id"
+          :transform="`translate(${viewStore.xScale(m.pulsesInRange[0].time)},0)`"
+          )
+          //- path.stroke-1.stroke-blue-400(:d="m.path")
+        g.bits.pointer-events-none1(
+          v-for="m in pulses.measurements.filter(m => m.decoder.sliceGuess?.hints?.length)"
+          :key="m.id"
+          :transform="`translate(${viewStore.xScale(m.pulsesInRange[0].time)},91)`"
+          )
+          g()
+            path(
+              class="stroke-2 stroke-red-600"
+              :d="m.decoder.sliceGuess.LA.map((h,i) => `M${h[3]},0 V-300`).join('')"
+              )
+            path(
+              class="stroke-1 stroke-green-400"
+              :d="m.decoder.sliceGuess.bb.map(h => `M${h[0]},0 V20 M${h[1]},0 V20`).join('')"
+              )
+            text(
+              class="fill-green-100 font-bold text-xss"
+              dy="-15"
+              :transform="`scale(${1/ZT.k},1)`"
+              text-anchor="middle"
+              dominant-baseline="hanging"
+              ) 
+              tspan(
+                v-for="(h,i) in m.decoder.sliceGuess.bb"
+                :key="i"
+                :x="`${(h[0] + (h[1]-h[0])/2)*ZT.k}`"
+              ) {{ parseInt(h[2],2).toString(16).toUpperCase() }}
+              //- {{ m.decoder.sliceGuess.bb.join('') }}
+              //- :textLength="m.rangeScaledWidth*ZT.k"
+              //- :x="m.scaledMinX*ZT.k"
+              //- tspan(
+                v-for="(h,i) in m.decoder.sliceGuess.hints.filter((h,i) => i%8 == 0)"
+                :key="i"
+                :x="`${(h[3] )*ZT.k}`"
+                ) {{ m.decoder.sliceGuess.bits.bytes[i].toString(16)}}
+              //- tspan {{ m.decoder.sliceGuess.bits.bytes.filter(b => +b > 0) }}
+              //- tspan.stroke-1.stroke-green-600(
+                v-for="(b,i) in m.decoder.sliceGuess.bits.bytes.filter(b => +b >= 0)"
+                :key="i"
+                :x="`${( m.decoder.sliceGuess.hints[(i)*7][3] )*ZT.k}`"
+                ) {{ b.toString(16).toUpperCase()}}
+                //- ) {{ m.decoder.sliceGuess.hints[i*4][3]}}
+
+          g(
+            v-if="m.decoder.sliceGuess?.hints?.length && ((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length > 9"
+            )
+            path(
+              class="stroke-1 stroke-base-content/20"
+              :d="m.decoder.sliceGuess.hints.map(h => `M${h[3]},0 V20 M${h[4]},0 V20`).join('')")
+            //- text.fill-accent(:x="m.scaledMinX*ZT.k" y="20"
+              :transform="`scale(${1/ZT.k},1)`"
+              dominant-baseline="hanging" text-anchor="middle") {{ m.decoder.sliceGuess?.hints[m.decoder.sliceGuess?.hints.length - 1] }}
+            text(
+              class="fill-base-content/60 text-xs"
+              dy="5"
+              :transform="`scale(${1/ZT.k},1)`"
+              text-anchor="middle"
+              dominant-baseline="hanging"
+              )
+              //- :x="m.scaledMinX*ZT.k"
+              tspan(
+                v-for="(h,i) in m.decoder.sliceGuess.hints"
+                :key="i"
+                :x="`${(h[3] + (h[4] - h[3])/2)*ZT.k}`"
+                ) {{ h[2]}}
+                //- :dx="`${100 / m.decoder.sliceGuess?.hints.length}%`"
+                //- :x="viewStore.xScale(m.pulsesInRange[0].time + h[0] + ((h[1] || h[0]) - h[0])/2)*ZT.k"
+
         //- foreignObject(
           v-for="m in measurementsWithHints"
           :key="m.id"
@@ -199,15 +272,16 @@
                 //- button. ASDAS
               PopoverPortal
                 PopoverContent(
-                  class="text-xs z-20 bg-base-300 rounded p-2 shadow-lg overflow-y-auto max-h-[220px]"
+                  class="text-xs z-20 bg-base-300 rounded p-2 shadow-lg overflow-y-auto max-h-[250px]"
                   align="center"
                   :side-offset="0"
-                  :modal="true"
+                  :modal="false"
                   side="top"
                   :avoidCollisions="true"
+                  :collisionBoundary="'app'"
                   sticky="partial"
-                  updatePositionStrategy="optimized"
-                  :style="`max-width: ${viewStore.wrapperBounds.width}px`"
+                  :prioritizePosition="false"
+                  updatePositionStrategy="always"
                   :collision-boundary="viewStore.wrapper"
                   @interactOutside="m.tooltipIsOpened = false"
                   @mouseleave="m.tooltipIsOpened = false"
@@ -217,27 +291,39 @@
                     button.join-item.btn.btn-sm(@click="m.rawPulsesClipboard.copy()")
                       i-heroicons-solid:clipboard-copy(v-if="!m.rawPulsesClipboard.copied")
                       i-heroicons-solid:clipboard-check(v-else)
-                    button.join-item.btn.btn-sm(@click="console.log(m)") LOG
+                    button.join-item.btn.btn-sm(@click="console.log(m)") m
+                    button.join-item.btn.btn-sm(@click="console.log(m.decoder)") m.decoder
                     button.join-item.btn.btn-sm(@click="m.showBitsToggle") show bits {{ m.showBits }}
                     
                     //- input.toggle(type="checkbox" v-model="m.showBits")
                     //- .flex-1
                     //- button.btn(@click="m.copyToClipboard") copyToClipboard
-                  div(class="mt-2 max-w-lg max-h-full overflow-auto")
+                  div(class="mt-2 max-w-lg")
                     div.text-nowrap(v-for="h in histogramTimings" :key="h.key")
                       p.inline {{ h.name }}: 
-                      p.inline-block.mr-3(v-for="b,i in m.decoder.analizer[h.key].bins" :key="i") {{ b.count }} × {{b.mean.toFixed(1)}} #[small ±{{b.devi.toFixed(1)}}] µs 
-                    .divider.my-0
-                    div(v-if="m.decoder.hasHints")
+                      p.inline-block.mr-3(v-for="b,i in m.decoder.analyzer[h.key].bins" :key="i") {{ b.count }} × {{b.mean.toFixed(1)}} #[small ±{{b.devi.toFixed(1)}}] µs 
+                    //- .divider.my-0
+                    //- div(v-if="m.decoder")
                       pre.text-error(v-if="m.showBits && m.decoder.sliceGuess.hints.length > 500") More than 500 bits
-                      pre #[b Modulation]: [ {{ m.decoder.guess.modulation }} ]
+                      button.btn.btn-xs(
+                        v-for="s in m.decoder.slicers"
+                        :key="s"
+                        @click="() => m.decoder.guess.modulation = s") {{ s }}
+                      p.font-mono
+                        | #[b Modulation]:
+                        | [ {{ m.decoder.analyzer.guessed.modulation }} ]
+                        | {{ m.decoder.analyzer.guessed.short && 'short: ' + m.decoder.analyzer.guessed.short.toFixed(1) }}
+                        | {{ m.decoder.analyzer.guessed.long && 'long: ' + m.decoder.analyzer.guessed.long.toFixed(1) }}
+                        | {{ m.decoder.analyzer.guessed.sync && 'sync: ' + m.decoder.analyzer.guessed.sync.toFixed(1) }}
+                        | {{ m.decoder.analyzer.guessed.gap && 'gap: ' + m.decoder.analyzer.guessed.gap.toFixed(1) }}
+                        | {{ m.decoder.analyzer.guessed.reset && 'reset: ' + m.decoder.analyzer.guessed.reset.toFixed(1) }}
                       pre #[b Guessing modulation]: {{ m.decoder.guess.name }}
-                      pre #[b DC bias (Pulse/Gap skew)]: {{ (m.decoder.analizer?.pulse_gap_skew * 100 || 0).toFixed(1) }}%
-                      pre #[b RfRaw (rx)]: {{ m.decoder.analizer.rfrawB1 }}
-                      pre #[b RfRaw (tx)]: {{ m.decoder.analizer.rfrawB0 }}
+                      pre #[b DC bias (Pulse/Gap skew)]: {{ (m.decoder.analyzer?.pulse_gap_skew * 100 || 0).toFixed(1) }}%
+                      pre #[b RfRaw (rx)]: {{ m.decoder.analyzer.rfrawB1 }}
+                      pre #[b RfRaw (tx)]: {{ m.decoder.analyzer.rfrawB0 }}
                       pre.text-balances #[b Bits]: {{ m.decoder.sliceGuess.bits?.toHexString() }}
                       //- .overflow-x-scroll(class="max-h-[300px] max-w-[300px]")
-                      //- p.break-wordss #[b RfRaw (tx)]: {{ m.decoder.analizer.rfrawB0 }}
+                      //- p.break-wordss #[b RfRaw (tx)]: {{ m.decoder.analyzer.rfrawB0 }}
                   PopoverArrow(class="fill-base-300") 
 
   //- pre {{ measurementsWithHints2.length }}
@@ -373,108 +459,6 @@ const svgViewBox = computed(() => {
 
 const isHovered = ref(false)
 
-useHover(
-  (s) => {
-    // isHovered.value = s.hovering
-  },
-  {
-    domTarget: chartElWrapper,
-  },
-)
-
-const measurementsInViewport = computed(() => {
-  return props.pulses.measurements.filter((m) => {
-    let offset = props.viewStore.xScale(props.pulses.xOffset)
-    return props.viewStore.isRangeInView(m.scaledMinX + offset, m.scaledMaxX + offset)
-  })
-})
-
-const measurementsWithHints = computed(() => {
-  return props.pulses.measurements
-    .filter((m) => m.showBits)
-    .filter((m) => {
-      let offset = props.viewStore.xScale(props.pulses.xOffset)
-      return props.viewStore.isRangeInView(m.scaledMinX + offset, m.scaledMaxX + offset)
-    })
-})
-
-const measurementsWithHints2 = computedWithControl(
-  () => measurementsWithHints.value.length,
-  () => {
-    // console.log("AKJSLKDAS");
-    // return []
-    let o = measurementsWithHints.value.filter((m) => m.decoder.hasHints && m.showBits)
-    o.forEach((m) => {
-      // console.log(m);
-      m.t0 = computed(() => props.pulses[m.rangeIds[0]].time - m.minX)
-      // m.t0 = computed(() => props.pulses[m.rangeIds[0]].time)
-      m.pixel = computed(() => {
-        // console.log(((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length);
-        // console.log({...m.decoder.guess}, props.viewStore.pixelRatio);
-        // console.log(m.decoder.guess.gap / props.viewStore.pixelRatio * ZT.k);
-        return ((m.decoder.guess?.gap || m.decoder.guess?.long) / props.viewStore.pixelRatio) * ZT.k
-        return ((m.rangeWidth / props.viewStore.pixelRatio) * ZT.k) / m.decoder.sliceGuess?.hints?.length
-      })
-      // m.decoderStyles = computed(() => {
-      //   return {
-      //     width: `${m.scaledWidth * ZT.k}px`,
-      //     transform: `translate3d(${m.scaledMinX * ZT.k}px, 0px, 0px)`,
-      //   }
-      // })
-    })
-    return o
-  },
-)
-
-const decoders = computed(() => {
-  return measurementsWithHints.value.map((m_) => {
-    const m = props.pulses.measurements.find((m) => m.id === m_.id)
-    const styles = computed(() => {
-      console.log("======")
-      return {
-        width: `${m.scaledWidth * ZT.k}px`,
-        transform: `translate3d(${m.scaledMinX * ZT.k}px, 0px, 0px)`,
-      }
-    })
-    const hints = computed(() => {
-      const t0 = props.pulses[m.rangeIds[0]].time - m.minX
-      return m.decoder.sliceGuess.hints.map((h) => [
-        ...h,
-        {
-          left: `${((t0 + h[0]) / m.width) * 100}%`,
-          width: `${((h[1] - h[0]) / m.width) * 100}%`,
-        },
-      ])
-    })
-    return {
-      id: m.id,
-      styles,
-      hints,
-    }
-    return computed(() => {
-      let d = { m }
-      d.id = m.id
-      d.styles = {
-        width: `${m.scaledWidth * ZT.k}px`,
-        transform: `translate3d(${m.scaledMinX * ZT.k}px, 0px, 0px)`,
-      }
-      // :style="{ left: `${( pulses[d.value.m.rangeIds[0]].time - d.m.minX + h[0])/m.width*100}%`, width: `${(h[1]-h[0])/d.m.width*100}%` }"
-      const t0 = props.pulses[m.rangeIds[0]].time - m.minX
-
-      d.hints = m.decoder.sliceGuess.hints.map((h) => [
-        ...h,
-        {
-          left: `${((t0 + h[0]) / m.width) * 100}%`,
-          width: `${((h[1] - h[0]) / m.width) * 100}%`,
-        },
-      ])
-      console.log("+++")
-      return d
-    })
-  })
-  // return o
-})
-
 const dataUnderCursor = computed(() => props.pulses[props.pulses.dataIDUnderCursor])
 
 const arrows = computed(() => {
@@ -574,25 +558,27 @@ function copyToSession(_pulses, sessionId) {
 }
 
 const copyToSessionMenu = computed(() => {
-  return sessionsStore.sessions
-    .map((s,i) => {
-      let label = props.pulsesStore.uuid === s.id ? "Current" : `Session #${i + (config.useESP32 ? 0 : 1)}`
-      if (s.id === "ESP32") label = "ESP32"
-      return {
-        id: s.id ,
-        label,
-        action: () => {
-          copyToSession(props.pulses, s.id)
-        },
-      }
-    })
+  return sessionsStore.sessions.map((s, i) => {
+    let label = props.pulsesStore.uuid === s.id ? "Current" : `Session #${i + (config.useESP32 ? 0 : 1)}`
+    if (s.id === "ESP32") label = "ESP32"
+    return {
+      id: s.id,
+      label,
+      action: () => {
+        copyToSession(props.pulses, s.id)
+      },
+    }
+  })
 })
 
 const histogramTimings = [
-  { name: 'Pulses', key: 'hist_pulses' },
-  { name: 'Gaps', key: 'hist_gaps' },
-  { name: 'Periods', key: 'hist_periods' },
-  { name: 'Timings', key: 'hist_timings' },
+  { name: "Pulses", key: "hist_pulses" },
+  { name: "Gaps", key: "hist_gaps" },
+  { name: "Periods", key: "hist_periods" },
+  { name: "Timings", key: "hist_timings" },
 ]
 
+// const measurementsWithHints = computed(() => {
+//   return props.pulses.measurements.filter((m) => m.decoder.sliceGuess?.hints?.length)
+// })
 </script>

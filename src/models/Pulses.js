@@ -34,25 +34,135 @@ function parsePlainArr(arr, startLevel = 0) {
   })
 }
 
-function getDecoder(m) {
+function getDecoder(m, viewStore) {
   // console.log(props.measurements[0].pulsesInRangeRaw);
-  const analizer = computedWithControl(
+  const analyzer = computedWithControl(
     () => m.pulsesInRangeRaw.length,
-    () => (m.pulsesInRangeRaw.length > 10 ? new Analyzer(m.pulsesInRangeRaw) : null),
+    () => {
+      if (m.pulsesInRangeRaw.length < 10) return null
+      const a = new Analyzer(m.pulsesInRangeRaw)
+      a.guessed = a.guess()
+      return a
+    },
+    // () => (m.pulsesInRangeRaw.length > 10 ? new Analyzer(m.pulsesInRangeRaw) : null),
   )
-  const guess = computed(() => analizer.value?.guess() || null)
-  const sg = computed(() => guess.value && sliceGuess(m.pulsesInRangeRaw, guess.value))
+  // console.log(analyzer.value.guess())
+
+  const slicers = ["PCM", "PWM", "PPM", "MC", "DM", "NRZI", "CMI", "PIWM"]
+  const pickedSlicer = ref(null)
+  // const guess = computed(() => analyzer.value?.guess() || null)
+  const guess = ref({})
+
+  watch(
+    [analyzer, pickedSlicer],
+    () => {
+      guess.value = analyzer.value?.guess() || {}
+      if (pickedSlicer.value) guess.value.modulation = pickedSlicer.value
+    },
+    { immediate: true },
+  )
+  // const guess = analyzer.value?.guess()
+  // guess.value.modulation = "PPM"
+  // console.log(guess)
+  pickedSlicer.value = analyzer.value?.guess()?.modulation || null
+
+  const sg = computed(() => {
+    const o = sliceGuess(m.pulsesInRangeRaw, guess.value)
+    o.hints?.forEach((h) => {
+      let scaledX1 = viewStore.xScale(h[0])
+      let scaledX2 = viewStore.xScale(h[1] || h[0])
+      h[3] = scaledX1
+      h[4] = scaledX2
+    })
+
+    let xp = null
+    o.LA = []
+    o.bb = []
+    let tmps = ""
+    let startID = null
+
+    for (let j = 0; o.hints && j < o.hints.length; j += 1) {
+      const hint = o.hints[j]
+      const x0 = hint[0] // start pos
+      const x1 = hint[1] // end pos
+      const s = hint[2] // symbol
+      // let blya = xp != x0 && ((xp && xp >= 0) || xp >= 0)
+      let blya = xp != x0 && ((xp && xp >= 0) || x0 >= 0)
+
+      let hasBreak = false
+
+      if (xp != x0 || s === "X") {
+        console.warn("BREAK", j)
+        o.LA.push(o.hints[j])
+        hasBreak = true
+
+        if ((xp && xp >= 0) || x0 >= 0) {
+          // console.log(j, "xp && xp >= 0", xp, x0, o.hints[j])
+          // startID = null
+          // tmps = ""
+        }
+        // if (x0 >= 0) {
+        //   // console.log(j, "x0 >= 0", x0)
+        //   o.LA.push(o.hints[j])
+        // }
+      }
+      xp = x1
+
+      if (s === "1" || s === "0") {
+        // o.hints[j][5] =
+        if (startID === null) startID = j
+        // if (j === 0) console.log({ s }, startID)
+        // if (blya) startID = j
+        tmps += s
+        if (tmps.length >= 8 || (hasBreak && j > 0)) {
+          if (hasBreak && j > 0) {
+            tmps = tmps.substring(0, tmps.length - 1)
+          }
+          o.hints[j][5] = tmps
+          o.bb.push([o.hints[startID][3], hasBreak ? o.hints[j][3] : o.hints[j][4], tmps])
+          // console.log(hasBreak, startID, j, tmps, parseInt(tmps, 2).toString(16), o.bb)
+          tmps = ""
+          startID = null
+          if (hasBreak) {
+            tmps = s
+            startID = j
+            hasBreak = false
+          }
+        }
+      }
+    }
+    console.log(o)
+
+    // for (let j = 0; this.data.hints && j < this.data.hints.length; j += 1) {
+    //     const hint = this.data.hints[j]
+    //     const x0 = hint[0] * scale + scroll // start pos
+    //     const x1 = hint[1] * scale + scroll // end pos
+    //     if (xp != x0) {
+    //         if (xp && xp >= 0 && xp < width) {
+    //             ctx.moveTo(~~xp - 0.5, this.yHintLo - 0.5)
+    //             ctx.lineTo(~~xp - 0.5, this.yHintHi + 0.5)
+    //         }
+    //         if (x0 >= 0 && x0 < width) {
+    //             ctx.moveTo(~~x0 - 0.5, this.yHintLo - 0.5)
+    //             ctx.lineTo(~~x0 - 0.5, this.yHintHi + 0.5)
+    //         }
+    //     }
+    //     xp = x1
+    // }
+
+    return o
+  })
   // watchEffect(() => {
   //   guess.value
-  //   // console.log("analizer has changed")
+  //   // console.log("analyzer has changed")
   // })
   const hasHints = computed(() => sg.value?.hints?.length > 0)
-  // console.log({ analizer: analizer.value, guess: guess.value, sliceGuess: sg.value })
+  // console.log({ analyzer: analyzer.value, guess: guess.value, sliceGuess: sg.value })
   // console.log(sg.value?.bits?.toHexString())
 
   // if (!sg.value.hints?.length)
   //   return null
-  return { analizer, guess, sliceGuess: sg, hasHints }
+  return { analyzer, guess, sliceGuess: sg, hasHints, slicers, pickedSlicer }
 }
 
 let measurementsCounter = 0
@@ -85,12 +195,15 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
       // () => m.pulsesInRange[m.rangeIds[1]].time - m.pulsesInRange[m.rangeIds[0]].time,
       () => m.pulsesInRange[m.pulsesInRange.length - 1]?.time - m.pulsesInRange[0]?.time,
     )
+    m.rangeScaledWidth = computed(
+      () => viewStore.xScale(m.pulsesInRange[m.pulsesInRange.length - 1]?.time) - viewStore.xScale(m.pulsesInRange[0]?.time),
+    )
     m.pulsesInRangeRaw = computed(() => pulses.raw_data.slice(...m.rangeIds))
     m.Nfalling = computed(() => m.pulsesInRange.filter((d) => d.level === 0).length)
     m.Nrising = computed(() => m.pulsesInRange.filter((d) => d.level === 1).length)
     m.minmaxFreq = computed(() => extent(m.pulsesInRange, (d) => d.width))
     m.averageTime = computed(() => m.pulsesInRange.reduce((acc, curr) => acc + curr.width, 0) / m.pulsesInRange.length)
-    m.decoder = getDecoder(m)
+    m.decoder = getDecoder(m, viewStore)
     m.q = computed(() =>
       quantile(
         m.pulsesInRange.map((d) => d.width),
@@ -102,7 +215,7 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
     m.remove = () => {
       measurements.removeMeasurement(m.id)
     }
-    m.rawPulsesClipboard = useClipboard({ source: computed(() => m.pulsesInRangeRaw.map((v, i) => (i % 2 ? `${v}\n` : `${v}`)).join(" "))})
+    m.rawPulsesClipboard = useClipboard({ source: computed(() => m.pulsesInRangeRaw.map((v, i) => (i % 2 ? `${v}\n` : `${v}`)).join(" ")) })
     // m.copyToClipboard = () => {
     //   // const pulses = arr.map(d => d.width).map((v,i) => i % 2 ? `${v}\n` : v).join(' ')
     //   const o = m.pulsesInRangeRaw.map((v, i) => (i % 2 ? `${v}\n` : `${v}`)).join(" ")
@@ -112,25 +225,13 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
     m.locate = () => {
       let w = m.scaledMaxX - m.scaledMinX
       let z = zoomIdentity.scale((viewStore.wrapperBounds.width / w) * 0.9)
-      // viewStore.state.ZT.k = z.k
-      // viewStore.state.ZT.x = - ((m.scaledMinX - w/2*0.1 )*z.k)
       let newX = -((m.scaledMinX - (w * 0.1) / 2) * z.k)
       newX -= viewStore.xScale(pulses.xOffset + pulsesMinX.value) * z.k
       viewStore.state.ZT.animateTo({ k: z.k, x: newX })
       if (m.rectRef) {
-        // m.rectRef.focus({ preventScroll: true, focusVisible: false })
-        // console.log( m.rectRef.scrollTo());
-        
-        m.rectRef.scrollIntoView({ block: "center" })
+        // BUG: Has bug without setTimeout
+        setTimeout(() => m.rectRef.scrollIntoView({ block: "center" }), 300)
       }
-      // animate({
-      //   from: {k: viewStore.state.ZT.k, x: viewStore.state.ZT.x},
-      //   to: {k: z.k, x: newX},
-      //   ease: easeInOut,
-      //   onUpdate: (v) => {
-      //     Object.assign(viewStore.state.ZT, v)
-      //   }
-      // })
     }
     m.changeColor = () => {
       m.color = getRandomNotUsedColor(colors)

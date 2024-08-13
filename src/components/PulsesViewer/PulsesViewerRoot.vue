@@ -60,20 +60,32 @@
       .flex-1
       button.btn.btn-md.join-item.text-lg(
         class="hover:btn-error"
-        @click="pulses.length = 0")
         title="Clear pulses"
+        @click="pulses.length = 0")
         i-mdi:clear-box
 
 
 div.h-fulls.flex-1.items-center.flex.justify-center(v-if="!pulses.length")
   pre Add pulses...
-
+  button.btn.btn-md.btn-block(@click="pulsesStore.loadPulses(sampleData)") add samaple data
 
 //- MeasurementsMeta block
-.pt-2.top-12.z-10.inline-block.max-w-full(
+.pt-2.top-12.z-20.inline-block.max-w-full(
   v-if="pulses.length"
   :class="[config.pinMeasurements && 'sticky']")
   .scroll-ml-6.snap-x.flex.w-auto.space-x-3.p-2.overflow-y-auto.-ml-2
+    MeasurementMeta( 
+      class="snap-start scroll-ml-2"
+      v-for="m in pulsesStore.allMeasurements" :key="m.id" v-bind="{ m }")
+
+//- div
+  .size-24.bg-green-400
+
+//- .pt-2.top-12.z-20.inline-blocks.max-w-fullx.overflow-y-auto.float-left(
+  v-if="pulses.length"
+  :class="[config.pinMeasurements && 'sticky']")
+  .size-24.bg-green-400
+  //- .scroll-ml-6.snap-x.inline-flex.w-auto.space-x-3.p-2.-ml-2
     MeasurementMeta( 
       class="snap-start scroll-ml-2"
       v-for="m in pulsesStore.allMeasurements" :key="m.id" v-bind="{ m }")
@@ -147,16 +159,17 @@ import draggable from "vuedraggable"
 
 import { useElementBounding } from "@vueuse/core"
 import { useViewStore, usePulsesStore } from "@/models"
-import useConfigStore from "@/stores/config";
+import sampleData from "@/stores/sample_data.json"
+import useConfigStore from "@/stores/config"
 
 const props = defineProps({
   session: {
     type: Object,
-    default: {},
+    default: () => {},
   },
   sessionsStore: {
     type: Object,
-    default: {},
+    default: () => {},
   },
 })
 
@@ -203,8 +216,8 @@ const dragOptions = {
 
 const drag = ref(false)
 
-const pinMeasurements = ref(false)
-
+// console.log(pulsesStore)
+// pulsesStore.loadPulses(sampleData)
 </script>
 
 <style>
