@@ -6,5 +6,21 @@
   "printWidth": 140,
   "trailingComma": "all",
   "arrowParens": "always",
-  "no-undef": "off"
+  "no-undef": "off",
+  "bracketSpacing": true,
+  "vueIndentScriptAndStyle": true,
+  "pugFramework": "vue",
+  "pugExplicitDiv": true,
+  "pugCommentPreserveSpaces": "keep-all",
+  "pugAttributeSeparator": "none",
+  "pugSingleFileComponentIndentation": false,
+  "pugWrapAttributesThreshold": 1,
+  "pugSortAttributesBeginning": [
+    "^class$", "^:class$"
+  ],
+  "pugClassNotation": "attribute",
+  "pugIdNotation": "literal",
+  "pugBracketSameLine": true,
+  "pugBracketSpacing": false,
+  "plugins": ["@prettier/plugin-pug"]
 }

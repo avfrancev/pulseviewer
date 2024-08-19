@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AddPulsesModal: typeof import('./src/components/PulsesViewer/AddPulsesModal.vue')['default']
     DialogClose: typeof import('radix-vue')['DialogClose']
     DialogContent: typeof import('radix-vue')['DialogContent']
     DialogDescription: typeof import('radix-vue')['DialogDescription']
@@ -19,8 +20,6 @@ declare module 'vue' {
     'IBi:zoomOut': typeof import('~icons/bi/zoom-out')['default']
     'IClarity:pinnedSolid': typeof import('~icons/clarity/pinned-solid')['default']
     'IFa:close': typeof import('~icons/fa/close')['default']
-    'IFa6Solid:waveSquare': typeof import('~icons/fa6-solid/wave-square')['default']
-    'IFluent:phoneSpanOut28Filled': typeof import('~icons/fluent/phone-span-out28-filled')['default']
     'IFluentEmojiHighContrast:orangeSquare': typeof import('~icons/fluent-emoji-high-contrast/orange-square')['default']
     'IHeroiconsSolid:clipboardCheck': typeof import('~icons/heroicons-solid/clipboard-check')['default']
     'IHeroiconsSolid:clipboardCopy': typeof import('~icons/heroicons-solid/clipboard-copy')['default']
@@ -43,7 +42,6 @@ declare module 'vue' {
     'IPh:plus': typeof import('~icons/ph/plus')['default']
     'IPh:sunBold': typeof import('~icons/ph/sun-bold')['default']
     'IPh:x': typeof import('~icons/ph/x')['default']
-    'IRadixIcons:clipboardCopy': typeof import('~icons/radix-icons/clipboard-copy')['default']
     'ITabler:trash': typeof import('~icons/tabler/trash')['default']
     'ITwemoji:raccoon': typeof import('~icons/twemoji/raccoon')['default']
     MeasurementMeta: typeof import('./src/components/PulsesViewer/MeasurementMeta.vue')['default']

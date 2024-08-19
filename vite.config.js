@@ -16,7 +16,7 @@ import { viteSingleFile } from "vite-plugin-singlefile"
 import { compression } from "vite-plugin-compression2"
 import RadixVueResolver from "radix-vue/resolver"
 
-let buildForESP32 = false // single file with gzip
+const buildForESP32 = process.env.ESP32 // single file with gzip
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -40,7 +40,7 @@ export default defineConfig({
       extensions: ["vue", "md", "js"],
       include: [/\.vue$/, /\.vue\?vue/, /\.js$/],
       dts: "./components.d.ts",
-      dirs: ['src/components', 'src/modules'],
+      dirs: ["src/components", "src/modules"],
       resolvers: [
         RadixVueResolver(),
         IconsResolver({

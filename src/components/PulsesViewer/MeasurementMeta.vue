@@ -1,71 +1,69 @@
 <template lang="pug">
-.bg-base-300.text-sm.box-border.flex.p-3.py-3.rounded(
-  :class="[m.isHovered && 'ring ring-secondary/50']"
-  v-hover="(e) => {m.isHovered = e.hovering}"
-  )
-  //- pre {{ m.bits }}
-  //- pre {{ m.bytes?.map(b => b.toString(2).padStart(8, '0')).join(' ') }}
-  //- pre {{ m.bytes?.map(b => '' + b.toString(16).padStart(2, '0')).join(' ') }}
-  //- pre {{ m.reversedBytes?.map(b => '' + b.toString(16).padStart(2, '0')).join(' ') }}
-  .wrapper.flex.transition-all(:ref="(e) => m.measurementCardRef = e")
-    .main.flex.flex-col
-      .flex.items-baseline.space-x-3
-        button(@click="m.changeColor" class="size-4 rounded-full" :style="{'background-color': m.color}")
+div(
+  class="text-sm box-border flex p-3 py-3 rounded bg-base-300/70 backdrop-blur-sm hover:backdrop-blur-lg transition-all duration-200"
+  :class="[m.isHovered && 'ring ring-secondary/50', config.pinMeasurements && 'shadow-lg']"
+  v-hover="(e) => { m.isHovered = e.hovering }")
+  div(class="wrapper flex transition-all" :ref="(e) => (m.measurementCardRef = e)")
+    div(class="main flex flex-col")
+      div(class="flex items-baseline space-x-3")
+        button(
+          class="size-4 rounded-full"
+          @click="m.changeColor"
+          :style="{'background-color': m.color}")
         pre #[small Δ]T
-        pre.text-right.flex-1: b {{ m.width?.toFixed() }} µs
-      .grid.grid-cols-2.flex-1.items-center
+        pre: b {{m.width?.toFixed()}} µs
+      div(class="[&>*:nth-child(even)]:text-right flex-1 grid grid-cols-2 items-center")
         pre N#[sub pulses]
-        pre.text-right: b {{ m.pulsesInRange.length }}
+        pre: b {{m.pulsesInRange.length}}
         pre N#[sub falling]
-        pre.text-right: b {{ m.Nfalling }}
+        pre: b {{m.Nfalling}}
         pre N#[sub rising]
-        pre.text-right: b {{ m.Nrising }}
+        pre: b {{m.Nrising}}
         //- pre {{ m.rangeIds }}
         pre #[i &#402;]#[sub min]
-        pre.text-right: b {{ m.minmaxFreq[0] }} µs
+        pre: b {{m.minmaxFreq[0]}} µs
         pre #[i &#402;]#[sub max]
-        pre.text-right: b {{ m.minmaxFreq[1] }} µs
+        pre: b {{m.minmaxFreq[1]}} µs
         //- pre {{ m.averageTime }}
         pre #[i &#402;]#[sub baud]
-        pre.text-right: b {{ m.baud }}
-      .join.flex.mt-2
-        button.join-item.btn-xs.btn.flex-1(@click="m.locate")
+        pre: b {{m.baud}}
+      div(class="join flex mt-2")
+        button(class="join-item btn-xs btn flex-1" @click="m.locate")
           i-lucide:locate-fixed
-        button.join-item.btn-xs.btn.flex-1(
-          @click="m.remove"
-          class="hover:btn-error")
+        button(class="join-item btn-xs btn flex-1 hover:btn-error" @click="m.remove")
           i-tabler:trash
-        button.join-item.btn-xs.btn.flex-1(@click="m.descOpened = !m.descOpened")
+        button(class="join-item btn-xs btn flex-1" @click="m.descOpened = !m.descOpened")
           i-mingcute:right-fill(v-if="!m.descOpened")
           i-mingcute:left-fill(v-if="m.descOpened")
-    .ml-4.more.flex.flex-col.overflow-hidden.max-w-lg.overflow-x-auto.text-xs(v-show="m.descOpened")
-      //- button.btn(@click="console.log(m)") logasdasdasdasdlogasdasdasdasdlogasdasdasdasd
-      //- button.btn(@click="console.log(m)") logasdasdasdasdlogasdasdasdasdlogasdasdasdasd
-      .flex.join
-        button.join-item.btn.btn-xs(
+    //- div(class="flex flex-col" v-show="m.descOpened")
+      div(class="ml-4 mb-2 join flex justify-stretch")
+        button(
+          class="join-item btn btn-xs"
+          :class="{'btn-active btn-secondary': m.decoder.pickedSlicer === s}"
           v-for="s in m.decoder.slicers"
           :key="s"
-          :class="{ 'btn-active': m.decoder.pickedSlicer === s }"
-          @click="() => m.decoder.pickedSlicer = s") {{ s }}
-      //- pre {{ m.decoder.analyzer.guessed }}
-      p.font-mono.text-nowrap(v-if="m.decoder.analyzer?.guessed")
-        | #[b Modulation]:
-        | [ {{ m.decoder.analyzer.guessed.modulation }} ]
-        | {{ m.decoder.analyzer.guessed.short && 'short: ' + m.decoder.analyzer.guessed.short.toFixed(1) }}
-        | {{ m.decoder.analyzer.guessed.long && 'long: ' + m.decoder.analyzer.guessed.long.toFixed(1) }}
-        | {{ m.decoder.analyzer.guessed.sync && 'sync: ' + m.decoder.analyzer.guessed.sync.toFixed(1) }}
-        | {{ m.decoder.analyzer.guessed.gap && 'gap: ' + m.decoder.analyzer.guessed.gap.toFixed(1) }}
-        | {{ m.decoder.analyzer.guessed.reset && 'reset: ' + m.decoder.analyzer.guessed.reset.toFixed(1) }}
-      pre #[b Guessing modulation]: {{ m.decoder.guess.name }}
-      pre #[b DC bias (Pulse/Gap skew)]: {{ (m.decoder.analyzer?.pulse_gap_skew * 100 || 0).toFixed(1) }}%
-      pre #[b RfRaw (rx)]: {{ m.decoder.analyzer?.rfrawB1 }}
-      pre #[b RfRaw (tx)]: {{ m.decoder.analyzer?.rfrawB0 }}
-      pre.text-balances #[b Bits]: {{ m.decoder.sliceGuess.bits?.toHexString() }}
+          @click="() => (m.decoder.pickedSlicer = s)") {{s}}
+      div(class="flex-1 ml-4 more flex flex-col overflow-hidden max-w-lg overflow-x-auto text-xs")
+        div(class="flex join")
+        //- pre {{ m.decoder.analyzer.guessed }}
+        p(class="font-mono text-nowrap" v-if="m.decoder.analyzer?.guessed")
+          |#[b Modulation]:
+          | [ {{m.decoder.analyzer.guessed.modulation}} ]
+          | {{m.decoder.analyzer.guessed.short && "short: " + m.decoder.analyzer.guessed.short.toFixed(1)}}
+          | {{m.decoder.analyzer.guessed.long && "long: " + m.decoder.analyzer.guessed.long.toFixed(1)}}
+          | {{m.decoder.analyzer.guessed.sync && "sync: " + m.decoder.analyzer.guessed.sync.toFixed(1)}}
+          | {{m.decoder.analyzer.guessed.gap && "gap: " + m.decoder.analyzer.guessed.gap.toFixed(1)}}
+          | {{m.decoder.analyzer.guessed.reset && "reset: " + m.decoder.analyzer.guessed.reset.toFixed(1)}}
+        pre #[b Guessing modulation]: {{m.decoder.guess.name}}
+        pre #[b DC bias (Pulse/Gap skew)]: {{(m.decoder.analyzer?.pulse_gap_skew * 100 || 0).toFixed(1)}}%
+        pre #[b RfRaw (rx)]: {{m.decoder.analyzer?.rfrawB1}}
+        pre #[b RfRaw (tx)]: {{m.decoder.analyzer?.rfrawB0}}
+        pre(class="text-balances") #[b Bits]: {{m.decoder.sliceGuess?.bits?.toHexString && m.decoder.sliceGuess?.bits?.toHexString()}}
     //- .ml-4.more.transition(v-show="m.descOpened")
       .flex.items-baseline
         pre CKMean clusters:
         //- input.input.input-xs.input-ghost.w-12.bold.flex-none(type="number" v-model.number="m.statistics.ckmeansClustersCount" min="2" max="10")
-        NumberFieldRoot#age(class="ml-2 text-sm ring ring-1 ring-base-content/20 rounded",
+        NumberFieldRoot#age(class="ml-2 text-sm  ring-1 ring-base-content/20 rounded",
           v-model="m.statistics.ckmeansClustersCount" :default-value="3" :min="2" :max="10")
           //- label(for="age") Age
           div(class=" flex items-center rounded-md")
@@ -84,13 +82,16 @@
       button.btn(@click="copyToClipboard(m.pulsesInRange)")
         i-oui:copy-clipboard            
       button.btn(@click="copyToClipboard(buildRTL_433_OOK(m.pulsesInRange))")
-        i-oui:copy-clipboard            
-
+        i-oui:copy-clipboard
 </template>
 
 <script setup>
-const props = defineProps({
-  m: Object,
-  viewStore: Object,
-})
+  const props = defineProps({
+    m: Object,
+    viewStore: Object,
+  })
+
+  import useConfig from "@/stores/config"
+
+  const { config } = useConfig()
 </script>

@@ -1,41 +1,43 @@
 # :raccoon:  RF Pulse Viewer
+App for decode and analyzing RF pulses data. Based on [Pulseplot](https://github.com/triq-org/pulseplot-js/)
 
-Project for viewing and analyzing RF pulses data.
+## Features
+- build with Vue 3 and vitejs
+- compatible for ESP32 with CC1101
 
-## Recommended IDE Setup
+## Installation
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+1. Clone the repository: `git clone https://github.com/your-username/project-name.git`
+2. Install dependencies: `npm install`
+3. Set up environment variables (if necessary): `cp .env.example .env`
+4. Start the project: `npm start`
 
-## Customize configuration
+## Usage
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
+git clone https://github.com/avfrancev/pulseviewer.git
+cd pulseviewer
 pnpm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 pnpm dev
 ```
 
-### Compile and Minify for Production
-
-```sh
+## Building
+``` bash
 pnpm build
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-pnpm test:unit
+## Building for ESP32
+Build as single file with gzip
+``` bash
+pnpm build:esp32
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+## Contributing
 
-```sh
-pnpm lint
-```
+Contributions are welcome! Please follow these guidelines:
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature/your-feature`
+3. Make your changes and commit them: `git commit -m "Add some feature"`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Submit a pull request

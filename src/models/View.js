@@ -29,6 +29,7 @@ export default (key = 0) => {
     return x >= state.viewportLeft && x <= state.viewportRight
   }
   function isRangeInView(x1,x2) {
+    // console.log(x1, state.viewportLeft, x2, state.viewportRight)
     return state.viewportLeft < x2 && x1 < state.viewportRight
   }
 
