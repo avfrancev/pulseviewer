@@ -15,9 +15,9 @@
     pre asdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdj
 div(class="sticky top-2 z-30")
   div(class="overflow-x-auto")
-    div(class="bg-base-300 min-h-0 p-0 flex backdrop-blur-sm bg-base-300/70 rounded-full dark:rounded-lg")
-      pre(@click="console.log(memory)") {{size(memory?.usedJSHeapSize) }}
-      div(class="join bg-base-300")
+    div(class="bg-base-300 min-h-0 p-0 flex backdrop-blur-sm bg-base-300/90 rounded-full dark:rounded-lg")
+      //- pre(@click="console.log(memory)") {{size(memory?.usedJSHeapSize)}}
+      div(class="join")
         AddPulsesModal(v-bind="{pulsesStore}")
         //- Modal
           template(#trigger)
@@ -42,39 +42,39 @@ div(class="sticky top-2 z-30")
         //- button.btn.join-item
           i-fluent:phone-span-out-28-filled
         button(
-          class="btn join-item"
+          class="btn btn-square join-item bg-opacity-0 border-none"
           @click="zoomIn"
           title="Zoom in"
           :disabled="ZT.k >= 1000")
           i-bi:zoom-in
         button(
-          class="btn join-item"
+          class="btn btn-square join-item bg-opacity-0 border-none"
           @click="zoomOut"
           title="Zoom out"
           :disabled="ZT.k <= 1")
           i-bi:zoom-out
         button(
-          class="btn btn-md join-item text-lg"
+          class="btn btn-square btn-md join-item text-lg bg-opacity-0 border-none"
           :disabled="viewStore.state.ZT.k === 1"
           @click="viewStore.state.ZT.animateTo({x: 0, k: 1})"
           title="Reset zoom")
           //- i-material-symbols:reset-focus-outline-rounded.text-lg(:class="{': viewStore.state.ZT.k !== 1}")
           i-material-symbols:zoom-in-map-rounded
         button(
-          class="btn btn-md join-item text-lg"
+          class="btn btn-square btn-md join-item1 text-lg bg-opacity-0 border-none"
           @click="pulses.forEach((p) => (p.xOffset = 0))"
           :disabled="pulses.every((p) => p.xOffset === 0)"
           title="Reset offsets")
           i-ph:align-left-fill 
         button(
-          class="btn btn-md join-item text-lg"
-          :class="[config.pinMeasurements && 'text-accent1 btn-active']"
+          class="btn btn-square btn-md join-item text-lg bg-opacity-0 border-none"
+          :class="[config.pinMeasurements && 'btn-active bg-opacity-100']"
           @click="config.pinMeasurements = !config.pinMeasurements"
           title="Pin measurements")
           i-clarity:pinned-solid
       div(class="flex-1")
       button(
-        class="btn btn-md join-item text-lg hover:btn-error"
+        class="btn btn-square btn-md join-item text-lg bg-opacity-0 border-none hover:btn-error"
         title="Clear pulses"
         @click="pulses.length = 0")
         i-mdi:clear-box
@@ -106,10 +106,14 @@ div(class="h-fulls flex-1 items-center flex justify-center space-x-12" v-if="!pu
 
 //- MeasurementsMeta block
 div(
-  class="pt-2 top-12 z-20 inline-block max-w-full"
+  class="pt-2 top-12 z-20 inline-flex self-start max-w-full"
   :class="[config.pinMeasurements && 'sticky']"
   v-if="pulses.length")
-  div(class="scroll-ml-6 snap-x flex w-auto space-x-3 p-2 overflow-y-auto -ml-2")
+  //- div(class="scroll-ml-6 inline-flex w-full2 space-x-3 p-2 overflow-y-auto -ml-2")
+    //- div(class="bg-base-300 p-20") LKAJSDLKJASLDKAJSLKDJLKAJSDLKJASLDKAJSLKDJL
+    div(class="bg-base-300 p-20") LKAJSDLKJASLDKAJSLKDJLKAJSDLKJASLDKAJSLKDJL
+    div(class="bg-base-300 p-20") LKAJSDLKJASLDKAJSLKDJLKAJSDLKJASLDKAJSLKDJL
+  div(class="scroll-ml-6 flex w-auto space-x-3 p-2 overflow-y-auto -ml-2")
     MeasurementMeta(
       v-for="m in pulsesStore.allMeasurements"
       :key="m.id"

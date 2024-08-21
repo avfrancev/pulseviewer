@@ -1,6 +1,6 @@
 <template lang="pug">
 div(
-  class="text-sm box-border flex p-3 py-3 rounded bg-base-300/70 backdrop-blur-sm hover:backdrop-blur-lg transition-all duration-200"
+  class="text-sm box-border flex p-3 py-3 rounded bg-base-300/90 backdrop-blur transition-all duration-200"
   :class="[m.isHovered && 'ring ring-secondary/50', config.pinMeasurements && 'shadow-lg']"
   v-hover="(e) => { m.isHovered = e.hovering }")
   div(class="wrapper flex transition-all" :ref="(e) => (m.measurementCardRef = e)")
