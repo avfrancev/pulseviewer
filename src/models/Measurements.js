@@ -104,29 +104,8 @@ export function getDecoder(m, viewStore, pulses) {
 
   watchWithFilter(
     () => m.rangeIds,
-    () => {
-      console.log("test")
-
-      analyzerWorker.workerTerminate()
-    },
-    {
-      eventFilter: (newVal, oldVal) => {
-        console.log(newVal, oldVal)
-
-        return newVal[0] != oldVal[0] || newVal[1] != oldVal[1]
-      },
-    },
-    // (e) => {
-    //   console.log(e);
-    //   return true
-    // }
-  )
-
-  watchThrottled(
-    () => m.rangeIds,
     async () => {
-      // if (m.rangeIds[0] == rangeIds[0] && m.rangeIds[1] == rangeIds[1]) return
-      // rangeIds = m.rangeIds
+      // console.log("test")
       analyzerWorker.workerTerminate()
       const result = await analyzerWorker.workerFn(toRaw(pulses.raw_data), m.rangeIds)
       analyzer.value = result.analyzer
@@ -134,10 +113,31 @@ export function getDecoder(m, viewStore, pulses) {
       sg.value = result.sg
     },
     {
-      throttle: 400,
+      eventFilter: (fn, { args }) => {
+        const [oldVal, newVal] = args
+        if (!newVal || !oldVal) return fn()
+        if (newVal[0] != oldVal[0] || newVal[1] != oldVal[1]) fn()
+      },
       immediate: true,
     },
   )
+
+  // watch(
+  //   () => m.rangeIds,
+  //   async () => {
+  //     // if (m.rangeIds[0] == rangeIds[0] && m.rangeIds[1] == rangeIds[1]) return
+  //     // rangeIds = m.rangeIds
+  //     // analyzerWorker.workerTerminate()
+  //     // const result = await analyzerWorker.workerFn(toRaw(pulses.raw_data), m.rangeIds)
+  //     // analyzer.value = result.analyzer
+  //     // guess.value = result.guessed
+  //     // sg.value = result.sg
+  //   },
+  //   {
+  //     throttle: 40,
+  //     immediate: true,
+  //   },
+  // )
 
   // watchThrottled(
   //   () => m.pulsesInRangeRaw.length,
