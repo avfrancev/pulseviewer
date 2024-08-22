@@ -159,12 +159,12 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
           //- :transform="`translate(${viewStore.xScale(m.pulsesInRange[0]?.time) - props.viewStore.xScale(0)},91)`"
           //- :transform="`translate(${viewStore.xScale(0)},91)`")
           //- :transform="`translate(${viewStore.xScale(m.pulsesInRange[0].time + pulses.xOffset)},91)`")
-          path(
-            v-if="m.decoder.analyzerWorker?.workerStatus === 'SUCCESS'"
-            class="stroke-1 stroke-error"
-            :d="m.decoder.bytesHints.map((g) => `M${g.scaledRange[0]},20 V-100 M${g.scaledRange[1]},20 V-100 `).join('')")
-          //- g(v-if="m.decoder.sliceGuess.groups.some((g) => g.bytes.filter(bytesFilter.bind(null, {m, g})).length)")
-          g(v-if="m.decoder.analyzerWorker?.workerStatus === 'SUCCESS'")
+          template(v-if="m.decoder.analyzerWorker?.workerStatus === 'SUCCESS'")
+            path(
+              class="stroke-1 stroke-error"
+              v-if="m.decoder.analyzerWorker?.workerStatus === 'SUCCESS'"
+              :d="m.decoder.bytesHints.map((g) => `M${g.scaledRange[0]},20 V-100 M${g.scaledRange[1]},20 V-100 `).join('')")
+            //- g(v-if="m.decoder.sliceGuess.groups.some((g) => g.bytes.filter(bytesFilter.bind(null, {m, g})).length)")
             path(
               class="stroke-1 stroke-base-content/20"
               v-if="bitsHints.length > 0"
@@ -172,7 +172,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             path(
               class="stroke-1 stroke-info"
               v-if="m.decoder.bytesHints.length > 0"
-              :d="bytesHints.map((h) => `M${h[3]},-20 V20 M${h[4]},-20 V20`).join('')")
+              :d="m.decoder.bytesHints.map(g=>g.bytes).flat().filter(bytesFilter.bind(null, 30)).map((h) => `M${h[3]},-20 V20 M${h[4]},-20 V20`).join('')")
               //- v-if="m.decoder.sliceGuess.groups.some((g) => g.bytes.filter(bytesFilter.bind(null, {m, g})).length)"
             //- g(:transform="`scale(${1 / ZT.k},1)`")
               i-bi:zoom-in(
@@ -180,28 +180,57 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
                 :key="h[0]"
                 :x="`${(h[3] + (h[4] - h[3]) / 2) }`"
                 )
-            g(
+
+            //- template(
+            //- text(
+              :transform="`scale(${1 / ZT.k},1)`"
+              class="fill-white") asd {{m.decoder.bytesHints.map((g) => g.bytes).flat().filter(bytesFilter).length}}
+            text(
               :transform="`scale(${1 / ZT.k},1)`"
               text-anchor="middle"
               dominant-baseline="hanging"
               paint-order="stroke")
-              text(class="fill-base-content/60 text-xs")
-                //- template(
-                  v-for="byte in g.bytes"
-                  :key="g.scaledRange[0]")
-                tspan(
-                  v-for="h in bitsHints"
-                  :data-key="m.firstPulse?.time + h[0]"
-                  :key="m.firstPulse?.time + h[0]"
-                  y="5"
-                  :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2]}}
-                tspan(
-                  class="text-xs font-bold fill-base-content stroke-base-300"
-                  v-for="h in bytesHints"
-                  :key="h[0]"
-                  y="-15"
-                  :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2].toString(16).padStart(2, "0").toUpperCase()}}
-                  //- ) {{h[2]}}
+              tspan(
+                y="-15"
+                class="text-xs font-bold fill-base-content stroke-base-300"
+                v-for="h in m.decoder.bytesHints.map((g) => g.bytes).flat().filter(bytesFilter.bind(null, 30))"
+                :key="h[0]"
+                :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`"
+                ) {{h[2].toString(16).padStart(2, "0").toUpperCase()}}
+              tspan(
+                y="5"
+                class="text-xs fill-base-content/50"
+                v-for="h in m.decoder.bitsHints.filter(bytesFilter.bind(null, 10))"
+                :key="h[0]"
+                :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`"
+                ) {{h[2]}}
+
+
+        //- g(
+          :transform="`translate(${-props.viewStore.xScale(0)},91) scale(${1 / ZT.k},1)`"
+          text-anchor="middle"
+          dominant-baseline="hanging"
+          paint-order="stroke")
+          text(class="fill-base-content/60 text-xs pointer-events-auto")
+            //- template(
+              v-for="byte in g.bytes"
+              :key="g.scaledRange[0]")
+            tspan(
+              v-for="(h, i) in bitsHints"
+              :data-key="h[0]"
+              :key="i + h[0]"
+              y="5"
+              :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2]}}
+            tspan(
+              class="text-xs font-bold fill-base-content stroke-base-300"
+              v-for="(h, i) in bytesHints"
+              :key="i + h[0]"
+              y="-15"
+              :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2].toString(16).padStart(2, "0").toUpperCase()}}
+              //- ) {{h[2]}}
+
+
+
 
               //- text(
                 class="text-xs font-bold fill-base-content stroke-base-300"
@@ -241,15 +270,16 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
         class="top-0 absolute will-change-auto"
         v-for="m in pulses.measurements"
         :key="m.id"
-        :style="{width: `${m.scaledWidth * ZT.k}px`, transform: `translate3d(${m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}"
-        )
+        :style="{width: `${m.scaledWidth * ZT.k}px`, transform: `translate3d(${m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}")
         //- .text-right asd: {{ m.decoder.analyzerWorker.workerStatus === 'RUNNING' }}
-        pre {{ m.decoder.analyzerWorker?.workerStatus }}
+        pre {{m.decoder.analyzerWorker?.workerStatus}}
         Transition(
-          enter-active-class="transition-opacity duration-300" leave-active-class="transition-opacity duration-300" enter-from-class="opacity-0" leave-to-class="opacity-0"
-          )
-          .text-right.p-2(v-if="m.decoder.analyzerWorker.workerStatus !== 'SUCCESS' ")
-            .loading
+          enter-active-class="transition-opacity duration-300"
+          leave-active-class="transition-opacity duration-300"
+          enter-from-class="opacity-0"
+          leave-to-class="opacity-0")
+          div(class="text-right p-2" v-if="m.decoder.analyzerWorker.workerStatus !== 'SUCCESS'")
+            div(class="loading")
       //- div(
         class="top-0 absolute will-change-auto"
         :style="{width: `${chartElBounds.width.value * ZT.k}px`, transform: `translate3d(${ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}")
@@ -485,7 +515,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bitsHints = refThrottled(bitsHints_, 500, true, true)
+  const bitsHints = refThrottled(bitsHints_, 10, true, true)
 
   const bytesHintsSource = computed(() => {
     return props.pulses.measurements.reduce((acc, m) => {
@@ -503,6 +533,19 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bytesHints = refThrottled(bytesHints_, 500, true, true)
+  const bytesHints = refThrottled(bytesHints_, 10, true, true)
 
+  const xOffset = computed(() => {
+    let n = -props.viewStore.xScale(0)
+    n += props.pulses.scaledXOffset / ZT.k
+    return n
+  })
+
+  function bytesFilter(w, h) {
+    // console.log(h,w)
+    const scaleConstraint = (h[4] - h[3]) * ZT.k > w
+    const viewportConstraint = props.viewStore.isRangeInView(xOffset.value + h[3], xOffset.value + h[4])
+
+    return scaleConstraint && viewportConstraint
+  }
 </script>
