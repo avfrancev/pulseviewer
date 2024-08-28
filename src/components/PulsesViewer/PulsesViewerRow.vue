@@ -86,7 +86,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
       pre {{ viewStore.xScale(m.pulsesInRange[0].time) }}
     //- pre(v-for="m in pulses.measurements" :key="m.id") {{ m.decoder.sliceGuess.groups.some(groupsFilter.bind( null, {m})) }}
     //- pre(v-for="m in pulses.measurements" :key="m.id") {{ m.decoder.sliceGuess.groups.some(g => g.bytes.filter(bytesFilter.bind( null, {m, g})).length ) }}
-    pre RSSI: {{pulses.rssi}}
+    //- pre RSSI: {{pulses.rssi}}
     //- pre {{ bitsHints.length }}
     //- div(
       v-for="m in pulses.measurements"
@@ -172,7 +172,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             path(
               class="stroke-1 stroke-info"
               v-if="m.decoder.bytesHints.length > 0"
-              :d="m.decoder.bytesHints.map(g=>g.bytes).flat().filter(bytesFilter.bind(null, 30)).map((h) => `M${h[3]},-20 V20 M${h[4]},-20 V20`).join('')")
+              :d="m.decoder.bytesHints.map((g) => g.bytes).flat().filter(bytesFilter.bind(null, 30)).map((h) => `M${h[3]},-20 V20 M${h[4]},-20 V20`).join('')")
               //- v-if="m.decoder.sliceGuess.groups.some((g) => g.bytes.filter(bytesFilter.bind(null, {m, g})).length)"
             //- g(:transform="`scale(${1 / ZT.k},1)`")
               i-bi:zoom-in(
@@ -185,7 +185,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             //- text(
               :transform="`scale(${1 / ZT.k},1)`"
               class="fill-white") asd {{m.decoder.bytesHints.map((g) => g.bytes).flat().filter(bytesFilter).length}}
-            text(
+            //- text(
               :transform="`scale(${1 / ZT.k},1)`"
               text-anchor="middle"
               dominant-baseline="hanging"
@@ -206,7 +206,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
                 ) {{h[2]}}
 
 
-        //- g(
+        g(
           :transform="`translate(${-props.viewStore.xScale(0)},91) scale(${1 / ZT.k},1)`"
           text-anchor="middle"
           dominant-baseline="hanging"
@@ -228,9 +228,6 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
               y="-15"
               :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2].toString(16).padStart(2, "0").toUpperCase()}}
               //- ) {{h[2]}}
-
-
-
 
               //- text(
                 class="text-xs font-bold fill-base-content stroke-base-300"
@@ -272,7 +269,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
         :key="m.id"
         :style="{width: `${m.scaledWidth * ZT.k}px`, transform: `translate3d(${m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}")
         //- .text-right asd: {{ m.decoder.analyzerWorker.workerStatus === 'RUNNING' }}
-        pre {{m.decoder.analyzerWorker?.workerStatus}}
+        //- pre {{m.decoder.analyzerWorker?.workerStatus}}
         Transition(
           enter-active-class="transition-opacity duration-300"
           leave-active-class="transition-opacity duration-300"
@@ -500,9 +497,11 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
   ]
 
   const bitsHintsSource = computed(() => {
-    return props.pulses.measurements.reduce((acc, m) => {
-      return [...acc, ...(m.decoder?.sliceGuess?.hints || [])]
-    }, [])
+    return props.pulses.measurements
+      .filter((m) => m.decoder.analyzerWorker.workerStatus === "SUCCESS")
+      .reduce((acc, m) => {
+        return [...acc, ...(m.decoder?.sliceGuess?.hints || [])]
+      }, [])
   })
 
   const bitsHints_ = computed(() => {
@@ -515,12 +514,14 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bitsHints = refThrottled(bitsHints_, 10, true, true)
+  const bitsHints = refThrottled(bitsHints_, 100, true, true)
 
   const bytesHintsSource = computed(() => {
-    return props.pulses.measurements.reduce((acc, m) => {
-      return [...acc, ...(m.decoder.bytesHints.map((g) => g.bytes).flat() || [])]
-    }, [])
+    return props.pulses.measurements
+      .filter((m) => m.decoder.analyzerWorker.workerStatus === "SUCCESS")
+      .reduce((acc, m) => {
+        return [...acc, ...(m.decoder.bytesHints.map((g) => g.bytes).flat() || [])]
+      }, [])
   })
 
   const bytesHints_ = computed(() => {
@@ -533,7 +534,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bytesHints = refThrottled(bytesHints_, 10, true, true)
+  const bytesHints = refThrottled(bytesHints_, 100, true, true)
 
   const xOffset = computed(() => {
     let n = -props.viewStore.xScale(0)

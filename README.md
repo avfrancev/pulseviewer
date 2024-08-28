@@ -1,9 +1,13 @@
 # :raccoon:  RF Pulse Viewer
-App for decode and analyzing RF pulses data. Based on [Pulseplot](https://github.com/triq-org/pulseplot-js/)
+App for visualizing and analyzing pulse data. Based on Vue 3, vitejs and [Pulseplot](https://github.com/triq-org/pulseplot-js/)
 
 ## Features
-- build with Vue 3 and vitejs
+- **Interactive Visualizations**. Users can create dynamic plots that allow for zooming and panning, making it easier to analyze specific segments of the data.
+- **Data Handling**. Supports various formats of input data which makes it versatile for different datasets.
 - compatible for ESP32 with CC1101
+- **Data Analysis**. Provides advanced analytics that can be used to identify trends and patterns in the data.
+- **Data Storage**. Supports local storage to store and retrieve data for future analysis.
+- **Responsive**. The app is designed to be responsive and work on all devices.
 
 ## Installation
 
