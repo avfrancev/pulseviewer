@@ -1,18 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%2210 0 100 100%22><text y=%22.90em%22 font-size=%2290%22>🦝</text></svg>"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pulse Viewer</title>
-    <script type="module" crossorigin src="/pulseviewer/assets/index-6QJqv_8x.js"></script>
-    <link rel="stylesheet" crossorigin href="/pulseviewer/assets/index-DVFbn_dn.css">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width" />
+
+    <title>Web Workers basic example</title>
+
+    <link rel="stylesheet" href="style.css" />
   </head>
+
   <body>
-    <div id="app"></div>
+    <h1>Web<br />Workers<br />basic<br />example</h1>
+
+    <div class="controls" tabindex="0">
+      <form>
+        <div>
+          <label for="number1">Multiply number 1: </label>
+          <input type="text" id="number1" value="0" />
+        </div>
+        <div>
+          <label for="number2">Multiply number 2: </label>
+          <input type="text" id="number2" value="0" />
+        </div>
+      </form>
+
+      <p class="result">Result: 0</p>
+    </div>
+    <script src="main.js"></script>
   </body>
 </html>
