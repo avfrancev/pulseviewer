@@ -108,7 +108,7 @@ export default (uuid = 0) => {
     })
     // pulsesStorage.value = out
 
-    // console.log('throttledSaveToLocalStorage');
+    console.log('throttledSaveToLocalStorage');
   }
 
   const throttledSaveToLocalStorage = useDebounceFn(saveToLocalStorage, 100)
@@ -117,8 +117,15 @@ export default (uuid = 0) => {
     return pulses.map((p) => p.xOffset)
   })
 
+  
   const debounceOptions = { debounce: 500, maxWait: 4000 }
-  watchDebounced(allMeasurements, throttledSaveToLocalStorage, { deep: true, ...debounceOptions })
+  // watchDebounced(allMeasurements, throttledSaveToLocalStorage, { deep: true, ...debounceOptions })
+  const measurementsDimensions = computed(() => {
+    return allMeasurements.value.map((m) => {
+      return [m.x1, m.x2]
+    })
+  })
+  watchDebounced(measurementsDimensions, throttledSaveToLocalStorage, { ...debounceOptions })
   watchDebounced(pulsesOffsetsX, throttledSaveToLocalStorage, { ...debounceOptions })
   watchDebounced(pulses, throttledSaveToLocalStorage, { ...debounceOptions })
 
