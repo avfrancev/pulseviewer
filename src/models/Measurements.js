@@ -78,12 +78,16 @@ export function getDecoder(m, viewStore, pulses) {
   const pickedSlicer = ref(null)
 
   const analyzerWorker = useWebWorkerFn(
-    (pulses, rangeIds) => {
+    (pulses, pickedSlicer) => {
       // return []
-      pulses = pulses.slice(...rangeIds)
+      // pulses = pulses.slice(...rangeIds)
       const analyzer = new Analyzer(pulses)
       const guessed = analyzer.guess()
+      // console.log(pickedSlicer);
+      guessed.modulation = pickedSlicer || guessed.modulation
       const sg = sliceGuess(pulses, guessed)
+      // console.log("sg", sg.bits.toHexString());
+      sg.hex = sg.bits.toHexString()
       return { analyzer, guessed, sg }
     },
     {
@@ -103,14 +107,26 @@ export function getDecoder(m, viewStore, pulses) {
   )
 
   watchWithFilter(
-    () => m.rangeIds,
+    () => [m.rangeIds, pickedSlicer.value],
+    // () => m.pulsesInRangeRaw,
     async () => {
-      // console.log("test")
+      // console.log(m.pulsesInRangeRaw);
+
       analyzerWorker.workerTerminate()
-      const result = await analyzerWorker.workerFn(toRaw(pulses.raw_data), m.rangeIds)
+      // const result = await analyzerWorker.workerFn(toRaw(pulses.raw_data), m.rangeIds)
+      const result = await analyzerWorker.workerFn(toRaw(m.pulsesInRangeRaw), pickedSlicer.value)
+      // console.log("result", result.guessed.modulation);
+
+      // result.guessed.
+      
       analyzer.value = result.analyzer
       guess.value = result.guessed
       sg.value = result.sg
+
+      if (!pickedSlicer.value) {
+        pickedSlicer.value = guess.value?.modulation || null
+      }
+      
     },
     {
       eventFilter: (fn, { args }) => {
@@ -122,196 +138,6 @@ export function getDecoder(m, viewStore, pulses) {
     },
   )
 
-  // watch(
-  //   () => m.rangeIds,
-  //   async () => {
-  //     // if (m.rangeIds[0] == rangeIds[0] && m.rangeIds[1] == rangeIds[1]) return
-  //     // rangeIds = m.rangeIds
-  //     // analyzerWorker.workerTerminate()
-  //     // const result = await analyzerWorker.workerFn(toRaw(pulses.raw_data), m.rangeIds)
-  //     // analyzer.value = result.analyzer
-  //     // guess.value = result.guessed
-  //     // sg.value = result.sg
-  //   },
-  //   {
-  //     throttle: 40,
-  //     immediate: true,
-  //   },
-  // )
-
-  // watchThrottled(
-  //   () => m.pulsesInRangeRaw.length,
-  //   () => {
-  //     pulsesInRangeRawLength.value = m.pulsesInRangeRaw.length
-  //   },
-  //   { throttle: 100 },
-  // )
-
-  // const analyzer = computedWithControl(
-  //   () => m.pulsesInRangeRaw.length,
-  //   () => {
-  //     // console.log("analyzer", m.pulsesInRangeRaw.length);
-  //     if (m.pulsesInRangeRaw.length < 10) return null
-  //     const a = new Analyzer(m.pulsesInRangeRaw)
-  //     return a
-  //   },
-  //   // () => (m.pulsesInRangeRaw.length > 10 ? new Analyzer(m.pulsesInRangeRaw) : null),
-  // )
-
-  // const pickedSlicer = ref(null)
-  // const guess = computed(() => analyzer.value?.guess() || null)
-  // const guess = ref({})
-
-  // pickedSlicer.value = analyzer.value?.guess()?.modulation || null
-
-  // const sg = ref(sliceGuess(m.pulsesInRangeRaw, guess.value || analyzer.value.guess()))
-
-  // const { workerFn, workerStatus, workerTerminate } = useWebWorkerFn((a, b) => sliceGuess(a, b), {
-  //   timeout: 50000,
-  //   localDependencies: [sliceGuess, ...Object.entries(pulseplotSlicer).map((d) => d[1]), manchesterAligned, Bitbuffer],
-  // })
-
-  // watch(
-  //   () => [guess.value, viewStore.xScale],
-  //   async () => {
-  //     // console.log("watch", workerStatus.value, m.pulsesInRangeRaw.length);
-  //     // if (workerStatus.value !== "PENDING" ) return
-  //     // console.log("Waiting,,,", m.pulsesInRangeRaw.length);
-  //     workerTerminate()
-
-  //     // if ()
-  //     // sg_.value = await workerFn(m.pulsesInRangeRaw, guess.value)
-
-  //     sg.value = await workerFn(m.pulsesInRangeRaw, toRaw(guess.value))
-  //     // console.log("RESULT",m.pulsesInRangeRaw.length, sg_.value);
-  //     // workerStatus.value = "PENDING"
-  //   },
-  // )
-
-  // const sg_ = computedWithControl(
-  //   () => [guess.value, viewStore.xScale],
-  //   () => {
-  //     return sliceGuess(m.pulsesInRangeRaw, guess.value)
-  //   },
-  // )
-
-  const sg2 = computedWithControl(
-    // watchThrottled(
-    () => [guess.value, viewStore.xScale],
-    // [guess, viewStore.xScale],
-    () => {
-      // console.log(123124)
-      const o = sliceGuess(m.pulsesInRangeRaw, guess.value)
-      const groups = []
-
-      let currGroup = null
-
-      o.hints?.forEach((h, i) => {
-        // let currGroup = groups[groups.length - 1] || {}
-
-        h[3] = viewStore.xScale(h[0])
-        h[4] = viewStore.xScale(h[1] || h[0])
-
-        let prevh = o.hints[i - 1]
-        let hasBreak = !prevh || prevh[1] !== h[0]
-
-        if (hasBreak || h[2] === "X") {
-          currGroup = {
-            bitsHints: [],
-            bbuf: new Bitbuffer(),
-          }
-          groups.push(currGroup)
-        }
-        currGroup.bitsHints.push(h)
-        currGroup.bbuf.pushSymbol(h[2])
-      })
-
-      groups.forEach((g) => {
-        g.range = [g.bitsHints[0][0], g.bitsHints[g.bitsHints.length - 1][1]]
-        g.scaledRange = [g.bitsHints[0][3], g.bitsHints[g.bitsHints.length - 1][4]]
-        g.bytes = g.bbuf.bytes.map((byte, i) => {
-          let startBit = g.bitsHints[i * 8]
-          let endBit = g.bitsHints[i * 8 + 7]
-          if (!endBit) endBit = g.bitsHints[g.bitsHints.length - 1]
-          // endBit ||= g.bitsHints[g.bitsHints.length - 1]
-          let x1 = startBit[0]
-          let x2 = endBit[1]
-          let scaledX1 = startBit[3]
-          let scaledX2 = endBit[4]
-          let o = {
-            x1,
-            x2,
-            byte,
-            scaledX1,
-            scaledX2,
-            bits: [],
-          }
-          for (let j = i * 8; j < i * 8 + 8; j++) {
-            const bit = g.bitsHints[j]
-            if (!bit) break
-            o.bits.push(bit)
-          }
-          o.minScaledBit = median(o.bits, (b) => b[4] - b[3]) || 5
-          return o
-        })
-        g.bytesHints = g.bbuf.bytes.map((byte, i) => {
-          let startBit = g.bitsHints[i * 8]
-          let endBit = g.bitsHints[i * 8 + 7]
-          if (!endBit) endBit = g.bitsHints[g.bitsHints.length - 1]
-          // endBit ||= g.bitsHints[g.bitsHints.length - 1]
-          let x1 = startBit[0]
-          let x2 = endBit[1]
-          let scaledx1 = startBit[3]
-          let scaledx2 = endBit[4]
-          let h = [x1, x2, byte, scaledx1, scaledx2, i * 8, i * 8 + 7]
-          return h
-        })
-      })
-
-      // console.log({ groups })
-
-      const dbf = () => {
-        let a = sg.value?.groups?.filter((g) => {
-          // return true
-          let n = viewStore.xScale(m.pulsesInRange[0].time) - viewStore.xScale(0)
-          n += pulses.scaledXOffset / viewStore.state.ZT.k
-          const viewportConstraint = viewStore.isRangeInView(n + g.scaledRange[0], n + g.scaledRange[1])
-          g.bytesFiltered = g.bytes.filter((byte) => {
-            const widthConstraint = (byte.scaledX2 - byte.scaledX1) * viewStore.state.ZT.k > 30
-            // let n = props.viewStore.xScale(m.pulsesInRange[0].time) - props.viewStore.xScale(0)
-            // n += props.pulses.scaledXOffset / ZT.k
-            const viewportConstraint = viewStore.isRangeInView(n + byte.scaledX1, n + byte.scaledX2)
-            // console.log(123, viewportConstraint && widthConstraint)
-            return viewportConstraint && widthConstraint
-          })
-          return viewportConstraint
-        })
-        // console.log(a);
-
-        return a
-      }
-
-      const dbfThrottled = useThrottleFn(dbf, 1200)
-
-      // const groupsInViewport = ref([])
-      const groupsInViewport = computed(() => {
-        return sg.value?.groups
-        // return dbf()
-      })
-
-      return { ...o, groups, groupsInViewport }
-    },
-    { throttle: 100 },
-  )
-
-  // watch(
-  //   [analyzer, pickedSlicer],
-  //   () => {
-  //     guess.value = analyzer.value?.guess() || {}
-  //     if (pickedSlicer.value) guess.value.modulation = pickedSlicer.value
-  //   },
-  //   { immediate: true },
-  // )
 
   const hasHints = computed(() => sg.value?.hints?.length > 0)
   // console.log({ analyzer: analyzer.value, guess: guess.value, sliceGuess: sg.value })
@@ -390,8 +216,15 @@ export function initMeasurements(pulses, viewStore, pulsesMinX) {
     m.statistics = {}
     m.isCursorsInsideMeasurement = computed(() => m.minX < pulses.cursorX && m.maxX > pulses.cursorX)
     m.rangeIds = computed(() => [pulses.bisectorRef.left(pulses, m.minX), pulses.bisectorRef.left(pulses, m.maxX)])
-    // m.pulsesInRange = computed(() => pulses.slice(...m.rangeIds))
-    m.pulsesInRange = []
+    m.pulsesInRange = computed(() => pulses.slice(...m.rangeIds))
+    m.pulsesInRangeRaw = computed(() => pulses.raw_data.slice(...m.rangeIds))
+    // m.pulsesInRange = []
+    // m.pulsesInRangeRaw = []
+    // watchThrottled(() => m.rangeIds, () => {
+    //   // console.log('rangeIds changed', m.rangeIds);
+    //   m.pulsesInRange = pulses.slice(...m.rangeIds)
+    //   m.pulsesInRangeRaw = pulses.raw_data.slice(...m.rangeIds)
+    // }, {trailing: true, leading: true, throttle: 300, debounce: 100, immediate: true})
     m.firstPulse = computed(() => pulses[m.rangeIds[0]])
     m.lastPulse = computed(() => pulses[m.rangeIds[1]])
     // m.rangeWidth = computed(
@@ -401,8 +234,6 @@ export function initMeasurements(pulses, viewStore, pulsesMinX) {
     m.rangeScaledWidth = computed(
       () => viewStore.xScale(m.pulsesInRange[m.pulsesInRange.length - 1]?.time) - viewStore.xScale(m.pulsesInRange[0]?.time),
     )
-    // m.pulsesInRangeRaw = computed(() => pulses.raw_data.slice(...m.rangeIds))
-    m.pulsesInRangeRaw = []
     m.Nfalling = computed(() => m.pulsesInRange.filter((d) => d.level === 0).length)
     m.Nrising = computed(() => m.pulsesInRange.filter((d) => d.level === 1).length)
     m.minmaxFreq = computed(() => extent(m.pulsesInRange, (d) => d.width))
