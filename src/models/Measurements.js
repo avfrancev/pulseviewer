@@ -283,5 +283,27 @@ export function initMeasurements(pulses, viewStore, pulsesMinX) {
     const index = measurements.findIndex((m) => m.id === id)
     if (index !== -1) measurements.splice(index, 1)
   }
+
+
+  const { data, post, terminate, worker } = useWebWorker('/worker.js')
+
+  post([1,33])
+  // function InlineWorker(code) {
+  //   var URL = (self.URL || self.webkitURL), BlobBuilder = (self.BlobBuilder || self.WebKitBlobBuilder);
+  //   var bb = new BlobBuilder();
+  //   bb.append("(" + code.toString() + ")();");
+  //   var url = URL.createObjectURL(bb.getBlob("application/javascript"));
+  //   var worker = new Worker(url);
+  //   URL.revokeObjectURL(url);
+  //   return worker;
+  // }
+  
+  // var worker = new InlineWorker(function() {
+  //   self.postMessage("hi!");
+  // });
+  // worker.onmessage = function(e) { alert('Worker said: ', e.data); };
+  // worker.postMessage("");
+
   return measurements
 }
+

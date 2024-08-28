@@ -108,7 +108,7 @@ export default (uuid = 0) => {
     })
     // pulsesStorage.value = out
 
-    console.log('throttledSaveToLocalStorage');
+    // console.log('throttledSaveToLocalStorage');
   }
 
   const throttledSaveToLocalStorage = useDebounceFn(saveToLocalStorage, 100)
