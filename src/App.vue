@@ -200,9 +200,9 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
     height: 100%
     display: grid
     &[data-theme='cupcake']
-      background-image: url("corrugation.png")
+      background-image: url("/corrugation.png")
     &[data-theme='dark']
-      background-image: url("fake-brick.png")
+      background-image: url("/fake-brick.png")
 
   #app
     position: relative
