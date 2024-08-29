@@ -19284,6 +19284,14 @@ function interpolateRainbow(t) {
   c.l = 0.8 - 0.9 * ts;
   return c + "";
 }
+function WorkerWrapper(options) {
+  return new Worker(
+    "/pulseviewer/assets/ww1-CbiWglqO.js",
+    {
+      name: options == null ? void 0 : options.name
+    }
+  );
+}
 /**
     @file Bitbuffer JS.
 
@@ -20369,6 +20377,16 @@ function getDecoder(m, viewStore, pulses) {
   const guess = ref(null);
   const sg = ref(null);
   const pickedSlicer = ref(null);
+  const ww2 = useWebWorker(WorkerWrapper);
+  console.log(m.pulsesInRangeRaw);
+  watchEffect(() => {
+    var _a, _b;
+    console.log(ww2.data.value);
+    console.log((_b = (_a = ww2.data.value) == null ? void 0 : _a.sg) == null ? void 0 : _b.hex);
+  });
+  setTimeout(() => {
+    ww2.post({ pulses: m.pulsesInRangeRaw, pickedSlicer: "PWM" });
+  }, 400);
   const analyzerWorker = useWebWorkerFn(
     (pulses2, pickedSlicer2) => {
       const analyzer2 = new Analyzer(pulses2);
@@ -34129,14 +34147,6 @@ const useESP32 = defineStore("ESP32", () => {
   const store = { ws, wsData, addWSData };
   return store;
 });
-function WorkerWrapper(options) {
-  return new Worker(
-    "/pulseviewer/assets/ww1-C9XBB1T0.js",
-    {
-      name: options == null ? void 0 : options.name
-    }
-  );
-}
 const _hoisted_1 = { class: "container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100svw]" };
 const _hoisted_2 = { class: "flex my-4 items-center overflow-x-auto" };
 const _hoisted_3 = { class: "flex items-center mr-4" };
@@ -34212,10 +34222,6 @@ const _sfc_main = {
       }
       p2.raw_data = [...p2.raw_data, ...data.parsed_buf];
     });
-    const ww2 = useWebWorker(WorkerWrapper);
-    console.log(ww2);
-    watchEffect(() => console.log(ww2.data.value));
-    ww2.post([24, 42]);
     return (_ctx, _cache) => {
       const _component_i_twemoji58raccoon = __unplugin_components_0;
       const _component_SelectValue = Uy;
