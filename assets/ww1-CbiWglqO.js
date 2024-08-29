@@ -76,6 +76,7 @@
           the Free Software Foundation, either version 2 of the License, or
           (at your option) any later version.
       */
+  const max_hist_bins = 16;
   class Bin {
     constructor(num) {
       if (typeof num !== "undefined") {
@@ -116,7 +117,6 @@
   }
   class Histogram {
     constructor(data, tolerance = 0.2) {
-      this.max_hist_bins = 16;
       this.bins = [];
       this.histogram_sum(data, tolerance);
     }
@@ -136,7 +136,7 @@
             break;
           }
         }
-        if (bin == this.bins.length && bin < this.max_hist_bins) {
+        if (bin == this.bins.length && bin < max_hist_bins) {
           this.bins.push(new Bin(data[n]));
         }
       }
@@ -486,17 +486,554 @@
       }
     }
   }
-  onmessage = function(e) {
-    console.log(Analyzer);
-    console.log(new Analyzer([24, 24, 24, 44, 25, 54, 5, 235, 235]));
-    console.log("Worker: Message received from main script");
-    const result = e.data[0] * e.data[1];
-    if (isNaN(result)) {
-      postMessage("Please write two numbers");
-    } else {
-      const workerResult = "Result: " + result;
-      console.log("Worker: Posting message back to main script");
-      postMessage(workerResult);
+  /**
+          @file Bitbuffer JS.
+  
+          @author Christian W. Zuckschwerdt <zany@triq.net>
+          @copyright Christian W. Zuckschwerdt, 2020
+          @license
+          This program is free software: you can redistribute it and/or modify
+          it under the terms of the GNU General Public License as published by
+          the Free Software Foundation, either version 2 of the License, or
+          (at your option) any later version.
+      */
+  class Bitbuffer {
+    constructor(bytes = [], len = 0) {
+      if (Array.isArray(bytes)) {
+        this.bytes = bytes;
+        this.len = len || bytes.length * 8;
+      } else {
+        this.fromString(bytes);
+      }
     }
+    fromString(s) {
+      this.bytes = [];
+      this.len = 0;
+      let len = -1;
+      s = s.trim();
+      if (s.startsWith("{")) {
+        const end = s.indexOf("}");
+        if (end < 0) return;
+        len = parseInt(s.slice(1), 10);
+        s = s.slice(end + 1);
+      }
+      if (s.startsWith("0x")) {
+        s = s.slice(2);
+      }
+      for (let c of s) {
+        const n = parseInt(c, 16);
+        this.pushNibble(n);
+      }
+      if (len >= 0)
+        this.len = len;
+    }
+    pushZero() {
+      this.push(0);
+    }
+    pushOne() {
+      this.push(1);
+    }
+    pushSymbol(s) {
+      if (s == "0")
+        this.push(0);
+      else if (s == "1")
+        this.push(1);
+    }
+    push(bit) {
+      bit = bit ? 128 : 0;
+      this.bytes[~~(this.len / 8)] |= bit >> this.len % 8;
+      this.len += 1;
+    }
+    pushNibble(n) {
+      for (let j = 3; j >= 0; --j) {
+        this.push(n >> j & 1);
+      }
+    }
+    pushByte(n) {
+      for (let j = 7; j >= 0; --j) {
+        this.push(n >> j & 1);
+      }
+    }
+    pushBreak() {
+      const b = ~~((this.len + 7) / 8);
+      this.bytes[b] = -1;
+      this.len = (b + 1) * 8;
+    }
+    toBitArray() {
+      let bits = [];
+      for (let j = 0; j < this.len; ++j) {
+        const byte = this.bytes[~~(j / 8)] || 0;
+        const bit = byte >> 7 - j % 8 & 1;
+        bits.push(bit);
+      }
+      return bits;
+    }
+    toHexString() {
+      let s = `{${this.len}}`;
+      for (let j = 0; j < this.len; j += 8) {
+        const b = this.bytes[~~(j / 8)] || 0;
+        if (b < 0) {
+          s += " / ";
+        } else {
+          s += " ";
+          s += (b >> 4).toString(16).toUpperCase();
+          if (j + 4 < this.len)
+            s += (b & 15).toString(16).toUpperCase();
+        }
+      }
+      return s;
+    }
+  }
+  /**
+          @file Pulse Slicer JS.
+  
+          @author Christian W. Zuckschwerdt <zany@triq.net>
+          @copyright Christian W. Zuckschwerdt, 2020
+          @license
+          This program is free software: you can redistribute it and/or modify
+          it under the terms of the GNU General Public License as published by
+          the Free Software Foundation, either version 2 of the License, or
+          (at your option) any later version.
+      */
+  function sliceGuess(pulses, guess) {
+    if (guess.modulation == "PCM")
+      return slicePCM(pulses, guess);
+    else if (guess.modulation == "MC")
+      return sliceMC(pulses, guess);
+    else if (guess.modulation == "PPM")
+      return slicePPM(pulses, guess);
+    else if (guess.modulation == "PWM")
+      return slicePWM(pulses, guess);
+    else if (guess.modulation == "DM")
+      return sliceDM(pulses, guess);
+    else if (guess.modulation == "NRZI")
+      return sliceNRZI(pulses, guess);
+    else if (guess.modulation == "CMI")
+      return sliceCMI(pulses, guess);
+    else if (guess.modulation == "PIWM")
+      return slicePIWM(pulses, guess);
+    else
+      return [];
+  }
+  function slicePCM(pulses, guess) {
+    if (!guess.long || guess.long == guess.short) {
+      return sliceNRZ(pulses, guess);
+    } else {
+      return sliceRZ(pulses, guess);
+    }
+  }
+  function sliceNRZ(pulses, guess) {
+    const short = guess.short;
+    const gap = guess.gap;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    for (let j = 0; j < pulses.length; j += 1) {
+      const symbol = 1 - j % 2;
+      const w = pulses[j];
+      if (gap && w > gap) {
+        bits.pushBreak();
+      } else {
+        const cnt = ~~(w / short + 0.5);
+        for (let k = 0; k < cnt; ++k) {
+          hints.push([x + w / cnt * k, x + w / cnt * (k + 1), symbol]);
+          bits.push(symbol);
+        }
+      }
+      x += w;
+    }
+    return { hints, bits };
+  }
+  function sliceRZ(pulses, guess) {
+    const short = guess.short;
+    const long = guess.long;
+    const gap = guess.gap;
+    const shortl = short * 0.5;
+    const shortu = short * 1.5;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    for (let j = 0; j < pulses.length; j += 2) {
+      const m = pulses[j];
+      const s = pulses[j + 1];
+      if (m < shortl || m > shortu) {
+        bits.pushBreak();
+        x += m + s;
+        continue;
+      }
+      let onew = m * long / short;
+      let zs = s + m - onew;
+      if (zs < long / 2) {
+        onew = m + s;
+        zs = 0;
+      }
+      hints.push([x, x + onew, "1"]);
+      bits.pushOne();
+      x += onew;
+      if (gap && s > gap) {
+        bits.pushBreak();
+        x += zs;
+        continue;
+      }
+      const cnt = ~~(zs / long + 0.5);
+      for (let k = 0; k < cnt; ++k) {
+        hints.push([x + zs * k / cnt, x + zs * (k + 1) / cnt, "0"]);
+        bits.pushZero();
+      }
+      x += zs;
+    }
+    return { hints, bits };
+  }
+  function slicePPM(pulses, guess) {
+    const short = guess.short;
+    const long = guess.long;
+    const sync = guess.sync;
+    const gap = guess.gap;
+    const shortl = short * 0.5;
+    const shortu = short * 1.5;
+    const longl = long * 0.5;
+    const longu = long * 1.5;
+    const syncl = sync * 0.5;
+    const syncu = sync * 1.5;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    for (let j = 0; j < pulses.length; j += 2) {
+      const m = pulses[j];
+      const s = pulses[j + 1];
+      const x0 = x;
+      x += m + s;
+      if (s > shortl && s < shortu) {
+        hints.push([x0, x, "1"]);
+        bits.pushOne();
+      } else if (s > longl && s < longu) {
+        hints.push([x0, x, "0"]);
+        bits.pushZero();
+      } else if (s > syncl && s < syncu) {
+        hints.push([x0, x, "X"]);
+        bits.pushBreak();
+      } else if (gap && s > gap) {
+        bits.pushBreak();
+      }
+    }
+    return { hints, bits };
+  }
+  function slicePWM(pulses, guess) {
+    const short = guess.short;
+    const long = guess.long;
+    const sync = guess.sync;
+    const gap = guess.gap;
+    const shortl = short * 0.5;
+    const shortu = short * 1.5;
+    const longl = long * 0.5;
+    const longu = long * 1.5;
+    const syncl = sync * 0.5;
+    const syncu = sync * 1.5;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    for (let j = 0; j < pulses.length; j += 2) {
+      const m = pulses[j];
+      const s = pulses[j + 1];
+      const x0 = x;
+      let x1 = x + m + s;
+      if (s > gap)
+        x1 = x + m + gap;
+      x += m + s;
+      if (m > shortl && m < shortu) {
+        hints.push([x0, x1, "1"]);
+        bits.pushOne();
+      } else if (m > longl && m < longu) {
+        hints.push([x0, x1, "0"]);
+        bits.pushZero();
+      } else if (m > syncl && m < syncu) {
+        hints.push([x0, x1, "X"]);
+        bits.pushBreak();
+      }
+      if (gap && s > gap) {
+        bits.pushBreak();
+      }
+    }
+    return { hints, bits };
+  }
+  function manchesterAligned(pulses, offset, short) {
+    for (let j = offset; j < pulses.length; j += 2) {
+      const mw = pulses[j];
+      const cw = ~~(mw / short + 0.5);
+      if (cw > 1) return 0;
+      const sw = pulses[j + 1];
+      const sc = ~~(sw / short + 0.5);
+      if (sc > 1) return 1;
+    }
+    return 0;
+  }
+  function sliceMC(pulses, guess) {
+    const short = guess.short;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let aligned = manchesterAligned(pulses, 0, short);
+    let x = 0;
+    let x1 = 0;
+    for (let j = 0; j < pulses.length; j += 2) {
+      const mark = pulses[j];
+      const mcnt = ~~(mark / short + 0.5);
+      const space = pulses[j + 1];
+      const scnt = ~~(space / short + 0.5);
+      if (mcnt == 1) {
+        if (!aligned) {
+          hints.push([x1, x + mark, "0"]);
+          bits.pushZero();
+          x1 = x + mark;
+        } else {
+          x1 = x;
+        }
+        aligned = !aligned;
+      } else if (mcnt == 2) {
+        if (!aligned) {
+          hints.push([x1, x + mark / 2, "0"]);
+          bits.pushZero();
+          x1 = x + mark / 2;
+        } else {
+          bits.pushBreak();
+          x1 = x + mark / 2;
+        }
+        aligned = false;
+      } else if (mcnt > 2) {
+        if (!aligned) {
+          hints.push([x1, x + mark / mcnt, "0"]);
+          bits.pushZero();
+          x1 = x + mark - mark / mcnt;
+        } else {
+          x1 = x + mark - mark / mcnt;
+        }
+        bits.pushBreak();
+        aligned = manchesterAligned(pulses, j + 1, short);
+      }
+      if (scnt == 1) {
+        if (!aligned) {
+          hints.push([x1, x + mark + space, "1"]);
+          bits.pushOne();
+          x1 = x + mark + space;
+        } else {
+          x1 = x + mark;
+        }
+        aligned = !aligned;
+      } else if (scnt == 2) {
+        if (!aligned) {
+          hints.push([x1, x + mark + space / 2, "1"]);
+          bits.pushOne();
+          x1 = x + mark + space / 2;
+        } else {
+          bits.pushBreak();
+          x1 = x + mark + space / 2;
+        }
+        aligned = false;
+      } else if (scnt > 2) {
+        if (!aligned) {
+          hints.push([x1, x + mark + space / scnt, "1"]);
+          bits.pushOne();
+          x1 = x + mark + space - space / scnt;
+        } else {
+          x1 = x + mark + space - space / scnt;
+        }
+        bits.pushBreak();
+        aligned = manchesterAligned(pulses, j + 1, short);
+      }
+      x += mark + space;
+    }
+    return { hints, bits };
+  }
+  function sliceDM(pulses, guess) {
+    const short = guess.short;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    let x1 = null;
+    for (let j = 0; j < pulses.length; j += 2) {
+      const mark = pulses[j];
+      const mcnt = ~~(mark / short + 0.5);
+      const space = pulses[j + 1];
+      const scnt = ~~(space / short + 0.5);
+      if (!x1 && mcnt == 1 && scnt == 1) {
+        hints.push([x, x + mark + space, "0"]);
+        bits.pushZero();
+      } else if (mcnt == 1 && scnt == 1) {
+        hints.push([x1, x + mark, "0"]);
+        bits.pushZero();
+        x1 = x + mark;
+      } else if (x1 && mcnt == 1 && scnt == 2) {
+        hints.push([x1, x + mark, "0"]);
+        bits.pushZero();
+        hints.push([x + mark, x + mark + space, "1"]);
+        bits.pushOne();
+        x1 = null;
+      } else if (mcnt == 2 && scnt == 1) {
+        hints.push([x, x + mark, "1"]);
+        bits.pushOne();
+        x1 = x + mark;
+      } else if (mcnt == 2 && scnt == 2) {
+        hints.push([x, x + mark, "1"]);
+        bits.pushOne();
+        hints.push([x + mark, x + mark + space, "1"]);
+        bits.pushOne();
+      } else if (!x1 && mcnt == 1) {
+        hints.push([x, x + mark + short, "0"]);
+        bits.pushZero();
+        bits.pushBreak();
+      } else if (!x1 && mcnt == 2) {
+        hints.push([x, x + mark, "1"]);
+        bits.pushOne();
+        bits.pushBreak();
+      } else {
+        if (x1) {
+          hints.push([x1, x1 + short * 2, "0"]);
+          bits.pushZero();
+        }
+        x1 = null;
+        bits.pushBreak();
+      }
+      x += mark + space;
+    }
+    return { hints, bits };
+  }
+  function sliceNRZI(pulses, guess) {
+    const short = guess.short;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    let x1 = 0;
+    for (let j = 0; j < pulses.length; j += 1) {
+      const w = pulses[j];
+      const cnt = ~~(w / short + 0.5);
+      if (x1) {
+        hints.push([x1, x + short / 2, "1"]);
+        bits.pushOne();
+      }
+      x1 = x + short / 2;
+      for (let k = 1; k < cnt; ++k) {
+        hints.push([x1, x1 + w / cnt, "0"]);
+        bits.pushZero();
+        x1 += w / cnt;
+      }
+      x += w;
+    }
+    return { hints, bits };
+  }
+  function sliceCMI(pulses, guess) {
+    const short = guess.short;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    let x1 = null;
+    for (let j = 0; j < pulses.length; j += 2) {
+      const mark = pulses[j];
+      const mcnt = ~~(mark / short + 0.5);
+      const space = pulses[j + 1];
+      const scnt = ~~(space / short + 0.5);
+      if (mcnt == 1 && scnt == 1) {
+        if (!x1) x1 = x - mark;
+        hints.push([x1, x + mark, "0"]);
+        bits.pushZero();
+        x1 = x + mark;
+      } else if (mcnt == 1 && scnt == 2) {
+        if (!x1) x1 = x - mark;
+        hints.push([x1, x + mark, "0"]);
+        bits.pushZero();
+        x1 = x + mark + space;
+        hints.push([x + mark, x1, "1"]);
+        bits.pushOne();
+      } else if (mcnt == 1 && scnt == 3) {
+        if (!x1) x1 = x - mark;
+        hints.push([x1, x + mark, "0"]);
+        bits.pushZero();
+        x1 = x + mark + space * 2 / 3;
+        hints.push([x + mark, x1, "1"]);
+        bits.pushOne();
+      } else if (mcnt == 2 && scnt == 1) {
+        hints.push([x1, x + mark, "1"]);
+        bits.pushOne();
+        x1 = x + mark;
+      } else if (mcnt == 2 && scnt == 2) {
+        hints.push([x1, x + mark, "1"]);
+        bits.pushOne();
+        x1 = x + mark + space;
+        hints.push([x + mark, x1, "1"]);
+        bits.pushOne();
+      } else if (mcnt == 2 && scnt == 3) {
+        hints.push([x1, x + mark, "1"]);
+        bits.pushOne();
+        x1 = x + mark + space * 2 / 3;
+        hints.push([x + mark, x1, "1"]);
+        bits.pushOne();
+      } else if (mcnt == 3 && scnt == 1) {
+        hints.push([x1, x + mark / 3, "0"]);
+        bits.pushZero();
+        hints.push([x + mark / 3, x + mark, "1"]);
+        bits.pushOne();
+        x1 = x + mark;
+      } else if (mcnt == 3 && scnt == 2) {
+        hints.push([x1, x + mark / 3, "0"]);
+        bits.pushZero();
+        hints.push([x + mark / 3, x + mark, "1"]);
+        bits.pushOne();
+        x1 = x + mark + space;
+        hints.push([x + mark, x1, "1"]);
+        bits.pushOne();
+      } else if (mcnt == 3 && scnt == 3) {
+        hints.push([x1, x + mark / 3, "0"]);
+        bits.pushZero();
+        hints.push([x, x + mark / 3, "1"]);
+        bits.pushOne();
+        hints.push([x + mark / 3, x + mark, "1"]);
+        bits.pushOne();
+        hints.push([x + mark, x + mark + space * 3 / 2, "1"]);
+        bits.pushOne();
+        x1 = x + mark + space * 3 / 2;
+      } else if (mcnt == 1) {
+        hints.push([x1, x + mark, "0"]);
+        bits.pushZero();
+        bits.pushBreak();
+        x1 = x + mark;
+      } else if (mcnt == 2) {
+        hints.push([x1, x + mark, "1"]);
+        bits.pushOne();
+        bits.pushBreak();
+        x1 = x + mark;
+      } else {
+        bits.pushBreak();
+      }
+      x += mark + space;
+    }
+    return { hints, bits };
+  }
+  function slicePIWM(pulses, guess) {
+    const short = guess.short;
+    const bits = new Bitbuffer();
+    let hints = [];
+    let x = 0;
+    for (let j = 0; j < pulses.length; j += 1) {
+      const w = pulses[j];
+      const cnt = ~~(w / short + 0.5);
+      if (cnt == 1) {
+        hints.push([x, x + w, "1"]);
+        bits.pushOne();
+      } else if (cnt == 2) {
+        hints.push([x, x + w, "0"]);
+        bits.pushZero();
+      } else {
+        bits.pushBreak();
+      }
+      x += w;
+    }
+    return { hints, bits };
+  }
+  onmessage = function(e) {
+    const { pulses, pickedSlicer } = e.data;
+    const analyzer = new Analyzer(pulses);
+    const guessed = analyzer.guess();
+    guessed.modulation = pickedSlicer || guessed.modulation;
+    const sg = sliceGuess(pulses, guessed);
+    sg.hex = sg.bits.toHexString();
+    postMessage({ analyzer, guessed, sg });
   };
 })();
