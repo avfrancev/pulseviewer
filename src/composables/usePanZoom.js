@@ -43,7 +43,6 @@ export const useGestures = (props) => {
           return
         }
         if (e.dragging) {
-          // console.log("DRAGGING")
           ZT.translateBy(e.delta[0], e.delta[1])
         }
       },
@@ -62,7 +61,6 @@ export const useGestures = (props) => {
           gestures.state.wheel.cancel()
           if (e.delta[2] !== 0) {
             e.event.preventDefault()
-            // let x = props.mouse.elementX.value
             const scaleFactor = Math.exp(e.delta[1] * -0.005)
             ZT.scaleToPointX(scaleFactor, x)
           }
@@ -84,7 +82,6 @@ export const useGestures = (props) => {
   )
   watchEffect(() => {
     gestures.config.domTarget = props.wrapper.value
-    // HACK
     gestures.clean()
     gestures.bind()
   })
@@ -95,24 +92,14 @@ export const useGestures = (props) => {
 function constrain(transform, extent, translateExtent) {
   var dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0],
     dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0]
-  // dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1],
-  // dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1];
-  return transform.translate(
-    dx1 > dx0 ? (dx0 + dx1) / 2 : Math.min(0, dx0) || Math.max(0, dx1),
-    // dy1 > dy0 ? (dy0 + dy1) / 2 : Math.min(0, dy0) || Math.max(0, dy1)
-    0,
-  )
+  return transform.translate(dx1 > dx0 ? (dx0 + dx1) / 2 : Math.min(0, dx0) || Math.max(0, dx1), 0)
 }
 
 export default ({ wrapper, wrapperBounds, viewState }) => {
   const ZT = reactive(new ZoomTransform(1, 0, 0))
 
-  // ZT.wrapperSel = computed(() => select(wrapper.value))
-
   ZT.translateBy = function (xOffset = 0, yOffset = 0) {
-    // console.log(store.state.wrapperBounds.width);
     let { width, height } = wrapperBounds.value
-    // height = 1000
     let translateExtent = [
       [0, 0],
       [width, height],
@@ -122,12 +109,8 @@ export default ({ wrapper, wrapperBounds, viewState }) => {
     this.x += xOffset
     this.y += yOffset
     this.y = clamp(this.y, height - viewState.fullCanvasHeight, 0)
-    // this.y = Math.max(0, 200)
     let constrained = constrain(this, translateExtent, translateExtent)
     Object.assign(this, constrained)
-    // props.xScale.value = ZT.rescaleX(props.xScaleOrigin.value)
-    // console.log(store.xScale, store.xScaleOrigin);
-    // store.xScale = ZT.rescaleX(store.xScaleOrigin)
   }
 
   ZT.getScaleToPointX = function (scaleFactor, p0) {

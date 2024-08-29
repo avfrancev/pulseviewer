@@ -2,12 +2,10 @@ import { usePulsesStore } from "@/models"
 import { v4 as uuidv4 } from "uuid"
 
 export default defineStore("sessions", () => {
-  
   const sessions = reactive([])
 
   function createSession(id = null) {
     return {
-      // id: sessionsCounter++,
       id: id || uuidv4(),
       remove() {
         usePulsesStore(this.id).remove()

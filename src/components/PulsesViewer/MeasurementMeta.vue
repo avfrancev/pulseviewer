@@ -45,7 +45,6 @@ div(
           @click="() => (m.decoder.pickedSlicer = s)") {{s}}
       div(class="flex-1 ml-4 more flex flex-col overflow-hidden max-w-lg overflow-x-auto text-xs")
         div(class="flex join")
-        //- pre {{ m.decoder.analyzer.guessed }}
         p(class="font-mono text-nowrap" v-if="m.decoder.guess")
         p
           |#[b Timings]:
@@ -59,32 +58,7 @@ div(
         pre #[b DC bias (Pulse/Gap skew)]: {{(m.decoder.analyzer?.pulse_gap_skew * 100 || 0).toFixed(1)}}%
         pre #[b RfRaw (rx)]: {{m.decoder.analyzer?.rfrawB1}}
         pre #[b RfRaw (tx)]: {{m.decoder.analyzer?.rfrawB0}}
-        pre(class="text-balances" ) #[b Bits]: {{ m.decoder.sliceGuess?.hex }}
-
-    //- .ml-4.more.transition(v-show="m.descOpened")
-      .flex.items-baseline
-        pre CKMean clusters:
-        //- input.input.input-xs.input-ghost.w-12.bold.flex-none(type="number" v-model.number="m.statistics.ckmeansClustersCount" min="2" max="10")
-        NumberFieldRoot#age(class="ml-2 text-sm  ring-1 ring-base-content/20 rounded",
-          v-model="m.statistics.ckmeansClustersCount" :default-value="3" :min="2" :max="10")
-          //- label(for="age") Age
-          div(class=" flex items-center rounded-md")
-            NumberFieldDecrement(class="btn btn-xs btn-ghost btn-square text-xs rounded-[3px]")
-              //- i-line-md:minus
-              i-tdesign:minus
-              //- Icon(icon="radix-icons:minus")
-              //- pre -
-            NumberFieldInput(class="bg-transparent w-7 text-center tabular-nums focus:outline-0")
-            NumberFieldIncrement(class="btn btn-xs btn-ghost btn-square text-xs rounded-[3px]")
-              i-tdesign:plus
-      div(v-for="c,i in m.statistics.ckmeans_mean" :key="i")
-        pre.text-xs {{ c.val.toFixed() }} µs
-        div(class="h-[1px] mb-[1px] transition-all duration-100 rounded-full" :style="{'background-color': m.color, 'width': `${c.percent}%`}")
-      //- pre {{ m.pulsesInRange.map((d) => d.width).join(',') }}
-      button.btn(@click="copyToClipboard(m.pulsesInRange)")
-        i-oui:copy-clipboard            
-      button.btn(@click="copyToClipboard(buildRTL_433_OOK(m.pulsesInRange))")
-        i-oui:copy-clipboard
+        pre(class="text-balances") #[b Bits]: {{m.decoder.sliceGuess?.hex}}
 </template>
 
 <script setup>

@@ -1,6 +1,4 @@
 <template lang="pug">
-//- .pulseplot
-  canvas.pulseplot-canvas
 div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100svw]")
   div(class="flex my-4 items-center overflow-x-auto")
     div(class="flex items-center mr-4")
@@ -17,14 +15,7 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
           SelectScrollUpButton(class="flex items-center justify-center bg-base-300 text-base-content cursor-default h-[25px]")
             Icon(icon="radix-icons:chevron-up")
           SelectViewport(class="relative p-[5px]")
-            //- SelectLabel(class="px-[25px] text-xs leading-[25px] text-mauve11") Fruits
             SelectGroup(class="relativ")
-              //- button.btn.btn-sm.btn-block.btn-ghost(@click="() => currentSession = sessionsStore.addSession(null)")
-                i-ph:plus.text-xs
-              //- SelectItem(:key="`esp32`", class="text-sm leading-none rounded-[3px] flex items-center h-8 pr-5 pl-[25px] relative select-none data-[disabled]:text-mauve8 data-[disabled]:pointer-events-none data-[highlighted]:outline-none data-[highlighted]:bg-green9 data-[highlighted]:text-green1", :value="ESP32Session")
-                SelectItemIndicator(class="absolute left-0 w-[25px] inline-flex items-center justify-center")
-                  Icon(icon="radix-icons:check")
-                SelectItemText ESP32
               SelectItem(
                 class="cursor-pointer hover:text-primary text-sm leading-none flex items-center h-8 pr-5 pr-8 relative select-none rounded-[3px] pl-[25px] data-[disabled]:text-mauve8 data-[disabled]:pointer-events-none data-[highlighted]:outline-none data-[highlighted]:bg-green9 data-[highlighted]:text-green1"
                 v-for="(option, index) in sessions"
@@ -34,9 +25,7 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
                   Icon(icon="radix-icons:check")
                 SelectItemText(v-if="option.id === 'ESP32' && config.useESP32") ESP32
                 SelectItemText(v-else) Session # {{index + (hasESP32Session ? 0 : 1)}}
-                  //- pre {{ hasESP32Session ? 0 : 1 }} {{ index }}
               div(class="absolute top-0 right-0 mt-1 mr-1")
-                //- button.invisible.btn.btn-xs.my-1.text-xs.btn-square.btn-ghost
                 div(
                   v-for="session in sessions"
                   :key="session.id")
@@ -49,10 +38,6 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
 
               button(class="btn btn-sm btn-block btn-ghost" @click="sessionsStore.addSession(null)")
                 i-ph:plus(class="text-xs")
-              //- SelectItem( :key="-1", class="text-sm leading-none rounded-[3px] flex items-center h-8 pr-5 pl-[25px] relative select-none data-[disabled]:text-mauve8 data-[disabled]:pointer-events-none data-[highlighted]:outline-none data-[highlighted]:bg-green9 data-[highlighted]:text-green1", :value="option")
-              //-   SelectItemIndicator(class="absolute left-0 w-[25px] inline-flex items-center justify-center")
-              //-     Icon(icon="radix-icons:check")
-              //-   SelectItemText ADD
           SelectScrollDownButton(class="flex items-center justify-center bg-base-300 text-base-content cursor-default h-[25px]")
             Icon(icon="radix-icons:chevron-down")
     div(class="flex-1")
@@ -107,7 +92,6 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
   import { Icon } from "@iconify/vue"
 
   import { mode } from "@/stores/colors"
-  // import PulsesViewer from "@/modules/PulsesViewer/PulsesViewer.vue"
   import useSessions from "@/stores/sessions"
   import useConfig from "@/stores/config"
   import useESP32 from "@/stores/ESP32"
@@ -123,11 +107,6 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
     console.log("no sessions")
     sessionsStore.addSession()
   }
-
-  // if ( sessions.length === 1 && hasESP32Session.value ) {
-  //   console.log('has ESP32 session');
-  //   sessionsStore.addSession()
-  // }
 
   const currentSession = ref(sessions[0])
 
@@ -169,29 +148,6 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
     }
     p.raw_data = [...p.raw_data, ...data.parsed_buf]
   })
-
-  // import { Pulseplot } from 'pulseplot'
-
-  // onMounted(() => {
-  //   const pulseplot = new Pulseplot({
-  //     parent: '.pulseplot',
-  //     data: usePulsesStore(currentSession.value.id)?.pulses[0]?.raw_data || [],
-  //   })
-  //   pulseplot.enableScrollZoom()
-  //   // console.log(pulseplot.data.hints.length);
-  //   let LLL = []
-  //   pulseplot.data.hints.forEach((h,i) =>{
-  //     let prev = pulseplot.data.hints[i-1]
-  //     if (prev) {
-  //       if (prev[1] != h[0]) {
-  //         // console.log(i, prev, h);
-  //         LLL.push([prev,h])
-  //       }
-  //     }
-  //   })
-  //   // console.log(LLL);
-
-  // })
 </script>
 
 <style lang="sass">

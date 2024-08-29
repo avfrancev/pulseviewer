@@ -1,46 +1,9 @@
 <template lang="pug">
-//- div.text-xs(ref="wrapper")
-  pre PV 
-
-  pre sessionID: {{ session.id }}
-  pre pulses: {{ pulsesStore }}
-//- pre viewStore: {{ viewStore.state.ZT.k }}
-//- pre {{ viewStore.wrapperBounds.height }}
-//- pre {{pulsesStore.pulses}}
-
-//- button.btn(@click="console.log(pulsesStore.$dispose)") log
-//- button.btn(@click="() => pulsesStore.$dispose()") reset
-//- ScrollAreaRoot(class="overflow-hidden")
-  ScrollAreaViewport(class="w-full h-full rounded border")
-    pre asdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdjasdjashdkjashdkjashdj
 div(class="sticky top-2 z-30")
   div(class="overflow-x-auto")
     div(class="bg-base-300 min-h-0 p-0 flex backdrop-blur-sm bg-base-300/90 rounded-full dark:rounded-lg")
-      //- pre(@click="console.log(memory)") {{size(memory?.usedJSHeapSize)}}
       div(class="join")
         AddPulsesModal(v-bind="{pulsesStore}")
-        //- Modal
-          template(#trigger)
-            DialogTrigger(class="join-item btn btn-square")
-              //- i-ph:file-plus-fill
-              //- i-pajamas:doc-new
-              i-mingcute:file-new-line(class="text-lg")
-          template(#content)
-            DialogTitle(class="mb-4 text-lg font-bolds")
-              | Add new pulses
-            DialogDescription(class="text-mauve11 mt-[10px] mb-5 text-[15px] leading-normal")
-              pre.text-xs(class="text-base-content/50") Example: 434,394,380,422,379,422,377,421,378,420,377,421
-            textarea.textarea.textarea-bordered.my-4.flex-1.w-full(
-              v-model="tmpPulsesString" placeholder="434,394,380,422,379,422,377,421,378,420,377,421")
-            div(class="mt-3 flex justify-end")
-              DialogClose(as-child)
-                button(class="btn" @click="pulsesStore.addPulses(tmpPulsesString.split(',').map(Number))")
-                  | Add
-            DialogClose(class="btn btn-square btn-sm text-xs top-0 right-0 absolute m-2" aria-label="Close")
-              i-fa:close
-
-        //- button.btn.join-item
-          i-fluent:phone-span-out-28-filled
         button(
           class="btn btn-square join-item bg-opacity-0 border-none"
           @click="zoomIn"
@@ -81,25 +44,6 @@ div(class="sticky top-2 z-30")
 
 div(class="h-fulls flex-1 items-center flex justify-center space-x-12" v-if="!pulses.length")
   AddPulsesModal(v-bind="{pulsesStore}")
-  //- Modal
-    template(#trigger)
-      DialogTrigger(class="join-item btn btn-square")
-        //- i-ph:file-plus-fill
-        //- i-pajamas:doc-new
-        i-mingcute:file-new-line(class="text-lg")
-    template(#content)
-      DialogTitle(class="mb-4 text-lg font-bolds")
-        | Add new pulses
-      DialogDescription(class="text-mauve11 mt-[10px] mb-5 text-[15px] leading-normal")
-        pre.text-xs(class="text-base-content/50") Example: 434,394,380,422,379,422,377,421,378,420,377,421
-      textarea.textarea.textarea-bordered.my-4.flex-1.w-full(
-        v-model="tmpPulsesString" placeholder="434,394,380,422,379,422,377,421,378,420,377,421")
-      div(class="mt-3 flex justify-end")
-        DialogClose(as-child)
-          button(class="btn" @click="pulsesStore.addPulses(tmpPulsesString.split(',').map(Number))")
-            | Add
-      DialogClose(class="btn btn-square btn-sm text-xs top-0 right-0 absolute m-2" aria-label="Close")
-        i-fa:close
   div(class="h-24")
     div(class="divider divider-horizontal h-24") OR
   button(class="btn btn-md" @click="pulsesStore.loadPulses(sampleData)") add samaple data
@@ -109,28 +53,11 @@ div(
   class="pt-2 top-12 z-20 inline-flex self-start max-w-full"
   :class="[config.pinMeasurements && 'sticky']"
   v-if="pulses.length")
-  //- div(class="scroll-ml-6 inline-flex w-full2 space-x-3 p-2 overflow-y-auto -ml-2")
-    //- div(class="bg-base-300 p-20") LKAJSDLKJASLDKAJSLKDJLKAJSDLKJASLDKAJSLKDJL
-    div(class="bg-base-300 p-20") LKAJSDLKJASLDKAJSLKDJLKAJSDLKJASLDKAJSLKDJL
-    div(class="bg-base-300 p-20") LKAJSDLKJASLDKAJSLKDJLKAJSDLKJASLDKAJSLKDJL
   div(class="scroll-ml-6 flex w-auto space-x-3 p-2 overflow-y-auto -ml-2")
     MeasurementMeta(
       v-for="m in pulsesStore.allMeasurements"
       :key="m.id"
       v-bind="{m}")
-
-//- div
-  .size-24.bg-green-400
-
-//- .pt-2.top-12.z-20.inline-blocks.max-w-fullx.overflow-y-auto.float-left(
-  v-if="pulses.length"
-  :class="[config.pinMeasurements && 'sticky']")
-  .size-24.bg-green-400
-  //- .scroll-ml-6.snap-x.inline-flex.w-auto.space-x-3.p-2.-ml-2
-    MeasurementMeta( 
-      class="snap-start scroll-ml-2"
-      v-for="m in pulsesStore.allMeasurements" :key="m.id" v-bind="{ m }")
-
 
 div(class="container fixed bottom-0 px-2 -ml-2 z-10" v-if="pulses.length")
   div(class="flex w-full bg-base-300 my-4 ring-4 ring-base-300 rounded-box" v-if="pulses.length")
@@ -186,10 +113,7 @@ div(class="relative mt-8 mb-12")
       @start="drag = true"
       @end="drag = false"
       item-key="iid")
-      //- @update="pulsesStore.throttledSaveToLocalStorage"
       template(#item="{element}")
-        //- .list-group-item(:key="element.iid")
-          .drag-handle {{ element.iid }}
         PulsesViewerRow(
           class="my-3"
           :key="element.iid"
@@ -255,15 +179,11 @@ div(class="relative mt-8 mb-12")
 
   const dragOptions = {
     animation: 250,
-    // group: "description",
     disabled: false,
     ghostClass: "ghost",
   }
 
   const drag = ref(false)
-
-  // console.log(pulsesStore)
-  // pulsesStore.loadPulses(sampleData)
 </script>
 
 <style>

@@ -15,10 +15,11 @@ Modal
           | 244,355
           | 244,355
         pre or
-        pre RFRaw: AAB03505141306060E02C601902378A481A3B2B2A3B2A3A3B2B2B2A3A3B2B2A3B2A3B2A3A3B2A3A3B2A3B2A3A3B2B2... 
+        pre RFRaw: AAB03505141306060E02C601902378A481A3B2B2A3B2A3A3B2B2B2A3A3B2B2A3B2A3B2A3A3B2A3A3B2A3B2A3A3B2B2...
     textarea(
+      class="textarea textarea-bordered my-4 flex-1 w-full"
       v-model="tmpPulsesString"
-      placeholder="434,394,380,422,379,422,377,421,378,420,377,421"     class="textarea textarea-bordered my-4 flex-1 w-full")
+      placeholder="434,394,380,422,379,422,377,421,378,420,377,421")
     div(class="mt-3 flex justify-end")
       DialogClose(as-child)
         button(class="btn" @click="addPulses")

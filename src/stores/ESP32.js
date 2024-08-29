@@ -23,10 +23,6 @@ function parse_rmt_message_t(data) {
   //   int rssi;
   //   rmt_data_t buf[512];
   // } rmt_message_t;
-  // offset time: 4
-  // offset delta: 8
-  // offset rssi: 16
-  // offset buf: 20
 
   let dv = new DataView(data)
   const length = dv.getUint16(0, true)
@@ -49,18 +45,22 @@ export default defineStore("ESP32", () => {
   const wsData = reactive([])
 
   const wsOptions = {
-    heartbeat: { interval: 5000, pongTimeout: 2000, },
+    heartbeat: { interval: 5000, pongTimeout: 2000 },
     immediate: config.useESP32,
     autoReconnect: {
-      retries: 5, delay: 1000,
-      onFailed() { setTimeout(() => { ws.open() }, 20000) },
+      retries: 5,
+      delay: 1000,
+      onFailed() {
+        setTimeout(() => {
+          ws.open()
+        }, 20000)
+      },
     },
     onConnected: (ws) => {
       console.warn("WebSocket connected!")
       ws.binaryType = "arraybuffer"
     },
-    onDisconnected: () => console.warn('WebSocket disconnected'),
-    // onError: () => console.warn('WebSocket ERROR'),
+    onDisconnected: () => console.warn("WebSocket disconnected"),
     onMessage: (ws, event) => {
       if (event.data instanceof ArrayBuffer) {
         const parsedRMT = parse_rmt_message_t(event.data)
@@ -72,9 +72,12 @@ export default defineStore("ESP32", () => {
   const esp32WSEndpoint = computed(() => config.esp32WSEndpoint)
   let ws = useWebSocket(esp32WSEndpoint, wsOptions)
 
-  watch(() => config.useESP32, () => {
-    config.useESP32 ? ws.open() : ws.close()
-  })
+  watch(
+    () => config.useESP32,
+    () => {
+      config.useESP32 ? ws.open() : ws.close()
+    },
+  )
 
   function addWSData(data) {
     wsData.push(data)

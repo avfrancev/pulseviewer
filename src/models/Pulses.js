@@ -2,11 +2,6 @@ import { extent, fsum, bisector, quantile, min, mean, median } from "d3-array"
 import { zoomIdentity } from "d3-zoom"
 import { interpolateRainbow } from "d3-scale-chromatic"
 
-// import { sliceGuess, slicePCM, sliceMC, slicePPM, slicePWM, sliceDM, sliceNRZI, sliceCMI, slicePIWM } from "pulseplot/lib/slicer.js"
-// import { Analyzer } from "pulseplot/lib/histogram.js"
-// import { Bitbuffer } from "pulseplot/lib/bitbuffer.js"
-
-// import { useViewStore, useESP32RMTStore, useConfigStore } from "."
 import { useViewStore } from "."
 import { initMeasurements } from "./Measurements"
 
@@ -17,8 +12,6 @@ function parsePlainArr(arr, startLevel = 0) {
     return { level: (i + startLevel) % 2, width: d, time }
   })
 }
-
-
 
 export default (uuid = 0) => {
   const viewStore = useViewStore(uuid)
@@ -106,9 +99,6 @@ export default (uuid = 0) => {
       }
       return o
     })
-    // pulsesStorage.value = out
-
-    // console.log('throttledSaveToLocalStorage');
   }
 
   const throttledSaveToLocalStorage = useDebounceFn(saveToLocalStorage, 100)
@@ -117,9 +107,7 @@ export default (uuid = 0) => {
     return pulses.map((p) => p.xOffset)
   })
 
-  
   const debounceOptions = { debounce: 500, maxWait: 4000 }
-  // watchDebounced(allMeasurements, throttledSaveToLocalStorage, { deep: true, ...debounceOptions })
   const measurementsDimensions = computed(() => {
     return allMeasurements.value.map((m) => {
       return [m.x1, m.x2]
