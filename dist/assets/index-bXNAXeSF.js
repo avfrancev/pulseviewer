@@ -17656,6 +17656,44 @@ function useWebSocket(url, options = {}) {
     ws: wsRef
   };
 }
+function useWebWorker(arg0, workerOptions, options) {
+  const {
+    window: window2 = defaultWindow
+  } = {};
+  const data = ref(null);
+  const worker = shallowRef();
+  const post = (...args) => {
+    if (!worker.value)
+      return;
+    worker.value.postMessage(...args);
+  };
+  const terminate = function terminate2() {
+    if (!worker.value)
+      return;
+    worker.value.terminate();
+  };
+  if (window2) {
+    if (typeof arg0 === "string")
+      worker.value = new Worker(arg0, workerOptions);
+    else if (typeof arg0 === "function")
+      worker.value = arg0();
+    else
+      worker.value = arg0;
+    worker.value.onmessage = (e) => {
+      data.value = e.data;
+    };
+    tryOnScopeDispose(() => {
+      if (worker.value)
+        worker.value.terminate();
+    });
+  }
+  return {
+    data,
+    post,
+    terminate,
+    worker
+  };
+}
 function jobRunner(userFunc) {
   return (e) => {
     const userFuncArgs = e.data[0];
@@ -20026,8 +20064,6 @@ class Histogram {
 }
 class Analyzer {
   constructor(data, tolerance = 0.2) {
-    console.log("ANALYZER");
-    console.log(Hexbuffer$1);
     this.analyse_pulses(data, tolerance);
     this.create_rfraw(data);
   }
@@ -20335,17 +20371,11 @@ function getDecoder(m, viewStore, pulses) {
   const pickedSlicer = ref(null);
   const analyzerWorker = useWebWorkerFn(
     (pulses2, pickedSlicer2) => {
-      console.log("START ANALYZER", { pulses: pulses2, pickedSlicer: pickedSlicer2 });
-      console.log(Hexbuffer$1);
       const analyzer2 = new Analyzer(pulses2);
-      console.log({ analyzer: analyzer2 });
       const guessed = analyzer2.guess();
-      console.log({ guessed });
       guessed.modulation = pickedSlicer2 || guessed.modulation;
       const sg2 = sliceGuess(pulses2, guessed);
-      console.log({ sg: sg2 });
       sg2.hex = sg2.bits.toHexString();
-      console.log("sg.hex", sg2.hex);
       return { analyzer: analyzer2, guessed, sg: sg2 };
     },
     {
@@ -34099,6 +34129,14 @@ const useESP32 = defineStore("ESP32", () => {
   const store = { ws, wsData, addWSData };
   return store;
 });
+function WorkerWrapper(options) {
+  return new Worker(
+    "/pulseviewer/assets/ww1-C9XBB1T0.js",
+    {
+      name: options == null ? void 0 : options.name
+    }
+  );
+}
 const _hoisted_1 = { class: "container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100svw]" };
 const _hoisted_2 = { class: "flex my-4 items-center overflow-x-auto" };
 const _hoisted_3 = { class: "flex items-center mr-4" };
@@ -34174,6 +34212,10 @@ const _sfc_main = {
       }
       p2.raw_data = [...p2.raw_data, ...data.parsed_buf];
     });
+    const ww2 = useWebWorker(WorkerWrapper);
+    console.log(ww2);
+    watchEffect(() => console.log(ww2.data.value));
+    ww2.post([24, 42]);
     return (_ctx, _cache) => {
       const _component_i_twemoji58raccoon = __unplugin_components_0;
       const _component_SelectValue = Uy;
