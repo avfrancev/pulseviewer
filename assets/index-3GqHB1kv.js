@@ -20287,71 +20287,6 @@ class Analyzer {
     }
   }
 }
-/**
-    @file Hexbuffer JS.
-
-    @author Christian W. Zuckschwerdt <zany@triq.net>
-    @copyright Christian W. Zuckschwerdt, 2020
-    @license
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
-*/
-function dec2hex(i, w = 2) {
-  return (i + 65536).toString(16).substr(-w).toUpperCase();
-}
-class Hexbuffer2 {
-  constructor(line2 = "") {
-    this.fromString(line2);
-  }
-  fromString(s) {
-    this.line = s.replace(/\s/g, "");
-    this.index = 0;
-  }
-  hasNibble() {
-    return this.index + 1 <= this.line.length;
-  }
-  hasByte() {
-    return this.index + 2 <= this.line.length;
-  }
-  hasWord() {
-    return this.index + 4 <= this.line.length;
-  }
-  peekNibble() {
-    return parseInt(this.line.substr(this.index, 1), 16);
-  }
-  peekByte() {
-    return parseInt(this.line.substr(this.index, 2), 16);
-  }
-  peekWord() {
-    return parseInt(this.line.substr(this.index, 4), 16);
-  }
-  getNibble() {
-    const r = parseInt(this.line.substr(this.index, 1), 16);
-    this.index += 1;
-    return r;
-  }
-  getByte() {
-    const r = parseInt(this.line.substr(this.index, 2), 16);
-    this.index += 2;
-    return r;
-  }
-  getWord() {
-    const r = parseInt(this.line.substr(this.index, 4), 16);
-    this.index += 4;
-    return r;
-  }
-  pushNibble(v) {
-    this.line += dec2hex(v, 1);
-  }
-  pushByte(v) {
-    this.line += dec2hex(v, 2);
-  }
-  pushWord(v) {
-    this.line += dec2hex(v, 4);
-  }
-}
 const colors$1 = Array.from(Array(20)).map((d, i) => {
   return interpolateRainbow(i / 20);
 });
@@ -20399,7 +20334,7 @@ function getDecoder(m, viewStore, pulses) {
   const analyzerWorker = useWebWorkerFn(
     (pulses2, pickedSlicer2) => {
       console.log("START ANALYZER", { pulses: pulses2, pickedSlicer: pickedSlicer2 });
-      console.log(Bitbuffer);
+      console.log(Hexbuffer$1);
       const analyzer2 = new Analyzer(pulses2);
       console.log({ analyzer: analyzer2 });
       const guessed = analyzer2.guess();
@@ -20414,8 +20349,8 @@ function getDecoder(m, viewStore, pulses) {
     {
       timeout: 1e4,
       localDependencies: [
-        Hexbuffer2,
-        dec2hex,
+        Hexbuffer$1,
+        dec2hex$1,
         Analyzer,
         Histogram,
         Bin,
@@ -22843,6 +22778,71 @@ function render$a(_ctx, _cache) {
 }
 const __unplugin_components_0$1 = markRaw({ name: "mingcute-file-new-line", render: render$a });
 /**
+    @file Hexbuffer JS.
+
+    @author Christian W. Zuckschwerdt <zany@triq.net>
+    @copyright Christian W. Zuckschwerdt, 2020
+    @license
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+*/
+function dec2hex(i, w = 2) {
+  return (i + 65536).toString(16).substr(-w).toUpperCase();
+}
+class Hexbuffer2 {
+  constructor(line2 = "") {
+    this.fromString(line2);
+  }
+  fromString(s) {
+    this.line = s.replace(/\s/g, "");
+    this.index = 0;
+  }
+  hasNibble() {
+    return this.index + 1 <= this.line.length;
+  }
+  hasByte() {
+    return this.index + 2 <= this.line.length;
+  }
+  hasWord() {
+    return this.index + 4 <= this.line.length;
+  }
+  peekNibble() {
+    return parseInt(this.line.substr(this.index, 1), 16);
+  }
+  peekByte() {
+    return parseInt(this.line.substr(this.index, 2), 16);
+  }
+  peekWord() {
+    return parseInt(this.line.substr(this.index, 4), 16);
+  }
+  getNibble() {
+    const r = parseInt(this.line.substr(this.index, 1), 16);
+    this.index += 1;
+    return r;
+  }
+  getByte() {
+    const r = parseInt(this.line.substr(this.index, 2), 16);
+    this.index += 2;
+    return r;
+  }
+  getWord() {
+    const r = parseInt(this.line.substr(this.index, 4), 16);
+    this.index += 4;
+    return r;
+  }
+  pushNibble(v) {
+    this.line += dec2hex(v, 1);
+  }
+  pushByte(v) {
+    this.line += dec2hex(v, 2);
+  }
+  pushWord(v) {
+    this.line += dec2hex(v, 4);
+  }
+}
+/**
     @file RfRaw JS.
 
     @author Christian W. Zuckschwerdt <zany@triq.net>
@@ -22870,7 +22870,7 @@ class RfRaw {
   static getCodePulses(line2) {
     console.log("parsing rfraw data: ", line2);
     let pulses = [];
-    const buf = new Hexbuffer$1(line2);
+    const buf = new Hexbuffer2(line2);
     const sync2 = buf.getByte();
     if (sync2 != 170) {
       return pulses;
