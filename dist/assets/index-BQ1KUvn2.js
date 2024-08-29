@@ -19815,7 +19815,7 @@ const pulseplotSlicer = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.def
 function dec2hex$1(i, w = 2) {
   return (i + 65536).toString(16).substr(-w).toUpperCase();
 }
-let Hexbuffer$1 = class Hexbuffer {
+let Hexbuffer$2 = class Hexbuffer2 {
   constructor(line2 = "") {
     this.fromString(line2);
   }
@@ -20185,7 +20185,7 @@ class Analyzer {
     if (data.length > 494) {
       return "";
     }
-    let raw = new Hexbuffer$1();
+    let raw = new Hexbuffer();
     for (let b of timings.bins) {
       raw.pushWord(b.mean);
     }
@@ -20211,13 +20211,13 @@ class Analyzer {
       raw.pushNibble(0);
     }
     raw.pushByte(85);
-    let raw0 = new Hexbuffer$1();
+    let raw0 = new Hexbuffer();
     raw0.pushByte(170);
     raw0.pushByte(176);
     raw0.pushByte(2 + raw.line.length / 2 - 1);
     raw0.pushByte(timings.bins.length);
     raw0.pushByte(1);
-    let raw1 = new Hexbuffer$1();
+    let raw1 = new Hexbuffer();
     raw1.pushByte(170);
     raw1.pushByte(177);
     raw1.pushByte(timings.bins.length);
@@ -20334,7 +20334,7 @@ function getDecoder(m, viewStore, pulses) {
   const analyzerWorker = useWebWorkerFn(
     (pulses2, pickedSlicer2) => {
       console.log("START ANALYZER", { pulses: pulses2, pickedSlicer: pickedSlicer2 });
-      console.log(Hexbuffer$1);
+      console.log(Hexbuffer$2);
       const analyzer2 = new Analyzer(pulses2);
       console.log({ analyzer: analyzer2 });
       const guessed = analyzer2.guess();
@@ -20349,7 +20349,7 @@ function getDecoder(m, viewStore, pulses) {
     {
       timeout: 1e4,
       localDependencies: [
-        Hexbuffer$1,
+        Hexbuffer$2,
         dec2hex$1,
         Analyzer,
         Histogram,
@@ -22791,7 +22791,7 @@ const __unplugin_components_0$1 = markRaw({ name: "mingcute-file-new-line", rend
 function dec2hex(i, w = 2) {
   return (i + 65536).toString(16).substr(-w).toUpperCase();
 }
-class Hexbuffer2 {
+let Hexbuffer$1 = class Hexbuffer3 {
   constructor(line2 = "") {
     this.fromString(line2);
   }
@@ -22841,7 +22841,7 @@ class Hexbuffer2 {
   pushWord(v) {
     this.line += dec2hex(v, 4);
   }
-}
+};
 /**
     @file RfRaw JS.
 
@@ -22870,7 +22870,7 @@ class RfRaw {
   static getCodePulses(line2) {
     console.log("parsing rfraw data: ", line2);
     let pulses = [];
-    const buf = new Hexbuffer2(line2);
+    const buf = new Hexbuffer$1(line2);
     const sync2 = buf.getByte();
     if (sync2 != 170) {
       return pulses;
