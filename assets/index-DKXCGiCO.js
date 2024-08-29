@@ -17656,39 +17656,6 @@ function useWebSocket(url, options = {}) {
     ws: wsRef
   };
 }
-function useWebWorker(arg0, workerOptions, options) {
-  const {
-    window: window2 = defaultWindow
-  } = {};
-  const data = ref(null);
-  const worker = shallowRef();
-  const post = (...args) => {
-    if (!worker.value)
-      return;
-    worker.value.postMessage(...args);
-  };
-  const terminate = function terminate2() {
-    if (!worker.value)
-      return;
-    worker.value.terminate();
-  };
-  if (window2) {
-    worker.value = new Worker(arg0, workerOptions);
-    worker.value.onmessage = (e) => {
-      data.value = e.data;
-    };
-    tryOnScopeDispose(() => {
-      if (worker.value)
-        worker.value.terminate();
-    });
-  }
-  return {
-    data,
-    post,
-    terminate,
-    worker
-  };
-}
 function jobRunner(userFunc) {
   return (e) => {
     const userFuncArgs = e.data[0];
@@ -20431,6 +20398,8 @@ function getDecoder(m, viewStore, pulses) {
   const pickedSlicer = ref(null);
   const analyzerWorker = useWebWorkerFn(
     (pulses2, pickedSlicer2) => {
+      console.log("START ANALYZER", { pulses: pulses2, pickedSlicer: pickedSlicer2 });
+      console.log(Bitbuffer);
       const analyzer2 = new Analyzer(pulses2);
       console.log({ analyzer: analyzer2 });
       const guessed = analyzer2.guess();
@@ -20594,12 +20563,6 @@ function initMeasurements(pulses, viewStore, pulsesMinX) {
     const index2 = measurements.findIndex((m) => m.id === id);
     if (index2 !== -1) measurements.splice(index2, 1);
   };
-  const ww1 = useWebWorker("/worker.js", {});
-  const ww2 = useWebWorkerFn((a, b) => a + b);
-  setTimeout(async () => {
-    console.log(await ww1.workerFn(1, 33));
-    console.log(await ww2.workerFn(1, 33));
-  }, 1e3);
   return measurements;
 }
 function parsePlainArr(arr, startLevel = 0) {
