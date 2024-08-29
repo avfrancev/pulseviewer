@@ -20432,20 +20432,24 @@ function getDecoder(m, viewStore, pulses) {
   const analyzerWorker = useWebWorkerFn(
     (pulses2, pickedSlicer2) => {
       const analyzer2 = new Analyzer(pulses2);
+      console.log({ analyzer: analyzer2 });
       const guessed = analyzer2.guess();
+      console.log({ guessed });
       guessed.modulation = pickedSlicer2 || guessed.modulation;
       const sg2 = sliceGuess(pulses2, guessed);
+      console.log({ sg: sg2 });
       sg2.hex = sg2.bits.toHexString();
+      console.log("sg.hex", sg2.hex);
       return { analyzer: analyzer2, guessed, sg: sg2 };
     },
     {
       timeout: 1e4,
       localDependencies: [
+        Hexbuffer2,
+        dec2hex,
         Analyzer,
         Histogram,
         Bin,
-        Hexbuffer2,
-        dec2hex,
         sliceGuess,
         ...Object.entries(pulseplotSlicer).map((d) => d[1]),
         manchesterAligned,
