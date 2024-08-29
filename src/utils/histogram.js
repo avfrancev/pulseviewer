@@ -10,7 +10,9 @@
     (at your option) any later version.
 */
 
-import { Hexbuffer } from "pulseplot/lib/hexbuffer.js"
+// import { Hexbuffer } from "pulseplot/lib/hexbuffer.js"
+import { Hexbuffer, dec2hex } from "@/utils/hexbuffer.js"
+
 
 
 /*eslint no-console: "off"*/

@@ -159,10 +159,10 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
           //- :transform="`translate(${viewStore.xScale(m.pulsesInRange[0]?.time) - props.viewStore.xScale(0)},91)`"
           //- :transform="`translate(${viewStore.xScale(0)},91)`")
           //- :transform="`translate(${viewStore.xScale(m.pulsesInRange[0].time + pulses.xOffset)},91)`")
-          template(v-if="m.decoder.analyzerWorker?.workerStatus === 'SUCCESS'")
+          template(v-if="!m.decoder.analyzerWorker?.isRunning")
             path(
               class="stroke-1 stroke-error"
-              v-if="m.decoder.analyzerWorker?.workerStatus === 'SUCCESS'"
+              v-if="!m.decoder.analyzerWorker?.isRunning"
               :d="m.decoder.bytesHints.map((g) => `M${g.scaledRange[0]},20 V-100 M${g.scaledRange[1]},20 V-100 `).join('')")
             //- g(v-if="m.decoder.sliceGuess.groups.some((g) => g.bytes.filter(bytesFilter.bind(null, {m, g})).length)")
             path(
@@ -275,7 +275,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
           leave-active-class="transition-opacity duration-300"
           enter-from-class="opacity-0"
           leave-to-class="opacity-0")
-          div(class="text-right p-2" v-if="m.decoder.analyzerWorker.workerStatus !== 'SUCCESS'")
+          div(class="text-right p-2" v-if="m.decoder.analyzerWorker?.isRunning")
             div(class="loading")
       //- div(
         class="top-0 absolute will-change-auto"
@@ -498,7 +498,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
   const bitsHintsSource = computed(() => {
     return props.pulses.measurements
-      .filter((m) => m.decoder.analyzerWorker.workerStatus === "SUCCESS")
+      .filter((m) => !m.decoder.analyzerWorker.isRunning)
       .reduce((acc, m) => {
         return [...acc, ...(m.decoder?.sliceGuess?.hints || [])]
       }, [])
@@ -518,7 +518,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
   const bytesHintsSource = computed(() => {
     return props.pulses.measurements
-      .filter((m) => m.decoder.analyzerWorker.workerStatus === "SUCCESS")
+      .filter((m) => !m.decoder.analyzerWorker.isRunning)
       .reduce((acc, m) => {
         return [...acc, ...(m.decoder.bytesHints.map((g) => g.bytes).flat() || [])]
       }, [])

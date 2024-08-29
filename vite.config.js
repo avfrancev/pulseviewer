@@ -35,7 +35,7 @@ export default defineConfig(({ command, mode }) => {
       vueJsx(),
       // vueDevTools(),
       arraybuffer(),
-      compression(),
+      buildForESP32 && compression(),
       // tarball(),
       buildForESP32 &&
         viteSingleFile({

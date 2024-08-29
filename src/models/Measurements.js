@@ -2,24 +2,27 @@ import { extent, fsum, bisector, quantile, min, mean, median } from "d3-array"
 import { zoomIdentity } from "d3-zoom"
 import { interpolateRainbow } from "d3-scale-chromatic"
 
-import {
-  sliceGuess,
-  slicePCM,
-  sliceMC,
-  slicePPM,
-  slicePWM,
-  sliceDM,
-  sliceNRZ,
-  sliceNRZI,
-  sliceCMI,
-  slicePIWM,
-} from "pulseplot/lib/slicer.js"
-import * as pulseplotSlicer from "pulseplot/lib/slicer.js"
+import AnalyzerWorker from '@/analyzerWorker.js?worker'
+import { Bitbuffer } from "pulseplot/lib/bitbuffer"
 
-import { Analyzer, Histogram, Bin } from "@/utils/histogram.js"
-import { Hexbuffer, dec2hex } from "@/utils/hexbuffer.js"
-// import { Analyzer, Histogram} from "pulseplot/lib/histogram.js"
-import { Bitbuffer } from "pulseplot/lib/bitbuffer.js"
+// import {
+//   sliceGuess,
+//   slicePCM,
+//   sliceMC,
+//   slicePPM,
+//   slicePWM,
+//   sliceDM,
+//   sliceNRZ,
+//   sliceNRZI,
+//   sliceCMI,
+//   slicePIWM,
+// } from "pulseplot/lib/slicer.js"
+// import * as pulseplotSlicer from "pulseplot/lib/slicer.js"
+
+// import { Hexbuffer, dec2hex } from "@/utils/hexbuffer.js"
+// import { Analyzer, Histogram, Bin } from "@/utils/histogram.js"
+// // import { Analyzer, Histogram} from "pulseplot/lib/histogram.js"
+// import { Bitbuffer } from "pulseplot/lib/bitbuffer.js"
 
 // import { useViewStore, useESP32RMTStore, useConfigStore } from "."
 import { useViewStore } from "."
@@ -45,19 +48,6 @@ function getRandomNotUsedColor(colors) {
 
 getRandomNotUsedColor.usedColors = []
 
-function manchesterAligned(pulses, offset, short) {
-  for (let j = offset; j < pulses.length; j += 2) {
-    const mw = pulses[j] // mark
-    const cw = ~~(mw / short + 0.5)
-    if (cw > 1) return 0 // middle
-    const sw = pulses[j + 1] // space
-    const sc = ~~(sw / short + 0.5)
-    if (sc > 1) return 1 // start
-  }
-  // warning, no alignment found
-  return 0
-}
-
 function splitArrayWithDelimiter(arr = [], delimiterCallback) {
   let result = [[]]
   arr.forEach((item, i) => {
@@ -77,40 +67,64 @@ export function getDecoder(m, viewStore, pulses) {
   const sg = ref(null)
   const pickedSlicer = ref(null)
 
-  const analyzerWorker = useWebWorkerFn(
-    (pulses, pickedSlicer) => {
-      // return []
-      // pulses = pulses.slice(...rangeIds)
-      const analyzer = new Analyzer(pulses)
-      const guessed = analyzer.guess()
-      // console.log(pickedSlicer);
-      guessed.modulation = pickedSlicer || guessed.modulation
-      const sg = sliceGuess(pulses, guessed)
-      // console.log("sg", sg.bits.toHexString());
-      sg.hex = sg.bits.toHexString()
-      return { analyzer, guessed, sg }
-    },
-    {
-      timeout: 10000,
-      localDependencies: [
-        Analyzer,
-        Histogram,
-        Bin,
-        Hexbuffer,
-        dec2hex,
-        sliceGuess,
-        ...Object.entries(pulseplotSlicer).map((d) => d[1]),
-        manchesterAligned,
-        Bitbuffer,
-      ],
-    },
-  )
+  // const isWorkerRunning = ref(false)
+
+  // const analyzerWorker = useWebWorker(AnalyzerWorker)
+  let analyzerWorker = {
+    worker: new AnalyzerWorker(),
+    isRunning: ref(false),
+  }
+  // analyzerWorker.isRunning = ref(false)
+  // console.log(analyzerWorker);
+  const onmessage = (e) => {
+    // console.log("analyzerWorker.onMessage", e);
+    analyzer.value = e.data.analyzer
+    guess.value = e.data.guessed
+    sg.value = e.data.sg
+    analyzerWorker.isRunning.value = false
+    pickedSlicer.value ||= e.data.guessed.modulation
+  }
+  // setTimeout(() => {
+  //   aaa.postMessage({pulses: m.pulsesInRangeRaw, pickedSlicer: pickedSlicer.value})
+  // }, 100)
+  
+  // const www = useWebWorkerFn("@/analyzerWorker.js?worker")
+  // console.log(www);
+  
+  // watch(analyzerWorker.data, () => {
+  //   // console.log("analyzerWorker.data", analyzerWorker.data.value);
+  //   analyzer.value = analyzerWorker.data.value.analyzer
+  //   guess.value = analyzerWorker.data.value.guessed
+  //   sg.value = analyzerWorker.data.value.sg
+  //   analyzerWorker.isRunning.value = false
+  // })
 
   watchWithFilter(
     () => [m.rangeIds, pickedSlicer.value],
     // () => m.pulsesInRangeRaw,
     async () => {
       // console.log(m.pulsesInRangeRaw);
+      // await nextTick()
+      // console.log(123);
+      // www.workerFn(m.pulsesInRangeRaw, pickedSlicer.value)
+      analyzerWorker.isRunning.value = true
+      // analyzerWorker.terminate()
+      analyzerWorker.worker.terminate()
+      analyzerWorker.worker = new AnalyzerWorker()
+      // analyzerWorker.isRunning = ref(true)
+      analyzerWorker.worker.onmessage = onmessage
+      analyzerWorker.worker.postMessage({pulses: m.pulsesInRangeRaw, pickedSlicer: pickedSlicer.value})
+      // analyzerWorker.terminate()
+      // console.log(aaa);
+      
+      return
+      analyzerWorker.worker.value.terminate()
+      // analyzerWorker = useWebWorker(AnalyzerWorker)
+      // analyzerWorker.worker.value = new AnalyzerWorker
+      // console.log(analyzerWorker.worker.value);
+      
+      analyzerWorker.post({pulses: m.pulsesInRangeRaw, pickedSlicer: pickedSlicer.value})
+      return
 
       analyzerWorker.workerTerminate()
       // const result = await analyzerWorker.workerFn(toRaw(pulses.raw_data), m.rangeIds)
@@ -131,8 +145,12 @@ export function getDecoder(m, viewStore, pulses) {
     {
       eventFilter: (fn, { args }) => {
         const [oldVal, newVal] = args
-        if (!newVal || !oldVal) return fn()
-        if (newVal[0] != oldVal[0] || newVal[1] != oldVal[1]) fn()
+        if (!oldVal || newVal?.toString() !== oldVal?.toString())
+          return fn()
+        // if (!newVal || !oldVal) return fn()
+        // console.log(!newVal || !oldVal, newVal[0], oldVal[0],newVal[1] , oldVal[1]);
+        // console.log(!newVal || !oldVal, newVal.toString(), oldVal.toString());
+        // if (newVal[0] != oldVal[0] || newVal[1] != oldVal[1]) return fn()
       },
       immediate: true,
     },
@@ -191,6 +209,7 @@ export function getDecoder(m, viewStore, pulses) {
   //   return null
   return { analyzer, guess, sliceGuess: sg, hasHints, slicers, pickedSlicer, bitsHints, bytesHints, analyzerWorker }
 }
+
 
 export function initMeasurements(pulses, viewStore, pulsesMinX) {
   const measurements = reactive([])
@@ -284,25 +303,21 @@ export function initMeasurements(pulses, viewStore, pulsesMinX) {
     if (index !== -1) measurements.splice(index, 1)
   }
 
+  // const ww1 = useWebWorker('')
 
-  const { data, post, terminate, worker } = useWebWorker('/worker.js')
+  // const ww1 = new Worker(
+  //   new URL('@/ww1', import.meta.url),
+  //   {type: 'module'}
+  // );
 
-  post([1,33])
-  // function InlineWorker(code) {
-  //   var URL = (self.URL || self.webkitURL), BlobBuilder = (self.BlobBuilder || self.WebKitBlobBuilder);
-  //   var bb = new BlobBuilder();
-  //   bb.append("(" + code.toString() + ")();");
-  //   var url = URL.createObjectURL(bb.getBlob("application/javascript"));
-  //   var worker = new Worker(url);
-  //   URL.revokeObjectURL(url);
-  //   return worker;
-  // }
+  // const ww1 = new WW1()
+  // ww1.onmessage = (e) => console.log(e);
+  // ww1.onerror = (e) => console.error(e);
+  // console.log(WW1,ww1);
+  // ww1.postMessage([1232,242], 'asdsa')
   
-  // var worker = new InlineWorker(function() {
-  //   self.postMessage("hi!");
-  // });
-  // worker.onmessage = function(e) { alert('Worker said: ', e.data); };
-  // worker.postMessage("");
+  // const ww2 = useWebWorker("@/ww1.js?worker")
+  
 
   return measurements
 }

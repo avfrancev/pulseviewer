@@ -8,6 +8,7 @@ App for visualizing and analyzing pulse data. Based on Vue 3, vitejs and [Pulsep
 - **Data Analysis**. Provides advanced analytics that can be used to identify trends and patterns in the data.
 - **Data Storage**. Supports local storage to store and retrieve data for future analysis.
 - **Responsive**. The app is designed to be responsive and work on all devices.
+- **Webworkers**. Supports webworkers for faster data processing.
 
 ## Installation
 
