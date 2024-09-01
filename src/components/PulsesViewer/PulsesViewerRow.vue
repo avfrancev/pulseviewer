@@ -143,20 +143,16 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
           text-anchor="middle"
           dominant-baseline="hanging"
           paint-order="stroke")
-          text(class="fill-base-content/60 text-xs pointer-events-auto")
-            tspan(
-              v-for="(h, i) in bitsHints"
-              :data-key="h[0]"
-              :key="i + h[0]"
-              y="5"
-              :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2]}}
-            tspan(
-              class="text-xs font-bold fill-base-content stroke-base-300"
-              v-for="(h, i) in bytesHints"
-              :key="i + h[0]"
-              y="-15"
-              :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2].toString(16).padStart(2, "0").toUpperCase()}}
-
+          text(
+            class="fill-base-content/60 text-xs pointer-events-auto"
+            :x="`${bitsHints.map(h => (h[3] + (h[4] - h[3])/2) * ZT.k).join(' ')}`"
+            @click="console.log(bitsHints)"
+            ) {{bitsHints.map(h => h[2]).join('')}}
+          text(
+            class="text-xs font-bold fill-base-content stroke-base-300"
+            :x="`${bytesHints.map(h => [(h[3] + (h[4] - h[3])/2) * ZT.k-4, (h[3] + (h[4] - h[3])/2) * ZT.k + 4].join(' ')).join(' ')}`"
+            y="-15"
+              ) {{bytesHints.map(h => h[2].toString(16).padStart(2, "0").toUpperCase()).join('')}}
       div(
         class="top-0 absolute will-change-auto"
         v-for="m in pulses.measurements"
@@ -172,6 +168,9 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 </template>
 
 <script setup>
+  function getXX(m) {
+    return `${10*ZT.k}`
+  }
   import { useGesture } from "@vueuse/gesture"
   import { line, curveStepAfter } from "d3-shape"
   import { scaleLinear } from "d3-scale"
@@ -332,7 +331,8 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
       }, [])
   })
 
-  const bitsHints_ = computed(() => {
+  const bitsHints = computed(() => {
+    // return bitsHintsSource.value
     let n = -props.viewStore.xScale(0)
     n += props.pulses.scaledXOffset / ZT.k
     return bitsHintsSource.value.filter((h) => {
@@ -342,7 +342,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bitsHints = refThrottled(bitsHints_, 100, true, true)
+  // const bitsHints = refThrottled(bitsHints_, 100, true, true)
 
   const bytesHintsSource = computed(() => {
     return props.pulses.measurements
@@ -352,7 +352,8 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
       }, [])
   })
 
-  const bytesHints_ = computed(() => {
+  const bytesHints = computed(() => {
+    // return bytesHintsSource.value
     let n = -props.viewStore.xScale(0)
     n += props.pulses.scaledXOffset / ZT.k
     return bytesHintsSource.value.filter((h) => {
@@ -362,7 +363,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bytesHints = refThrottled(bytesHints_, 100, true, true)
+  // const bytesHints = refThrottled(bytesHints_, 100, true, true)
 
   const xOffset = computed(() => {
     let n = -props.viewStore.xScale(0)
