@@ -23,13 +23,13 @@ export const useGestures = (props) => {
           e.event.preventDefault()
           ZT.translateBy(e.delta[0])
         }
-        if (!e.event.shiftKey) return
-        if (e.delta[1] !== 0) {
-          e.event.preventDefault()
-          let x = e.event.clientX - wrapperBounds.value.left
-          const scaleFactor = Math.exp(e.delta[1] * -0.001)
-          ZT.scaleToPointX(scaleFactor, x)
-        }
+        // if (!e.event.ctrlKey) return
+        // if (e.delta[1] !== 0) {
+        //   e.event.preventDefault()
+        //   let x = e.event.clientX - wrapperBounds.value.left
+        //   const scaleFactor = Math.exp(e.delta[1] * -0.0000001)
+        //   ZT.scaleToPointX(scaleFactor, x)
+        // }
       },
       onDrag: (e) => {
         if (e.last) {

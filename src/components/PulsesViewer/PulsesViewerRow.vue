@@ -118,7 +118,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             marker-end="url(#head)"
             :d="`M${arrows.x1},96 L${arrows.x3},96`")
 
-        g(
+        //- g(
           class="bits pointer-events-none"
           v-for="m in pulses.measurements.filter((m) => m.decoder.sliceGuess?.hints?.length)"
           :key="m.id"
@@ -138,7 +138,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
               v-if="m.decoder.bytesHints.length > 0"
               :d="m.decoder.bytesHints.map((g) => g.bytes).flat().filter(bytesFilter.bind(null, 30)).map((h) => `M${h[3]},-20 V20 M${h[4]},-20 V20`).join('')")
 
-        g(
+        //- g(
           :transform="`translate(${-props.viewStore.xScale(0)},91) scale(${1 / ZT.k},1)`"
           text-anchor="middle"
           dominant-baseline="hanging"
@@ -148,11 +148,48 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             :x="`${bitsHints.map(h => (h[3] + (h[4] - h[3])/2) * ZT.k).join(' ')}`"
             @click="console.log(bitsHints)"
             ) {{bitsHints.map(h => h[2]).join('')}}
-          text(
+          //- text(
             class="text-xs font-bold fill-base-content stroke-base-300"
             :x="`${bytesHints.map(h => [(h[3] + (h[4] - h[3])/2) * ZT.k-4, (h[3] + (h[4] - h[3])/2) * ZT.k + 4].join(' ')).join(' ')}`"
             y="-15"
               ) {{bytesHints.map(h => h[2].toString(16).padStart(2, "0").toUpperCase()).join('')}}
+      svg.absolute.top-0.pointer-events-none(
+        class="w-full h-[120px] will-change-auto"
+        :viewBox="`${-ZT.x - viewStore.xScale(pulses.xOffset + pulsesStore.minX)*ZT.k} 0 ${wrapperBounds.width} 120`"
+        )
+        g(
+          class="bits pointer-events-none"
+          v-for="m in pulses.measurements.filter((m) => m.decoder.sliceGuess?.hints?.length)"
+          :key="m.id"
+          )
+          //- :transform="`translate(${-props.viewStore.xScale(0)},91)`"
+          template(v-if="!m.decoder.analyzerWorker?.isRunning")
+            path(
+              class="stroke-1 stroke-base-content/20"
+              v-if="bitsHints.length > 0"
+              :d="bitsHints.map((h) => `M${h[3]*ZT.k},95 V110 M${h[4]*ZT.k},95 V110`).join('')")
+            path(
+              class="stroke-1 stroke-info"
+              v-if="m.decoder.bytesHints.length > 0"
+              :d="m.decoder.bytesHints.map((g) => g.bytes).flat().filter(bytesFilter.bind(null, 30)).map((h) => `M${h[3]*ZT.k},75 V90 M${h[4]*ZT.k},75 V90`).join('')")
+            path(
+              class="stroke-1 stroke-error"
+              v-if="!m.decoder.analyzerWorker?.isRunning"
+              :d="m.decoder.bytesHints.map((g) => `M${g.scaledRange[0]*ZT.k},0 V120 M${g.scaledRange[1]*ZT.k},0 V120 `).join('')")
+        text(
+          class="fill-base-content/60 text-xs"
+          :x="`${bitsHints.map(h => (h[3] + (h[4] - h[3])/2) * ZT.k).join(' ')}`"
+          text-anchor="middle"
+          y=107
+          ) {{bitsHints.map(h => h[2]).join('')}}
+        text(
+          text-anchor="middle"
+          class="text-xs font-bold fill-base-content stroke-base-100 stroke-2"
+          :x="`${bytesHints.map(h => [(h[3] + (h[4] - h[3])/2) * ZT.k-4, (h[3] + (h[4] - h[3])/2) * ZT.k + 4].join(' ')).join(' ')}`"
+          paint-order="stroke"
+          y=85
+          ) {{bytesHints.map(h => h[2].toString(16).padStart(2, "0").toUpperCase()).join('')}}
+      
       div(
         class="top-0 absolute will-change-auto"
         v-for="m in pulses.measurements"
@@ -168,9 +205,6 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 </template>
 
 <script setup>
-  function getXX(m) {
-    return `${10*ZT.k}`
-  }
   import { useGesture } from "@vueuse/gesture"
   import { line, curveStepAfter } from "d3-shape"
   import { scaleLinear } from "d3-scale"
@@ -278,7 +312,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
         if (tmpMeasurement) s.event.stopPropagation()
 
-        if (s.altKey && !s.first) {
+        if (s.shiftKey && !s.first) {
           s.event.stopPropagation()
           let x = s.event.clientX - wrapperBounds.left - ZT.x
           props.pulses.cursorX = props.viewStore.xScale.invert(x / ZT.k) - props.pulses.xOffset
@@ -333,10 +367,11 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
   const bitsHints = computed(() => {
     // return bitsHintsSource.value
-    let n = -props.viewStore.xScale(0)
+    let n = -props.viewStore.xScale(0) / ZT.k
+    n = 0
     n += props.pulses.scaledXOffset / ZT.k
     return bitsHintsSource.value.filter((h) => {
-      const scaleConstraint = (h[4] - h[3]) * ZT.k > 20
+      const scaleConstraint = (h[4] - h[3]) * ZT.k > 10
       const viewportConstraint = props.viewStore.isRangeInView(n + h[3], n + h[4])
       return scaleConstraint && viewportConstraint
     })
@@ -353,8 +388,8 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
   })
 
   const bytesHints = computed(() => {
-    // return bytesHintsSource.value
     let n = -props.viewStore.xScale(0)
+    n=0
     n += props.pulses.scaledXOffset / ZT.k
     return bytesHintsSource.value.filter((h) => {
       const scaleConstraint = (h[4] - h[3]) * ZT.k > 30
@@ -367,13 +402,16 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
   const xOffset = computed(() => {
     let n = -props.viewStore.xScale(0)
+    n = 0
     n += props.pulses.scaledXOffset / ZT.k
     return n
   })
 
   function bytesFilter(w, h) {
     const scaleConstraint = (h[4] - h[3]) * ZT.k > w
+    // const scaleConstraint = (h[4] - h[3]) > w
     const viewportConstraint = props.viewStore.isRangeInView(xOffset.value + h[3], xOffset.value + h[4])
     return scaleConstraint && viewportConstraint
+    return viewportConstraint
   }
 </script>
