@@ -83,7 +83,7 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
           PopoverArrow(class="fill-base-300")
 
   template(v-if="currentSession")
-    PulsesViewerRoot(
+    PulsesViewerRootPaper(
       v-bind="{session: currentSession, sessionsStore}"
       :key="currentSession.id")
 </template>

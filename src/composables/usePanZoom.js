@@ -61,7 +61,7 @@ export const useGestures = (props) => {
           gestures.state.wheel.cancel()
           if (e.delta[2] !== 0) {
             e.event.preventDefault()
-            const scaleFactor = Math.exp(e.delta[1] * -0.005)
+            const scaleFactor = Math.exp(e.delta[1] * -0.001)
             ZT.scaleToPointX(scaleFactor, x)
           }
         }

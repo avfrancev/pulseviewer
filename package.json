@@ -24,6 +24,7 @@
     "d3-scale-chromatic": "^3.1.0",
     "d3-shape": "^3.2.0",
     "d3-zoom": "^3.0.0",
+    "paper": "^0.12.18",
     "pinia": "^2.2.1",
     "pinia-di": "^3.1.2",
     "popmotion": "^11.0.5",
