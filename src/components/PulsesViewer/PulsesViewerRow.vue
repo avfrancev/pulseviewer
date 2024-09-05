@@ -2,9 +2,8 @@
 div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-2 outline-1 outline-dashed outline-base-content/40`")
   div(
     class="relative rounded"
-    ref="chartElWrapper"
+    ref="wrapper"
     @mouseover="isHovered = true"
-    @touchstart="console.log"
     @mouseleave="isHovered = false")
     div(class="join join-verticals absolute left-0 top-0 pr-12s z-10 shadow-lg -translate-y-full bg-base-300" v-show="isHovered")
       button(class="join-item btn btn-sm btn-square drag-handle cursor-grab active:cursor-grabbing")
@@ -16,10 +15,11 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
         template(#content)
           DialogTitle(class="mb-4 text-lg font-bolds")
             | Edit pulses
+          DialogDescription
           textarea(
             class="flex-1 input w-full"
             v-wheel="(e) => e.event.stopImmediatePropagation()"
-            v-model="raw_data")
+            v-model.lazy="raw_data")
           div(class="mt-3 flex justify-end")
             DialogClose(as-child)
               button(class="btn")
@@ -63,13 +63,15 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
         title="Remove pulses")
         i-tabler:trash
 
-    div(class="relative overflow-hidden")
+    //- div(class="relative overflow-hidden")
+    div(class="relative h-[120px]" ref="wrapper")
+      //- p {{  pulses.viewportRangeIDs }}
       svg(
-        class="w-full h-[120px] will-change-auto"
+        class="w-full h-[120px] will-change-auto absolute top-0"
         preserveAspectRatio="none"
         :viewBox="svgViewBox"
         ref="chartEl"
-        :height="chartElBounds.height.value || 1")
+        :height="wrapperBounds.height.value || 1")
         //- :viewBox="`${-ZT.x/ZT.k - viewStore.xScale(pulses.xOffset)} -1 ${wrapperBounds.width/ZT.k} ${150}`"
         defs
           marker#head(
@@ -85,9 +87,6 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
               :transform="`scale(${1 / ZT.k},${1})`"
               :d="`M 0 0 L 10 5 L 0 10 z`") 
 
-        PulsesMeasurements(v-bind="{pulses: props.pulses, pulsesStore, viewStore}")
-
-        path(class="fill-none pointer-events-none select-none touch-none stroke-base-content/50 dark:stroke-accent" :d="pulsesLine")
         g(
           class="arrows pointer-events-none select-none touch-none"
           v-if="(dataUnderCursor?.width / viewStore.pixelRatio) * ZT.k > 15 && isHovered && arrows.x1 !== undefined && arrows.x3 !== undefined")
@@ -118,44 +117,11 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             marker-end="url(#head)"
             :d="`M${arrows.x1},96 L${arrows.x3},96`")
 
-        g(
-          class="bits pointer-events-none"
-          v-for="m in pulses.measurements.filter((m) => m.decoder.sliceGuess?.hints?.length)"
-          :key="m.id"
-          :transform="`translate(${-props.viewStore.xScale(0)},91)`")
-          template(v-if="!m.decoder.analyzerWorker?.isRunning")
-            path(
-              class="stroke-1 stroke-error"
-              v-if="!m.decoder.analyzerWorker?.isRunning"
-              :d="m.decoder.bytesHints.map((g) => `M${g.scaledRange[0]},20 V-100 M${g.scaledRange[1]},20 V-100 `).join('')")
-            //- g(v-if="m.decoder.sliceGuess.groups.some((g) => g.bytes.filter(bytesFilter.bind(null, {m, g})).length)")
-            path(
-              class="stroke-1 stroke-base-content/20"
-              v-if="bitsHints.length > 0"
-              :d="bitsHints.map((h) => `M${h[3]},0 V20 M${h[4]},0 V20`).join('')")
-            path(
-              class="stroke-1 stroke-info"
-              v-if="m.decoder.bytesHints.length > 0"
-              :d="m.decoder.bytesHints.map((g) => g.bytes).flat().filter(bytesFilter.bind(null, 30)).map((h) => `M${h[3]},-20 V20 M${h[4]},-20 V20`).join('')")
-
-        g(
-          :transform="`translate(${-props.viewStore.xScale(0)},91) scale(${1 / ZT.k},1)`"
-          text-anchor="middle"
-          dominant-baseline="hanging"
-          paint-order="stroke")
-          text(class="fill-base-content/60 text-xs pointer-events-auto")
-            tspan(
-              v-for="(h, i) in bitsHints"
-              :data-key="h[0]"
-              :key="i + h[0]"
-              y="5"
-              :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2]}}
-            tspan(
-              class="text-xs font-bold fill-base-content stroke-base-300"
-              v-for="(h, i) in bytesHints"
-              :key="i + h[0]"
-              y="-15"
-              :x="`${(h[3] + (h[4] - h[3]) / 2) * ZT.k}`") {{h[2].toString(16).padStart(2, "0").toUpperCase()}}
+        PulsesMeasurements(v-bind="{pulses: pulses, pulsesStore, viewStore}")
+      canvas(
+        ref="canvas"
+        :width="wrapperBounds.width.value"
+        :height="wrapperBounds.height.value"       class="absolute pointer-events-none")
 
       div(
         class="top-0 absolute will-change-auto"
@@ -171,16 +137,19 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             div(class="loading")
 </template>
 
-<script setup>
+<script setup lang="jsx">
+  import { bisector } from "d3-array"
+  import paper from "paper/dist/paper-core"
   import { useGesture } from "@vueuse/gesture"
-  import { line, curveStepAfter } from "d3-shape"
   import { scaleLinear } from "d3-scale"
 
   import useSessionStore from "@/stores/sessions"
   import useConfigStore from "@/stores/config"
 
-  import { PulsesMeasurements } from "./Measurements"
+  import { PulsesMeasurements } from "@/components/PulsesViewer/Measurements"
   import { usePulsesStore } from "@/models"
+  import { colors, getColor, mode, darkColors, lightColors } from "@/stores/colors"
+import { average } from "simple-statistics"
 
   const props = defineProps({
     pulses: {
@@ -197,46 +166,36 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     },
   })
 
-  const chartEl = ref(null)
-  const chartElWrapper = ref(null)
-  const chartElBounds = useElementBounding(chartEl)
-
-  const sessionsStore = useSessionStore()
   const { config } = useConfigStore()
-  const yScale = scaleLinear([0, 1], [20, 90])
+  const sessionsStore = useSessionStore()
 
+  // const pulsesStore = usePulsesStore(props.session.id)
+  const { pulses, viewStore, pulsesStore } = props
   const { ZT } = props.viewStore.state
-  const wrapperBounds = props.viewStore.wrapperBounds
+  // const { pulses } = props
 
-  const genLine = computed(() => {
-    return line()
-      .x((d) => props.viewStore.xScale(d.time))
-      .y((d) => yScale(d.level))
-      .curve(curveStepAfter)
-  })
+  const wrapper = ref(null)
+  const canvas = ref(null)
+  const chartEl = ref(null)
+  const wrapperBounds = useElementBounding(wrapper)
 
-  const pulsesLine = computed(() => {
-    let lastPulse = props.pulses[props.pulses.length - 1]
-    let l = genLine.value(props.pulses)
-    l += `L${props.viewStore.xScale(lastPulse.time + lastPulse.width)},${yScale(lastPulse.level)}`
-    return l
-  })
+  const targetIsVisible = useElementVisibility(wrapper)
 
   const svgViewBox = computed(() => {
-    let x = -ZT.x / ZT.k - props.viewStore.xScale(props.pulses.xOffset + props.pulsesStore.minX)
-    let w = wrapperBounds.width / ZT.k
-    return `${x} -1 ${w} ${chartElBounds.height.value || 0}`
+    let x = -ZT.x / ZT.k - viewStore.xScale(pulses.xOffset + pulsesStore.minX)
+    let w = wrapperBounds.width.value / ZT.k
+    return `${x} -1 ${w} ${wrapperBounds.height.value || 0}`
   })
 
   const isHovered = ref(false)
 
-  const dataUnderCursor = computed(() => props.pulses[props.pulses.dataIDUnderCursor])
+  const dataUnderCursor = computed(() => pulses[pulses.dataIDUnderCursor])
 
   const arrows = computed(() => {
-    let next = props.pulses[props.pulses.dataIDUnderCursor + 1]
-    let x1 = props.viewStore.xScale(dataUnderCursor.value?.time)
-    let x2 = props.viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width)
-    let x3 = props.viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width + next?.width)
+    let next = pulses[pulses.dataIDUnderCursor + 1]
+    let x1 = viewStore.xScale(dataUnderCursor.value?.time)
+    let x2 = viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width)
+    let x3 = viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width + next?.width)
     return {
       x1,
       x2,
@@ -254,10 +213,11 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
   const raw_data = computed({
     get() {
-      return props.pulses.raw_data
+      return pulses.raw_data
     },
     set(v) {
-      props.pulses.raw_data = v.split(",").map(Number)
+      v = v.split(",").map(Number)
+      pulses.raw_data = v
     },
   })
 
@@ -267,8 +227,8 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     {
       onMove: (s) => {
         if (s.dragging || tmpMeasurement) return
-        let x = s.event.clientX - wrapperBounds.left - ZT.x
-        props.pulses.cursorX = props.viewStore.xScale.invert(x / ZT.k) - props.pulses.xOffset
+        let x = s.event.clientX - wrapperBounds.left.value - ZT.x
+        pulses.cursorX = viewStore.xScale.invert(x / ZT.k) - pulses.xOffset
       },
       onDrag: (s) => {
         if (s.shiftKey && (s.ctrlKey || s.metaKey)) {
@@ -281,7 +241,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
         if (s.altKey && !s.first) {
           s.event.stopPropagation()
-          let x = s.event.clientX - wrapperBounds.left - ZT.x
+          let x = s.event.clientX - wrapperBounds.left.value - ZT.x
           props.pulses.cursorX = props.viewStore.xScale.invert(x / ZT.k) - props.pulses.xOffset
           if (tmpMeasurement && s.last) {
             tmpMeasurement = null
@@ -293,7 +253,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             return
           }
           if (!tmpMeasurement && s.delta[0] !== 0) {
-            let x = s.event.clientX - wrapperBounds.left - ZT.x
+            let x = s.event.clientX - wrapperBounds.left.value - ZT.x
             tmpMeasurement = props.pulses.measurements.addMeasurement(props.pulses.cursorX, props.pulses.cursorX)
           }
           return
@@ -325,14 +285,15 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
   })
 
   const bitsHintsSource = computed(() => {
-    return props.pulses.measurements
+    return pulses.measurements
+      .toSorted((a, b) => a.minXWithXOffset - b.minXWithXOffset)
       .filter((m) => !m.decoder.analyzerWorker.isRunning)
       .reduce((acc, m) => {
-        return [...acc, ...(m.decoder?.sliceGuess?.hints || [])]
+        return [...acc, ...(m.decoder?.bitsHints || [])]
       }, [])
   })
 
-  const bitsHints_ = computed(() => {
+  const bitsHints = computed(() => {
     let n = -props.viewStore.xScale(0)
     n += props.pulses.scaledXOffset / ZT.k
     return bitsHintsSource.value.filter((h) => {
@@ -342,37 +303,161 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bitsHints = refThrottled(bitsHints_, 100, true, true)
-
-  const bytesHintsSource = computed(() => {
-    return props.pulses.measurements
-      .filter((m) => !m.decoder.analyzerWorker.isRunning)
-      .reduce((acc, m) => {
-        return [...acc, ...(m.decoder.bytesHints.map((g) => g.bytes).flat() || [])]
-      }, [])
-  })
-
-  const bytesHints_ = computed(() => {
-    let n = -props.viewStore.xScale(0)
-    n += props.pulses.scaledXOffset / ZT.k
-    return bytesHintsSource.value.filter((h) => {
-      const scaleConstraint = (h[4] - h[3]) * ZT.k > 30
-      const viewportConstraint = props.viewStore.isRangeInView(n + h[3], n + h[4])
-      return scaleConstraint && viewportConstraint
-    })
-  })
-
-  const bytesHints = refThrottled(bytesHints_, 100, true, true)
-
-  const xOffset = computed(() => {
-    let n = -props.viewStore.xScale(0)
-    n += props.pulses.scaledXOffset / ZT.k
-    return n
-  })
-
-  function bytesFilter(w, h) {
-    const scaleConstraint = (h[4] - h[3]) * ZT.k > w
-    const viewportConstraint = props.viewStore.isRangeInView(xOffset.value + h[3], xOffset.value + h[4])
-    return scaleConstraint && viewportConstraint
+  const transformPath = (path, matrix) => {
+    const copy = new Path2D()
+    copy.addPath(path, matrix)
+    return copy
   }
+
+  const bitsHintsSourcePath = computed(() => {
+    return bitsHintsSource.value.reduce((acc, h) => {
+      acc += `M${h[3]} 94 V108 M${h[4]} 94 V108 `
+      return acc
+    }, "")
+  })
+
+  const pulsesPath = computed(() => {
+    let o = pulses.reduce((acc, d, i) => {
+      const t = i % 2 === 0
+      let x = viewStore.xScale(d.time)
+      let w = x + viewStore.xScale(d.width + pulsesStore.minOffset)
+      return (acc += `M${x},${t ? 22 : 90} V${t ? 90 : 22} H${w}`)
+    }, "")
+    return new Path2D(o)
+  })
+
+  const bitsHintsSourceViewportIDs = computed(() => {
+    let l = viewStore.state.viewportLeft - pulses.scaledXOffset / ZT.k
+    let r = viewStore.state.viewportRight - pulses.scaledXOffset / ZT.k
+    // return [arr.bisector(h=>h[3])(bitsHints.value, l).left(arr, l)]
+    let ids = [bisector((h) => h[3]).left(bitsHintsSource.value, l), bisector((h) => h[4]).left(bitsHintsSource.value, r)]
+    return ids
+  })
+
+  let ctx, ctx__, sprites
+  let scope = new paper.PaperScope()
+
+  watch(wrapperBounds.width, () => {
+    canvas.value.width = wrapperBounds.width.value
+    canvas.value.height = wrapperBounds.height.value
+    canvas.value.offscreenCanvas.width = wrapperBounds.width.value
+    canvas.value.offscreenCanvas.height = wrapperBounds.height.value
+  })
+  
+  watch(
+    () => [ZT.k, ZT.x, bitsHintsSource.value, pulses.scaledXOffset, mode.value, pulses.raw_data, targetIsVisible.value, wrapperBounds.width.value],
+    () => {
+      if (targetIsVisible.value === false) return
+      window.requestAnimationFrame(draw)
+    },
+    { immediate: true },
+  )
+
+  let a = []
+  function draw() {
+    if (!ctx) return
+    ctx.clearRect(0, 0, wrapperBounds.width.value, wrapperBounds.height.value)
+    ctx.reset()
+    ctx.strokeStyle = getColor(["accent", "base-content"], [1, 0.4]).value
+    ctx.stroke(transformPath(pulsesPath.value, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+    drawBitsHints()
+    drawBytesHints()
+  }
+
+  function drawBytesHints() {
+    let bytesRangesPath = new Path2D()
+    let bytesRangesPathErr = new Path2D()
+    ctx.fillStyle = getColor(["base-content", "base-content"], [0.8, 0.8]).value
+    ctx.strokeStyle = getColor(["base-100", "base-100"], [0.8, 0.8]).value
+    ctx.lineWidth = 3
+    ctx.textAlign = "center"
+    ctx.font = "bold 10px monospace"
+    // return
+    pulses.measurements.forEach((m) => {
+      if (m.decoder.analyzerWorker.isRunning) return
+      m.decoder.bytesHints.forEach((h) => {
+        h.bytes.forEach((b) => {
+          bytesRangesPath.moveTo(b[3], 70)
+          bytesRangesPath.lineTo(b[3], 110)
+          bytesRangesPath.moveTo(b[4], 70)
+          bytesRangesPath.lineTo(b[4], 110)
+          let w = b[4] - b[3]
+          if (w * ZT.k < 30) return
+          let args = [b[2].toString(16).padStart(2, "0").toUpperCase(), (b[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 85, w * ZT.k]
+          ctx.strokeText(...args)
+          ctx.fillText(...args)
+        })
+        bytesRangesPathErr.moveTo(h.scaledRange[0], 0)
+        bytesRangesPathErr.lineTo(h.scaledRange[0], 110)
+        bytesRangesPathErr.moveTo(h.scaledRange[1], 0)
+        bytesRangesPathErr.lineTo(h.scaledRange[1], 110)
+      })
+    })
+    ctx.lineWidth = 1
+    ctx.strokeStyle = getColor(["error", "error"], [0.9, 0.9]).value
+    ctx.stroke(transformPath(bytesRangesPathErr, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+    ctx.strokeStyle = getColor(["info", "info"], [0.9, 0.9]).value
+    ctx.stroke(transformPath(bytesRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+  }
+
+  function drawBitsHints() {
+    let bitsRangesPath = new Path2D()
+    ctx.fillStyle = getColor(["base-content", "base-content"], [0.6, 0.5]).value
+    ctx.textAlign = "center"
+    ctx.font = "10px monospace"
+    
+    
+    pulses.measurements.forEach((m) => {
+      if (m.decoder.analyzerWorker.isRunning) return
+      let w = viewStore.xScale(m.decoder.guess?.short)
+      if (w && w*ZT.k < 5) return
+      
+      for (let i = m.decoder.viewportRangeIDs[0] - 1; i <= m.decoder.viewportRangeIDs[1]; i++) {
+        let h = m.decoder.bitsHints[i]
+        if (!h) continue
+        w = h[4] - h[3]
+        if (w * ZT.k < 10) continue
+        ctx.fillText(h[2], (h[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 105, w * ZT.k)
+        bitsRangesPath.moveTo(h[3], 94)
+        bitsRangesPath.lineTo(h[3], 108)
+        bitsRangesPath.moveTo(h[4], 94)
+        bitsRangesPath.lineTo(h[4], 108)
+      }
+    })
+    ctx.strokeStyle = getColor(["base-content", "base-content"], [0.4, 0.3]).value
+    ctx.stroke(transformPath(bitsRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+  }
+
+  async function createOffscreenCanvas() {
+    canvas.value.offscreenCanvas = document.createElement("canvas");
+    ctx__ = canvas.value.offscreenCanvas.getContext("2d", {
+      alpha: true,
+    })
+    ctx__.fillStyle = getColor(["base-content", "base-content"], [1, 0.5]).value
+    ctx__.textAlign = "center"
+    ctx__.font = "10px monospace"
+    
+    ctx__.fillText("0", 5, 10)
+    ctx__.fillText("1", 15, 10)
+    ctx__.fillText("X", 25, 10)
+    // ctx__.strokeStyle = "red"
+    // ctx__.lineWidth = 5
+    // ctx__.beginPath()
+    // ctx__.moveTo(0, 0)
+    // ctx__.lineTo(10, 10)
+    // ctx__.stroke()
+    sprites = await Promise.all([
+      createImageBitmap(canvas.value.offscreenCanvas, 0,0,10,10),
+      createImageBitmap(canvas.value.offscreenCanvas, 10,0,10,10),
+      createImageBitmap(canvas.value.offscreenCanvas, 20,0,10,10),
+    ])
+    
+  }
+  
+  onMounted(() => {
+    ctx = canvas.value.getContext("2d", {
+      alpha: true,
+    })
+    createOffscreenCanvas()
+  })
 </script>
