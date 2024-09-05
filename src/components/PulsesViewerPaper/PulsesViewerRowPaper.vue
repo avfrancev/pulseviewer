@@ -1,11 +1,142 @@
 <template lang="pug">
+div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-2 outline-1 outline-dashed outline-base-content/40`")
+  div(
+    class="relative rounded"
+    ref="wrapper"
+    @mouseover="isHovered = true"
+    @mouseleave="isHovered = false")
+    div(class="join join-verticals absolute left-0 top-0 pr-12s z-10 shadow-lg -translate-y-full bg-base-300" v-show="isHovered")
+      button(class="join-item btn btn-sm btn-square drag-handle cursor-grab active:cursor-grabbing")
+        i-ic:round-drag-indicator
+      Modal
+        template(#trigger)
+          DialogTrigger(class="join-item btn btn-sm btn-square")
+            i-mdi:edit-outline
+        template(#content)
+          DialogTitle(class="mb-4 text-lg font-bolds")
+            | Edit pulses
+          textarea(
+            class="flex-1 input w-full"
+            v-wheel="(e) => e.event.stopImmediatePropagation()"
+            v-model="raw_data")
+          div(class="mt-3 flex justify-end")
+            DialogClose(as-child)
+              button(class="btn")
+                | OK
+          DialogClose(class="btn btn-square btn-sm text-xs top-0 right-0 absolute m-2" aria-label="Close")
+            i-fa:close 
+      button(
+        class="join-item btn btn-sm btn-square"
+        @click="pulses.measurements.addMeasurement(0, pulses[pulses.length - 1].time)"
+        title="Measure all")
+        i-fluent-emoji-high-contrast:orange-square
+      button(
+        class="join-item btn btn-sm btn-square"
+        :disabled="pulses.xOffset === 0"
+        @click.stop="pulses.xOffset = 0"
+        title="Reset offset")
+        i-ph:align-left-fill
 
-//- pre {{ bitsHintsSource.length }}
-div(ref="wrapper" class="border")
-  canvas(ref="canvas" class="w-full h-32")
+      PopoverRoot
+        PopoverTrigger(
+          class="join-item btn btn-square btn-sm"
+          aria-label="Copy to session"
+          title="Copy to session")
+          i-material-symbols:copy-all
+        PopoverContent(
+          class="bg-base-300 menu rounded z-30 p-0 shadow-lg"
+          side="bottom"
+          :side-offset="2")
+          p(class="px-2 py-2 text-xs text-base-content/50") Copy to:
+          PopoverClose
+            li: a(
+              class="text-xs px-2 py-1 rounded"
+              v-for="s in copyToSessionMenu"
+              :key="s.id"
+              @click="s.action") {{s.label}}
+          PopoverArrow(class="fill-base-300")
+
+      button(
+        class="join-item btn btn-sm btn-square hover:btn-error"
+        @click.stop="pulsesStore.removePulses(pulses)"
+        title="Remove pulses")
+        i-tabler:trash
+
+    //- div(class="relative overflow-hidden")
+    div(ref="wrapper" class="relative h-[120px]")
+      //- p {{  pulses.viewportRangeIDs }}
+      svg(
+        class="w-full h-[120px] will-change-auto absolute top-0"
+        preserveAspectRatio="none"
+        :viewBox="svgViewBox"
+        ref="chartEl"
+        :height="wrapperBounds.height.value || 1")
+        //- :viewBox="`${-ZT.x/ZT.k - viewStore.xScale(pulses.xOffset)} -1 ${wrapperBounds.width/ZT.k} ${150}`"
+        defs
+          marker#head(
+            markerUnits="userSpaceOnUse"
+            :viewBox="`0 0 10 10`"
+            :refX="10 / ZT.k"
+            :refY="5"
+            :markerWidth="6"
+            :markerHeight="6"
+            orient="auto-start-reverse")
+            path(
+              class="fill-base-content"
+              :transform="`scale(${1 / ZT.k},${1})`"
+              :d="`M 0 0 L 10 5 L 0 10 z`") 
+
+        g(
+          class="arrows pointer-events-none select-none touch-none"
+          v-if="(dataUnderCursor?.width / viewStore.pixelRatio) * ZT.k > 15 && isHovered && arrows.x1 !== undefined && arrows.x3 !== undefined")
+          text(
+            class="fill-base-content text-xs"
+            :x="arrows.label1.x"
+            dy="0"
+            :transform="`scale(${1 / ZT.k},1)`"
+            :transform-origin="`${arrows.label1.x} 0`"
+            dominant-baseline="hanging"
+            text-anchor="middle") {{arrows.label1.text}}
+          text(
+            class="fill-base-content text-xs"
+            :x="arrows.label1.x"
+            dy="100"
+            :transform="`scale(${1 / ZT.k},1)`"
+            :transform-origin="`${arrows.label2.x} 0`"
+            dominant-baseline="hanging"
+            text-anchor="middle") {{arrows.label2.text}}
+          path(
+            class="stroke-base-content stroke-1 fill-none"
+            marker-start="url(#head)"
+            marker-end="url(#head)"
+            :d="`M${arrows.x1},15 L${arrows.x2},15`")
+          path(
+            class="stroke-base-content stroke-1 fill-none"
+            marker-start="url(#head)"
+            marker-end="url(#head)"
+            :d="`M${arrows.x1},96 L${arrows.x3},96`")
+
+        PulsesMeasurements(v-bind="{pulses: pulses, pulsesStore, viewStore}")
+      canvas.absolute.pointer-events-none(ref="canvas" :width="wrapperBounds.width.value" :height="wrapperBounds.height.value")
+
+      div(
+        class="top-0 absolute will-change-auto"
+        v-for="m in pulses.measurements"
+        :key="m.id"
+        :style="{width: `${m.scaledWidth * ZT.k}px`, transform: `translate3d(${m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}")
+        Transition(
+          enter-active-class="transition-opacity duration-300"
+          leave-active-class="transition-opacity duration-300"
+          enter-from-class="opacity-0"
+          leave-to-class="opacity-0")
+          div(class="text-right p-2" v-if="m.decoder.analyzerWorker?.isRunning")
+            div(class="loading")
+
+
 </template>
 
 <script setup lang="jsx">
+  import { bisector } from "d3-array"
   import paper from "paper/dist/paper-core"
   import { useGesture } from "@vueuse/gesture"
   import { scaleLinear } from "d3-scale"
@@ -13,8 +144,10 @@ div(ref="wrapper" class="border")
   import useSessionStore from "@/stores/sessions"
   import useConfigStore from "@/stores/config"
 
-  // import { PulsesMeasurements } from "./Measurements"
+  import { PulsesMeasurements } from "@/components/PulsesViewer/Measurements"
   import { usePulsesStore } from "@/models"
+  import {colors, getColor, mode, darkColors, lightColors} from "@/stores/colors"
+  
 
   const props = defineProps({
     pulses: {
@@ -33,185 +166,127 @@ div(ref="wrapper" class="border")
 
   const { config } = useConfigStore()
 
-  // const viewStore = useViewStore(props.session.id)
   // const pulsesStore = usePulsesStore(props.session.id)
-  const { pulses, viewStore } = props
+  const { pulses, viewStore, pulsesStore } = props
   const { ZT } = props.viewStore.state
   // const { pulses } = props
 
   const wrapper = ref(null)
   const canvas = ref(null)
+  const chartEl = ref(null)
   const wrapperBounds = useElementBounding(wrapper)
 
-  let scope = new paper.PaperScope()
-
-  onMounted(() => {
-    scope.setup(canvas.value)
-
-    // Draw the view now:
-    // paper.view.draw()
-    initZoom()
-    drawPulses()
-    drawText()
+  const svgViewBox = computed(() => {
+    let x = -ZT.x / ZT.k - viewStore.xScale(pulses.xOffset + pulsesStore.minX)
+    let w = wrapperBounds.width.value / ZT.k
+    return `${x} -1 ${w} ${wrapperBounds.height.value || 0}`
   })
 
-  function initZoom() {
-    watch(
-      ZT,
-      () => {
-        scope.view.matrix = new scope.Matrix(ZT.k, 0, 0, 1, ZT.x, 0)
-      }
-    )
+  const isHovered = ref(false)
+
+  const dataUnderCursor = computed(() => pulses[pulses.dataIDUnderCursor])
+
+  const arrows = computed(() => {
+    let next = pulses[pulses.dataIDUnderCursor + 1]
+    let x1 = viewStore.xScale(dataUnderCursor.value?.time)
+    let x2 = viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width)
+    let x3 = viewStore.xScale(dataUnderCursor.value?.time + dataUnderCursor.value?.width + next?.width)
+    return {
+      x1,
+      x2,
+      x3: next ? x3 : undefined,
+      label1: {
+        x: x1 + (x2 - x1) / 2,
+        text: `${dataUnderCursor.value?.width}`,
+      },
+      label2: {
+        x: x1 + (x3 - x1) / 2,
+        text: next?.width + dataUnderCursor.value?.width,
+      },
+    }
+  })
+
+  const raw_data = computed({
+    get() {
+      return props.pulses.raw_data
+    },
+    set(v) {
+      props.pulses.raw_data = v.split(",").map(Number)
+    },
+  })
+
+  let tmpMeasurement = null
+
+  useGesture(
+    {
+      onMove: (s) => {
+        if (s.dragging || tmpMeasurement) return
+        let x = s.event.clientX - wrapperBounds.left.value - ZT.x
+        pulses.cursorX = viewStore.xScale.invert(x / ZT.k) - pulses.xOffset
+      },
+      onDrag: (s) => {
+        if (s.shiftKey && (s.ctrlKey || s.metaKey)) {
+          s.event.stopPropagation()
+          props.pulses.xOffset += (props.viewStore.pixelRatio * s.delta[0]) / ZT.k
+          return
+        }
+
+        if (tmpMeasurement) s.event.stopPropagation()
+
+        if (s.altKey && !s.first) {
+          s.event.stopPropagation()
+          let x = s.event.clientX - wrapperBounds.left.value - ZT.x
+          props.pulses.cursorX = props.viewStore.xScale.invert(x / ZT.k) - props.pulses.xOffset
+          if (tmpMeasurement && s.last) {
+            tmpMeasurement = null
+            props.viewStore.state.gestures.state.drag.cancel()
+            return
+          }
+          if (tmpMeasurement) {
+            tmpMeasurement.x2 = props.pulses.cursorX
+            return
+          }
+          if (!tmpMeasurement && s.delta[0] !== 0) {
+            let x = s.event.clientX - wrapperBounds.left.value - ZT.x
+            tmpMeasurement = props.pulses.measurements.addMeasurement(props.pulses.cursorX, props.pulses.cursorX)
+          }
+          return
+        }
+      },
+    },
+    {
+      domTarget: chartEl,
+    },
+  )
+
+  function copyToSession(_pulses, sessionId) {
+    const ps = usePulsesStore(sessionId)
+    ps.loadPulses([_pulses], false)
   }
 
-  function drawPulses() {
-    let path
-    watch(
-      () => [pulses, viewStore.xScale], () => {
-        const pulsesScaled = pulses.map((d) => viewStore.xScale(d.time))
-        let segments = []
-        pulsesScaled.forEach((x, i) => {
-          const t = i % 2 === 0 
-          segments.push([x, t ? 20 : 80],[x, t ? 80 : 20])
-        })
-        scope.activate()
-        path = new scope.Path({
-          segments,
-          strokeColor: 'lightgreen',
-          strokeWidth: 1,
-          // strokeCap: 'round',
-          strokeScaling: false,
-          selected: false,
-        });
+  const copyToSessionMenu = computed(() => {
+    return sessionsStore.sessions.map((s, i) => {
+      let label = props.pulsesStore.uuid === s.id ? "Current" : `Session #${i + (config.useESP32 ? 0 : 1)}`
+      if (s.id === "ESP32") label = "ESP32"
+      return {
+        id: s.id,
+        label,
+        action: () => {
+          copyToSession(props.pulses, s.id)
+        },
       }
-    )
-
-  }
-
-  function drawText() {
-    scope.activate()
-    const textGroup = new scope.Group()
-    const arr = []
-    let p = new scope.Path()
-    
-    // const bitsHintsText = computed(() => {
-    //   bitsHintsSource.value
-    // })
-    
-    watch(
-      bitsHintsSource,
-      () => {
-        scope.activate()
-        textGroup.removeChildren()
-        console.log("create texts...");
-        let pd = bitsHintsSource.value.map((h) => `M${h[3]},80 V110 M${h[4]},80 V110`).join('')
-        // console.log(p);
-        p.remove()
-        p = new scope.CompoundPath(pd)
-        p.stroke = 2
-        p.strokeColor = 'lightgray'
-        p.strokeScaling = false
-        bitsHintsSource.value.forEach((h) => {
-          let t = new scope.PointText({
-            point: [h[3] + (h[4] - h[3]) / 2, 100],
-            applyMatrix: false,
-            content: h[2],
-            data: h,
-            fillColor: 'white',
-            strokeScaling: false,
-            fontSize: 15,
-            locked: true,
-            // parent: textGroup,
-            justification: "center",
-            insert : false
-          })
-          
-          arr.push(t)
-          // h.t = t
-        })
-      }
-    )
-
-    // watch(ZT, () => {
-    //   textGroup.children.forEach((c) => {
-    //     c.scaling.x = 1/ZT.k
-    //     // c.visible = ZT.k > 3
-    //   })
-    // })
-
-    const ww = useWebWorkerFn((arr, k) => {
-      return arr.filter((h) => {
-        const scaleConstraint = (h[4] - h[3]) * k > 20
-        return scaleConstraint
-      })
-    },{
-
     })
-    
-    scope.view.autoUpdate = false
-    watch(() => [ZT.x, ZT.k], () => {
-      // console.log(123);
-      let n = -props.viewStore.xScale(0)
-      n += props.pulses.scaledXOffset / ZT.k
-      // textGroup.children.forEach((c) => {
-      //   c.scaling.x = 1/ZT.k
-      // })
-      // scope.view.draw()
-      // ww.workerFn(arr, ZT.k)
-      console.log(arr);
-      
-      textGroup.removeChildren()
-      // for (const i in arr) {
-      //   let h = arr[i].data
-      //   // console.log({i});
-        
-      //   const scaleConstraint = (h[4] - h[3]) * ZT.k > 20
-      //   const viewportConstraint = props.viewStore.isRangeInView(n + h[3], n + h[4])
-      //   // if (scaleConstraint && viewportConstraint)
-      //   // textGroup.addChild(arr[i])
-      //   // arr[i].scaling.x = 1/ZT.k
-      //   // textGroup.children[i].visible = scaleConstraint && viewportConstraint
-      //   // textGroup.children[i].scaling.x = 1/ZT.k
-      // }
+  })
 
-      // textGroup.visible = false
-
-      // textGroup.children.filter((t) => {
-      //   return
-      // })
-      // bitsHintsSource.value.forEach((h) => {
-      //   // const scaleConstraint = (h[4] - h[3]) * ZT.k > 20
-      //   // const viewportConstraint = props.viewStore.isRangeInView(n + h[3], n + h[4])
-      //   // h.t.scaling.x = ZT.k
-      //   // h.t.remove()
-      //   // h.t.scaling.x = 1/ZT.k
-
-      //   // if (scaleConstraint && viewportConstraint)
-      //   //   textGroup.addChild(h.t)
-        
-      //   // h.t.visible = scaleConstraint && viewportConstraint
-      //   // return scaleConstraint && viewportConstraint
-      // })
-      scope.view.update()
-
-      // scope.activate()
-      // let m = new scope.Matrix(1/ZT.k, 0, 0, 1, 0, 0)
-
-      
-      // paper.view.draw()
-    })
-  }
-
+  
   const bitsHintsSource = computed(() => {
     return pulses.measurements
+      .toSorted((a, b) => a.minXWithXOffset - b.minXWithXOffset)
       .filter((m) => !m.decoder.analyzerWorker.isRunning)
       .reduce((acc, m) => {
         return [...acc, ...(m.decoder?.bitsHints || [])]
       }, [])
   })
-  let c = 0
-
-
 
   const bitsHints = computed(() => {
     let n = -props.viewStore.xScale(0)
@@ -222,5 +297,133 @@ div(ref="wrapper" class="border")
       return scaleConstraint && viewportConstraint
     })
   })
+
+  const transformPath = (path, matrix) => {
+    const copy = new Path2D();
+    copy.addPath(path, matrix);
+    return copy;
+  };
+
+  const bitsHintsSourcePath = computed(() => {
+    return bitsHintsSource.value
+    .reduce((acc, h) => {
+      acc += `M${h[3]} 94 V108 M${h[4]} 94 V108 `
+      return acc
+    }, "")
+  })
+
+  const pulsesPath = computed(() => {
+    return pulses.reduce( (acc, d, i) => {
+      const t = i % 2 === 0 
+      let x = viewStore.xScale(d.time)
+      let w = x + viewStore.xScale(d.width + pulsesStore.minOffset)
+      return acc += `M${x},${t ? 22 : 90} V${t ? 90 : 22} H${w}`
+    }, "")
+  })
+
+  const bitsHintsSourceViewportIDs = computed(() => {
+    let l = viewStore.state.viewportLeft - pulses.scaledXOffset / ZT.k
+    let r = viewStore.state.viewportRight - pulses.scaledXOffset / ZT.k
+    // return [arr.bisector(h=>h[3])(bitsHints.value, l).left(arr, l)]
+    let ids = [bisector(h=>h[3]).left(bitsHintsSource.value, l), bisector(h=>h[4]).left(bitsHintsSource.value, r)]
+    return ids
+  })
+
+  let ctx
+  let scope = new paper.PaperScope()
+
+
+  watch(() => [ZT.k, ZT.x, bitsHintsSource.value, pulses.scaledXOffset, mode.value], () => {
+    window.requestAnimationFrame(draw)
+  }, {immediate: true})
+  
+  function draw() {
+    if (!ctx) return
+
+    ctx.clearRect(0,0,wrapperBounds.width.value, wrapperBounds.height.value)
+    ctx.reset()
+
+    let pp = new Path2D(pulsesPath.value)
+    ctx.strokeStyle = getColor(['accent', 'base-content'], [1, 0.4]).value
+    ctx.stroke(transformPath(pp, {a: ZT.k, e: ZT.x + pulses.scaledXOffset}))
+    
+    drawBitsHints()
+    drawBytesHints()
+  }  
+  
+  
+  function drawBytesHints() {
+    let bytesRangesPath = new Path2D()
+    let bytesRangesPathErr = new Path2D()
+    ctx.fillStyle = getColor(['base-content', 'base-content'], [0.8, 0.8]).value
+    ctx.strokeStyle = getColor(['base-100', 'base-100'], [0.8, 0.8]).value
+    ctx.lineWidth = 3
+    ctx.textAlign = "center"
+    ctx.font = "bold 10px monospace"
+    pulses.measurements.forEach( m => {
+      if (m.decoder.analyzerWorker.isRunning) return
+      m.decoder.bytesHints.forEach( h => {
+        h.bytes.forEach( b => {
+          bytesRangesPath.moveTo(b[3], 70)
+          bytesRangesPath.lineTo(b[3], 110)
+          bytesRangesPath.moveTo(b[4], 70)
+          bytesRangesPath.lineTo(b[4], 110)
+          let w = b[4] - b[3]
+          if (w * ZT.k < 30) return
+          let args = [b[2].toString(16).padStart(2, "0").toUpperCase(), (b[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 85, w * ZT.k]
+          ctx.strokeText(...args);
+          ctx.fillText(...args);
+        })
+        bytesRangesPathErr.moveTo(h.scaledRange[0], 0)
+        bytesRangesPathErr.lineTo(h.scaledRange[0], 110)
+        bytesRangesPathErr.moveTo(h.scaledRange[1], 0)
+        bytesRangesPathErr.lineTo(h.scaledRange[1], 110)
+      })
+    })
+    ctx.lineWidth = 1
+    ctx.strokeStyle = getColor(['error', 'error'], [0.9, 0.9]).value
+    ctx.stroke(transformPath(bytesRangesPathErr, {a: ZT.k, e: ZT.x + pulses.scaledXOffset}))
+    ctx.strokeStyle = getColor(['info', 'info'], [0.9, 0.9]).value
+    ctx.stroke(transformPath(bytesRangesPath, {a: ZT.k, e: ZT.x + pulses.scaledXOffset}))
+  }
+
+  function drawBitsHints() {
+    let bitsRangesPath = new Path2D()
+    ctx.fillStyle = getColor(['base-content', 'base-content'], [0.6, 0.5]).value
+    ctx.textAlign = "center"
+    ctx.font = "10px monospace"
+    
+    pulses.measurements.forEach( m => {
+      if (m.decoder.analyzerWorker.isRunning) return
+
+      for(let i = m.decoder.viewportRangeIDs[0]-1; i <= m.decoder.viewportRangeIDs[1]; i++) {
+        let h = m.decoder.bitsHints[i]
+        if (!h) continue
+        let w = h[4] - h[3]
+        if (w * ZT.k < 10) continue
+        ctx.fillText(h[2], (h[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 105, w * ZT.k);
+        bitsRangesPath.moveTo(h[3], 94)
+        bitsRangesPath.lineTo(h[3], 108)
+        bitsRangesPath.moveTo(h[4], 94)
+        bitsRangesPath.lineTo(h[4], 108)
+      }
+    })
+    ctx.strokeStyle = getColor(['base-content', 'base-content'], [0.4, 0.3]).value
+    ctx.stroke(transformPath(bitsRangesPath, {a: ZT.k, e: ZT.x + pulses.scaledXOffset}))
+  }
+  
+  onMounted(() => {
+    // scope.setup(canvas.value)
+    // const dpr = window.devicePixelRatio;
+    // canvas.value.width = wrapperBounds.width.value
+    // canvas.value.height = wrapperBounds.height.value
+    // canvas.value.style.width = wrapperBounds.width.value
+    // canvas.value.style.height = wrapperBounds.height.value
+
+    ctx = canvas.value.getContext("2d", {
+      alpha: true,
+    })
+  })
+
   
 </script>

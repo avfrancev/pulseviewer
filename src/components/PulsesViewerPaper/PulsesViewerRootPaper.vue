@@ -24,7 +24,7 @@ div(class="sticky top-2 z-30")
           //- i-material-symbols:reset-focus-outline-rounded.text-lg(:class="{': viewStore.state.ZT.k !== 1}")
           i-material-symbols:zoom-in-map-rounded
         button(
-          class="btn btn-square btn-md join-item1 text-lg bg-opacity-0 border-none"
+          class="btn btn-square btn-md join-item text-lg bg-opacity-0 border-none"
           @click="pulses.forEach((p) => (p.xOffset = 0))"
           :disabled="pulses.every((p) => p.xOffset === 0)"
           title="Reset offsets")
@@ -103,8 +103,10 @@ div(class="relative mt-8 mb-12")
         height="100%")
         div(class="btn btn-xs absolute -translate-x-1/2") {{viewStore.state.cursor.xLabel / 1000}} ms
 
+    //- pre(@click="console.log(pulses)") {{viewStore.state.viewportLeft}} : {{viewStore.state.viewportRight}} {{ viewStore.xScale.invert(viewStore.state.viewportLeft) }}
+
     draggable(
-      class="list-group"
+      class="list-group pt-2"
       :component-data="{tag: 'div', type: 'transition-group', name: 'flip-list' && !drag}"
       :list="pulses"
       v-bind="dragOptions"

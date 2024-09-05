@@ -32,4 +32,18 @@ watch(
   { immediate: true },
 )
 
-export { colors, mode }
+import d from "daisyui/src/theming/themes"
+console.log()
+
+function getColor([k1,k2], [a1,a2] = [1,1]) {
+  return computed(() => {
+    if (mode.value == "dark")
+      return darkColors[k1] + (Math.floor(255*a1)).toString(16)
+    return lightColors[k2] + (Math.floor(255*a2)).toString(16)
+  })
+}
+
+const darkColors = Object.assign(d.dark, d.dracula)
+const lightColors = Object.assign(d.light, d.cupcake)
+
+export { colors, mode, getColor, darkColors, lightColors }
