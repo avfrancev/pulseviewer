@@ -340,8 +340,6 @@ import { average } from "simple-statistics"
   watch(wrapperBounds.width, () => {
     canvas.value.width = wrapperBounds.width.value
     canvas.value.height = wrapperBounds.height.value
-    canvas.value.offscreenCanvas.width = wrapperBounds.width.value
-    canvas.value.offscreenCanvas.height = wrapperBounds.height.value
   })
   
   watch(
@@ -428,36 +426,10 @@ import { average } from "simple-statistics"
     ctx.stroke(transformPath(bitsRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
   }
 
-  async function createOffscreenCanvas() {
-    canvas.value.offscreenCanvas = document.createElement("canvas");
-    ctx__ = canvas.value.offscreenCanvas.getContext("2d", {
-      alpha: true,
-    })
-    ctx__.fillStyle = getColor(["base-content", "base-content"], [1, 0.5]).value
-    ctx__.textAlign = "center"
-    ctx__.font = "10px monospace"
-    
-    ctx__.fillText("0", 5, 10)
-    ctx__.fillText("1", 15, 10)
-    ctx__.fillText("X", 25, 10)
-    // ctx__.strokeStyle = "red"
-    // ctx__.lineWidth = 5
-    // ctx__.beginPath()
-    // ctx__.moveTo(0, 0)
-    // ctx__.lineTo(10, 10)
-    // ctx__.stroke()
-    sprites = await Promise.all([
-      createImageBitmap(canvas.value.offscreenCanvas, 0,0,10,10),
-      createImageBitmap(canvas.value.offscreenCanvas, 10,0,10,10),
-      createImageBitmap(canvas.value.offscreenCanvas, 20,0,10,10),
-    ])
-    
-  }
   
   onMounted(() => {
     ctx = canvas.value.getContext("2d", {
       alpha: true,
     })
-    createOffscreenCanvas()
   })
 </script>
