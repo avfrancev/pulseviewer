@@ -326,27 +326,110 @@ import { average } from "simple-statistics"
     return new Path2D(o)
   })
 
-  const bytesHints_ = computed(() => {
-    let n = -props.viewStore.xScale(0)
-    n += props.pulses.scaledXOffset / ZT.k
-    return bytesHintsSource.value.filter((h) => {
-      const scaleConstraint = (h[4] - h[3]) * ZT.k > 30
-      const viewportConstraint = props.viewStore.isRangeInView(n + h[3], n + h[4])
-      return scaleConstraint && viewportConstraint
+  const bitsHintsSourceViewportIDs = computed(() => {
+    let l = viewStore.state.viewportLeft - pulses.scaledXOffset / ZT.k
+    let r = viewStore.state.viewportRight - pulses.scaledXOffset / ZT.k
+    // return [arr.bisector(h=>h[3])(bitsHints.value, l).left(arr, l)]
+    let ids = [bisector((h) => h[3]).left(bitsHintsSource.value, l), bisector((h) => h[4]).left(bitsHintsSource.value, r)]
+    return ids
+  })
+
+  let ctx, ctx__, sprites
+  let scope = new paper.PaperScope()
+
+  watch(wrapperBounds.width, () => {
+    canvas.value.width = wrapperBounds.width.value
+    canvas.value.height = wrapperBounds.height.value
+  })
+  
+  watch(
+    () => [ZT.k, ZT.x, bitsHintsSource.value, pulses.scaledXOffset, mode.value, pulses.raw_data, targetIsVisible.value, wrapperBounds.width.value],
+    () => {
+      if (targetIsVisible.value === false) return
+      window.requestAnimationFrame(draw)
+    },
+    { immediate: true },
+  )
+
+  let a = []
+  function draw() {
+    if (!ctx) return
+    ctx.clearRect(0, 0, wrapperBounds.width.value, wrapperBounds.height.value)
+    ctx.reset()
+    ctx.strokeStyle = getColor(["accent", "base-content"], [1, 0.4]).value
+    ctx.stroke(transformPath(pulsesPath.value, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+    drawBitsHints()
+    drawBytesHints()
+  }
+
+  function drawBytesHints() {
+    let bytesRangesPath = new Path2D()
+    let bytesRangesPathErr = new Path2D()
+    ctx.fillStyle = getColor(["base-content", "base-content"], [0.8, 0.8]).value
+    ctx.strokeStyle = getColor(["base-100", "base-100"], [0.8, 0.8]).value
+    ctx.lineWidth = 3
+    ctx.textAlign = "center"
+    ctx.font = "bold 10px monospace"
+    // return
+    pulses.measurements.forEach((m) => {
+      if (m.decoder.analyzerWorker.isRunning) return
+      m.decoder.bytesHints.forEach((h) => {
+        h.bytes.forEach((b) => {
+          bytesRangesPath.moveTo(b[3], 70)
+          bytesRangesPath.lineTo(b[3], 110)
+          bytesRangesPath.moveTo(b[4], 70)
+          bytesRangesPath.lineTo(b[4], 110)
+          let w = b[4] - b[3]
+          if (w * ZT.k < 30) return
+          let args = [b[2].toString(16).padStart(2, "0").toUpperCase(), (b[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 85, w * ZT.k]
+          ctx.strokeText(...args)
+          ctx.fillText(...args)
+        })
+        bytesRangesPathErr.moveTo(h.scaledRange[0], 0)
+        bytesRangesPathErr.lineTo(h.scaledRange[0], 110)
+        bytesRangesPathErr.moveTo(h.scaledRange[1], 0)
+        bytesRangesPathErr.lineTo(h.scaledRange[1], 110)
+      })
+    })
+    ctx.lineWidth = 1
+    ctx.strokeStyle = getColor(["error", "error"], [0.9, 0.9]).value
+    ctx.stroke(transformPath(bytesRangesPathErr, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+    ctx.strokeStyle = getColor(["info", "info"], [0.9, 0.9]).value
+    ctx.stroke(transformPath(bytesRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+  }
+
+  function drawBitsHints() {
+    let bitsRangesPath = new Path2D()
+    ctx.fillStyle = getColor(["base-content", "base-content"], [0.6, 0.5]).value
+    ctx.textAlign = "center"
+    ctx.font = "10px monospace"
+    
+    
+    pulses.measurements.forEach((m) => {
+      if (m.decoder.analyzerWorker.isRunning) return
+      let w = viewStore.xScale(m.decoder.guess?.short)
+      if (w && w*ZT.k < 5) return
+      
+      for (let i = m.decoder.viewportRangeIDs[0] - 1; i <= m.decoder.viewportRangeIDs[1]; i++) {
+        let h = m.decoder.bitsHints[i]
+        if (!h) continue
+        w = h[4] - h[3]
+        if (w * ZT.k < 10) continue
+        ctx.fillText(h[2], (h[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 105, w * ZT.k)
+        bitsRangesPath.moveTo(h[3], 94)
+        bitsRangesPath.lineTo(h[3], 108)
+        bitsRangesPath.moveTo(h[4], 94)
+        bitsRangesPath.lineTo(h[4], 108)
+      }
+    })
+    ctx.strokeStyle = getColor(["base-content", "base-content"], [0.4, 0.3]).value
+    ctx.stroke(transformPath(bitsRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+  }
+
+  
+  onMounted(() => {
+    ctx = canvas.value.getContext("2d", {
+      alpha: true,
     })
   })
-
-  const bytesHints = refThrottled(bytesHints_, 100, true, true)
-
-  const xOffset = computed(() => {
-    let n = -props.viewStore.xScale(0)
-    n += props.pulses.scaledXOffset / ZT.k
-    return n
-  })
-
-  function bytesFilter(w, h) {
-    const scaleConstraint = (h[4] - h[3]) * ZT.k > w
-    const viewportConstraint = props.viewStore.isRangeInView(xOffset.value + h[3], xOffset.value + h[4])
-    return scaleConstraint && viewportConstraint
-  }
 </script>
