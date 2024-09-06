@@ -32,6 +32,9 @@ importers:
       d3-zoom:
         specifier: ^3.0.0
         version: 3.0.0
+      paper:
+        specifier: ^0.12.18
+        version: 0.12.18
       pinia:
         specifier: ^2.2.1
         version: 2.2.1(vue@3.4.37)
@@ -1990,6 +1993,10 @@ packages:
 
   package-json-from-dist@1.0.0:
     resolution: {integrity: sha512-dATvCeZN/8wQsGywez1mzHtTlP22H8OEfPrVMLNr4/eGa+ijtLn/6M5f0dY8UKNrC2O9UCU6SSoG3qRKnt7STw==}
+
+  paper@0.12.18:
+    resolution: {integrity: sha512-ZSLIEejQTJZuYHhSSqAf4jXOnii0kPhCJGAnYAANtdS72aNwXJ9cP95tZHgq1tnNpvEwgQhggy+4OarviqTCGw==}
+    engines: {node: '>=8.0.0'}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -4636,6 +4643,8 @@ snapshots:
       p-limit: 3.1.0
 
   package-json-from-dist@1.0.0: {}
+
+  paper@0.12.18: {}
 
   parent-module@1.0.1:
     dependencies:

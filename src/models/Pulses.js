@@ -16,7 +16,7 @@ function parsePlainArr(arr, startLevel = 0) {
 export default (uuid = 0) => {
   const viewStore = useViewStore(uuid)
 
-  let pulsesCounter = ref(0)
+  let pulsesIIDCounter = ref(0)
 
   const pulses = reactive([])
 
@@ -34,8 +34,8 @@ export default (uuid = 0) => {
       return
     }
     let arr = reactive(parsePlainArr(data))
-    arr.iid = pulsesCounter.value
-    pulsesCounter.value += 1
+    arr.iid = pulsesIIDCounter.value
+    pulsesIIDCounter.value += 1
     arr.raw_data = data
     arr.sum = computed(() => fsum(arr, (d) => d.width))
     arr.xOffset = 0
@@ -45,6 +45,11 @@ export default (uuid = 0) => {
     arr.isHovered = false
     arr.isSelected = false
     arr.bisectorRef = bisector((d) => d.time)
+    arr.viewportRangeIDs = computed(() => {
+      let l = viewStore.xScale.invert(viewStore.state.viewportLeft)
+      let r = viewStore.xScale.invert(viewStore.state.viewportRight)
+      return [arr.bisectorRef.left(arr, l), arr.bisectorRef.left(arr, r)]
+    })
     arr.dataIDUnderCursor = computed(() => {
       return arr.bisectorRef.left(arr, arr.cursorX) - 1
     })

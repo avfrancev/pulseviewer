@@ -1,8 +1,8 @@
 <template lang="pug">
 div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100svw]")
   div(class="flex my-4 items-center overflow-x-auto")
-    div(class="flex items-center mr-4")
-      i-twemoji:raccoon(class="hue-rotate-180 drop-shadow-lg mr-4 text-3xl transition duration-600 hover:scale-110 hover:hue-rotate-0")
+    div(class="flex items-center mr-0 md:mr-4")
+      i-twemoji:raccoon(class="hue-rotate-180 drop-shadow-lg mr-0 md:mr-4 text-3xl transition duration-600 hover:scale-110 hover:hue-rotate-0")
       pre(class="hidden md:block"): b(class="text-xl") RF Pulse Viewer
     //- SelectRoot(:value="currentSession.id")
     SelectRoot(v-model="currentSession")
@@ -57,6 +57,9 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
         @click="isESP32Paused = !isESP32Paused")
         i-ph:pause-fill(v-if="!isESP32Paused")
         i-ph:play-fill(v-else)
+      button(class="join-item btn btn-square ml-2 text-xl" @click="fullscreen.toggle()")
+        i-mingcute:fullscreen-fill(v-if="!fullscreen.isFullscreen.value")
+        i-mingcute:fullscreen-exit-fill(v-if="fullscreen.isFullscreen.value")
       button(class="join-item btn btn-square ml-2 text-xl" onclick="helpDialog.showModal()")
         i-material-symbols:help-outline
       PopoverRoot
@@ -102,6 +105,8 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
   const { config } = useConfig()
 
   const hasESP32Session = computed(() => sessions.some((session) => session.id === "ESP32"))
+
+  const fullscreen = useFullscreen()
 
   if (!sessions.length || (sessions.length === 1 && hasESP32Session.value)) {
     console.log("no sessions")

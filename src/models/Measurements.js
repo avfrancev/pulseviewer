@@ -1,4 +1,4 @@
-import { extent, quantile } from "d3-array"
+import { extent, quantile, bisector } from "d3-array"
 import { zoomIdentity } from "d3-zoom"
 import { interpolateRainbow } from "d3-scale-chromatic"
 
@@ -75,14 +75,20 @@ export function getDecoder(m, viewStore, pulses) {
     },
   )
 
-  const hasHints = computed(() => sg.value?.hints?.length > 0)
-
   const bitsHints = computed(() => {
     return sg.value?.hints?.map((h) => {
       h[3] = viewStore.xScale(h[0] + m.firstPulse?.time)
       h[4] = viewStore.xScale((h[1] || h[0]) + m.firstPulse?.time)
       return h
-    })
+    }) || []
+  })
+
+  const viewportRangeIDs = computed(() => {
+    let l = viewStore.state.viewportLeft - pulses.scaledXOffset / viewStore.state.ZT.k
+    let r = viewStore.state.viewportRight - pulses.scaledXOffset / viewStore.state.ZT.k
+    // return [arr.bisector(h=>h[3])(bitsHints.value, l).left(arr, l)]
+    let ids = [bisector(h=>h[3]).left(bitsHints.value, l), bisector(h=>h[4]).left(bitsHints.value, r)]
+    return ids
   })
 
   const bytesHints = computed(() => {
@@ -116,7 +122,7 @@ export function getDecoder(m, viewStore, pulses) {
     return groups
   })
 
-  return { analyzer, guess, sliceGuess: sg, hasHints, slicers, pickedSlicer, bitsHints, bytesHints, analyzerWorker }
+  return { analyzer, guess, sliceGuess: sg, slicers, pickedSlicer, bitsHints, bytesHints, analyzerWorker, viewportRangeIDs }
 }
 
 export function initMeasurements(pulses, viewStore, pulsesMinX) {

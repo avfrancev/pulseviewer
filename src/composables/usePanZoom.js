@@ -23,11 +23,11 @@ export const useGestures = (props) => {
           e.event.preventDefault()
           ZT.translateBy(e.delta[0])
         }
-        // if (!e.event.ctrlKey) return
+        // if (!e.event.shiftKey) return
         // if (e.delta[1] !== 0) {
         //   e.event.preventDefault()
         //   let x = e.event.clientX - wrapperBounds.value.left
-        //   const scaleFactor = Math.exp(e.delta[1] * -0.0000001)
+        //   const scaleFactor = Math.exp(e.delta[1] * -0.001)
         //   ZT.scaleToPointX(scaleFactor, x)
         // }
       },
@@ -61,7 +61,7 @@ export const useGestures = (props) => {
           gestures.state.wheel.cancel()
           if (e.delta[2] !== 0) {
             e.event.preventDefault()
-            const scaleFactor = Math.exp(e.delta[1] * -0.005)
+            const scaleFactor = Math.exp(e.delta[1] * -0.001)
             ZT.scaleToPointX(scaleFactor, x)
           }
         }
