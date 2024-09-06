@@ -120,7 +120,6 @@ const Measurement = {
     watchEffect(() => {
       m.rectRef = groupRef.value
     })
-
     return () =>
       h(
         "svg",
@@ -130,13 +129,22 @@ const Measurement = {
               m.remove()
             }
           },
+          onFocus() {
+            m.selected = true
+          },
+          onBlur() {
+            m.selected = false
+          },
           tabindex: 0,
-          style: "overflow: visible;",
+          // style: "overflow: visible;",
           y: 0,
           x: m.scaledMinX,
           width: m.scaledWidth,
           preserveAspectRatio: "none",
-          viewBox: `0 0 100 100`,
+          viewBox: `0 0 100 102`,
+          // style: {
+          //   "box-shadow": "inset 0 -2px 4px rgba(0, 0, 0, 1)"
+          // },
           class: "overflow-visible focus:outline-none",
           "vector-effect": "non-scaling-stroke",
           ref: groupRef,
@@ -144,17 +152,20 @@ const Measurement = {
         [
           h("path", {
             d: `M0 0 L 100 0 L 100 100 L 0 100 Z`,
-            opacity: m.isHovered ? 0.2 : 0.1,
-            fill: m.color,
+            // opacity: m.isHovered ? 0.2 : 0.1,
+            "stroke-width": 1,
+            "stroke-alignment": "inner",
+            stroke: m.selected ? (m.color + "ff") : (m.color + "00"),
+            fill: m.color + (m.isHovered ? "20" : "10"),
           }),
-          h("path", {
-            d: `M0 0 V 100`,
-            stroke: m.color,
-          }),
-          h("path", {
-            d: `M100 0 V 100`,
-            stroke: m.color,
-          }),
+          // h("path", {
+          //   d: `M0 0 V 100`,
+          //   stroke: m.color,
+          // }),
+          // h("path", {
+          //   d: `M100 0 V 100`,
+          //   stroke: m.color,
+          // }),
           h("path", {
             d: `M ${Math.min(50, k.value)} 96 H ${Math.max(50, 100 - k.value)} `,
             stroke: m.color,

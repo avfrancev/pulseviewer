@@ -1,12 +1,13 @@
 import { extent, quantile, bisector } from "d3-array"
 import { zoomIdentity } from "d3-zoom"
 import { interpolateRainbow } from "d3-scale-chromatic"
+import { color as d3Color } from "d3-color"
 
 import AnalyzerWorker from "@/analyzerWorker.js?worker"
 import { Bitbuffer } from "pulseplot/lib/bitbuffer"
 
 const colors = Array.from(Array(20)).map((d, i) => {
-  return interpolateRainbow(i / 20)
+  return d3Color(interpolateRainbow(i / 20)).hex()
 })
 
 let measurementsCounter = 0
@@ -76,18 +77,20 @@ export function getDecoder(m, viewStore, pulses) {
   )
 
   const bitsHints = computed(() => {
-    return sg.value?.hints?.map((h) => {
-      h[3] = viewStore.xScale(h[0] + m.firstPulse?.time)
-      h[4] = viewStore.xScale((h[1] || h[0]) + m.firstPulse?.time)
-      return h
-    }) || []
+    return (
+      sg.value?.hints?.map((h) => {
+        h[3] = viewStore.xScale(h[0] + m.firstPulse?.time)
+        h[4] = viewStore.xScale((h[1] || h[0]) + m.firstPulse?.time)
+        return h
+      }) || []
+    )
   })
 
   const viewportRangeIDs = computed(() => {
     let l = viewStore.state.viewportLeft - pulses.scaledXOffset / viewStore.state.ZT.k
     let r = viewStore.state.viewportRight - pulses.scaledXOffset / viewStore.state.ZT.k
     // return [arr.bisector(h=>h[3])(bitsHints.value, l).left(arr, l)]
-    let ids = [bisector(h=>h[3]).left(bitsHints.value, l), bisector(h=>h[4]).left(bitsHints.value, r)]
+    let ids = [bisector((h) => h[3]).left(bitsHints.value, l), bisector((h) => h[4]).left(bitsHints.value, r)]
     return ids
   })
 

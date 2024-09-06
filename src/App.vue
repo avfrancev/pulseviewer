@@ -60,8 +60,22 @@ div(class="container mx-auto px-2 min-h-screen flex flex-col max-sm:max-w-[100sv
       button(class="join-item btn btn-square ml-2 text-xl" @click="fullscreen.toggle()")
         i-mingcute:fullscreen-fill(v-if="!fullscreen.isFullscreen.value")
         i-mingcute:fullscreen-exit-fill(v-if="fullscreen.isFullscreen.value")
-      button(class="join-item btn btn-square ml-2 text-xl" onclick="helpDialog.showModal()")
+      //- button(class="join-item btn btn-square ml-2 text-xl" onclick="helpDialog.showModal()")
         i-material-symbols:help-outline
+      //- Modal
+        template(#trigger)
+          DialogTrigger(class="join-item btn text-xl btn-square")
+            i-material-symbols:help-outline
+        template(#content)
+          DialogTitle(class="mb-4 text-lg font-bolds")
+            | Key bindings
+          DialogDescription
+          pre ctr + wheel = zoom
+          pre shift + wheel or drag = translate 
+          h3.text-xl Measurements
+          pre d = delete
+          DialogClose(class="btn btn-square btn-sm text-xs top-0 right-0 absolute m-2" aria-label="Close")
+            i-fa:close 
       PopoverRoot
         PopoverTrigger(class="join-item btn btn-square ml-2 text-xl" aria-label="Settings")
           i-material-symbols:settings-outline
