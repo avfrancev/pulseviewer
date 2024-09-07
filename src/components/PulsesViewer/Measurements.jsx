@@ -130,6 +130,9 @@ const Measurement = {
             }
           },
           onFocus() {
+          console.log(props.viewStore.state.gestures.state.drag);
+          // console.log();
+            
             m.selected = true
           },
           onBlur() {
@@ -156,7 +159,9 @@ const Measurement = {
             "stroke-width": 1,
             "stroke-alignment": "inner",
             stroke: m.selected ? (m.color + "ff") : (m.color + "00"),
-            fill: m.color + (m.isHovered ? "20" : "10"),
+            // fill: m.color + (m.isHovered ? "20" : "10"),
+            fill: (m.isHovered ? m.color + "15" :  "transparent"),
+            // fill: 'transparent',
           }),
           // h("path", {
           //   d: `M0 0 V 100`,

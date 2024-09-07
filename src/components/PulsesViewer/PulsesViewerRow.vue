@@ -119,9 +119,10 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
         PulsesMeasurements(v-bind="{pulses: pulses, pulsesStore, viewStore}")
       canvas(
+        class="absolute pointer-events-none"
         ref="canvas"
         :width="wrapperBounds.width.value"
-        :height="wrapperBounds.height.value"       class="absolute pointer-events-none")
+        :height="wrapperBounds.height.value")
 
       div(
         class="top-0 absolute will-change-auto"
@@ -149,7 +150,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
   import { PulsesMeasurements } from "@/components/PulsesViewer/Measurements"
   import { usePulsesStore } from "@/models"
   import { colors, getColor, mode, darkColors, lightColors } from "@/stores/colors"
-import { average } from "simple-statistics"
+  import { average } from "simple-statistics"
 
   const props = defineProps({
     pulses: {
@@ -231,7 +232,7 @@ import { average } from "simple-statistics"
         pulses.cursorX = viewStore.xScale.invert(x / ZT.k) - pulses.xOffset
       },
       onDrag: (s) => {
-        if (s.shiftKey && (s.ctrlKey || s.metaKey)) {
+        if (s.shiftKey) {
           s.event.stopPropagation()
           props.pulses.xOffset += (props.viewStore.pixelRatio * s.delta[0]) / ZT.k
           return
@@ -239,7 +240,7 @@ import { average } from "simple-statistics"
 
         if (tmpMeasurement) s.event.stopPropagation()
 
-        if (s.shiftKey && !s.first) {
+        if (s.altKey && !s.first) {
           s.event.stopPropagation()
           let x = s.event.clientX - wrapperBounds.left.value - ZT.x
           props.pulses.cursorX = props.viewStore.xScale.invert(x / ZT.k) - props.pulses.xOffset
@@ -341,9 +342,22 @@ import { average } from "simple-statistics"
     canvas.value.width = wrapperBounds.width.value
     canvas.value.height = wrapperBounds.height.value
   })
-  
+
+  // const measurementsForWatch
+
   watch(
-    () => [ZT.k, ZT.x, bitsHintsSource.value, pulses.scaledXOffset, mode.value, pulses.raw_data, targetIsVisible.value, wrapperBounds.width.value],
+    () => [
+      ZT.k,
+      ZT.x,
+      bitsHintsSource.value,
+      pulses.scaledXOffset,
+      mode.value,
+      pulses.raw_data,
+      targetIsVisible.value,
+      wrapperBounds.width.value,
+      wrapperBounds.height.value,
+      pulses.measurements.map((m) => [m.x1, m.x2]),
+    ],
     () => {
       if (targetIsVisible.value === false) return
       window.requestAnimationFrame(draw)
@@ -356,8 +370,14 @@ import { average } from "simple-statistics"
     if (!ctx) return
     ctx.clearRect(0, 0, wrapperBounds.width.value, wrapperBounds.height.value)
     ctx.reset()
+    pulses.measurements.forEach((m) => {
+      const pattern = getPattern(m.color + "40")
+      ctx.fillStyle = pattern
+      ctx.fillRect(m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset, 0, m.scaledWidth * ZT.k, 120)
+    })
     ctx.strokeStyle = getColor(["accent", "base-content"], [1, 0.4]).value
     ctx.stroke(transformPath(pulsesPath.value, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
+
     drawBitsHints()
     drawBytesHints()
   }
@@ -403,13 +423,12 @@ import { average } from "simple-statistics"
     ctx.fillStyle = getColor(["base-content", "base-content"], [0.6, 0.5]).value
     ctx.textAlign = "center"
     ctx.font = "10px monospace"
-    
-    
+
     pulses.measurements.forEach((m) => {
       if (m.decoder.analyzerWorker.isRunning) return
       let w = viewStore.xScale(m.decoder.guess?.short)
-      if (w && w*ZT.k < 5) return
-      
+      if (w && w * ZT.k < 5) return
+
       for (let i = m.decoder.viewportRangeIDs[0] - 1; i <= m.decoder.viewportRangeIDs[1]; i++) {
         let h = m.decoder.bitsHints[i]
         if (!h) continue
@@ -426,10 +445,25 @@ import { average } from "simple-statistics"
     ctx.stroke(transformPath(bitsRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
   }
 
-  
+  const getPattern = useMemoize((color = "#fec") => {
+    const patternCanvas = document.createElement("canvas")
+    const patternContext = patternCanvas.getContext("2d", { alpha: true })
+
+    patternCanvas.width = 4
+    patternCanvas.height = 4
+    patternContext.strokeStyle = color
+    patternContext.beginPath()
+    patternContext.moveTo(0, 0)
+    patternContext.lineTo(4, 4)
+    patternContext.stroke()
+    const pattern = ctx.createPattern(patternCanvas, "repeat")
+    return pattern
+  })
+
   onMounted(() => {
     ctx = canvas.value.getContext("2d", {
       alpha: true,
     })
+    ctx.textRendering = "optimizeSpeed"
   })
 </script>
