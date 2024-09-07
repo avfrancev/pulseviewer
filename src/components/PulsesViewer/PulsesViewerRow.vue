@@ -65,7 +65,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
 
     //- div(class="relative overflow-hidden")
     div(class="relative h-[120px]" ref="wrapper")
-      //- p {{  pulses.viewportRangeIDs }}
+      //- p {{  pulses.bitsHintsViewportRangeIDs }}
       svg(
         class="w-full h-[120px] will-change-auto absolute top-0"
         preserveAspectRatio="none"
@@ -393,8 +393,10 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     // return
     pulses.measurements.forEach((m) => {
       if (m.decoder.analyzerWorker.isRunning) return
-      m.decoder.bytesHints.forEach((h) => {
-        h.bytes.forEach((b) => {
+      m.decoder.bytesHints.forEach((group) => {
+        for (let i = group.viewportRangeIDs.value[0] - 1; i <= group.viewportRangeIDs.value[1]; i++) {
+          let b = group.bytes[i]
+          if (!b) continue
           bytesRangesPath.moveTo(b[3], 70)
           bytesRangesPath.lineTo(b[3], 110)
           bytesRangesPath.moveTo(b[4], 70)
@@ -404,11 +406,11 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
           let args = [b[2].toString(16).padStart(2, "0").toUpperCase(), (b[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 85, w * ZT.k]
           ctx.strokeText(...args)
           ctx.fillText(...args)
-        })
-        bytesRangesPathErr.moveTo(h.scaledRange[0], 0)
-        bytesRangesPathErr.lineTo(h.scaledRange[0], 110)
-        bytesRangesPathErr.moveTo(h.scaledRange[1], 0)
-        bytesRangesPathErr.lineTo(h.scaledRange[1], 110)
+        }
+        bytesRangesPathErr.moveTo(group.scaledRange[0], 0)
+        bytesRangesPathErr.lineTo(group.scaledRange[0], 110)
+        bytesRangesPathErr.moveTo(group.scaledRange[1], 0)
+        bytesRangesPathErr.lineTo(group.scaledRange[1], 110)
       })
     })
     ctx.lineWidth = 1
@@ -429,7 +431,7 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
       let w = viewStore.xScale(m.decoder.guess?.short)
       if (w && w * ZT.k < 5) return
 
-      for (let i = m.decoder.viewportRangeIDs[0] - 1; i <= m.decoder.viewportRangeIDs[1]; i++) {
+      for (let i = m.decoder.bitsHintsViewportRangeIDs[0] - 1; i <= m.decoder.bitsHintsViewportRangeIDs[1]; i++) {
         let h = m.decoder.bitsHints[i]
         if (!h) continue
         w = h[4] - h[3]

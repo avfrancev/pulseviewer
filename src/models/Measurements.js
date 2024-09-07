@@ -86,10 +86,9 @@ export function getDecoder(m, viewStore, pulses) {
     )
   })
 
-  const viewportRangeIDs = computed(() => {
+  const bitsHintsViewportRangeIDs = computed(() => {
     let l = viewStore.state.viewportLeft - pulses.scaledXOffset / viewStore.state.ZT.k
     let r = viewStore.state.viewportRight - pulses.scaledXOffset / viewStore.state.ZT.k
-    // return [arr.bisector(h=>h[3])(bitsHints.value, l).left(arr, l)]
     let ids = [bisector((h) => h[3]).left(bitsHints.value, l), bisector((h) => h[4]).left(bitsHints.value, r)]
     return ids
   })
@@ -120,12 +119,18 @@ export function getDecoder(m, viewStore, pulses) {
         let h = [x1, x2, byte, scaledx1, scaledx2, i * 8, i * 8 + 7]
         return h
       })
+      g.viewportRangeIDs = computed(() => {
+        let l = viewStore.state.viewportLeft - pulses.scaledXOffset / viewStore.state.ZT.k
+        let r = viewStore.state.viewportRight - pulses.scaledXOffset / viewStore.state.ZT.k
+        let ids = [bisector((h) => h[3]).left(g.bytes, l), bisector((h) => h[4]).left(g.bytes, r)]
+        return ids
+      })
     })
 
     return groups
   })
 
-  return { analyzer, guess, sliceGuess: sg, slicers, pickedSlicer, bitsHints, bytesHints, analyzerWorker, viewportRangeIDs }
+  return { analyzer, guess, sliceGuess: sg, slicers, pickedSlicer, bitsHints, bytesHints, analyzerWorker, bitsHintsViewportRangeIDs }
 }
 
 export function initMeasurements(pulses, viewStore, pulsesMinX) {
