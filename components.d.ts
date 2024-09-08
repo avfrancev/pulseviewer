@@ -50,6 +50,8 @@ declare module 'vue' {
     PopoverPortal: typeof import('radix-vue')['PopoverPortal']
     PopoverRoot: typeof import('radix-vue')['PopoverRoot']
     PopoverTrigger: typeof import('radix-vue')['PopoverTrigger']
+    PulsesCanvas: typeof import('./src/components/PulsesViewer/PulsesCanvas.vue')['default']
+    PulsesMeasurements: typeof import('./src/components/PulsesViewer/PulsesMeasurements.vue')['default']
     PulsesViewerRoot: typeof import('./src/components/PulsesViewer/PulsesViewerRoot.vue')['default']
     PulsesViewerRow: typeof import('./src/components/PulsesViewer/PulsesViewerRow.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

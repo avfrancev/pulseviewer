@@ -117,40 +117,42 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
             marker-end="url(#head)"
             :d="`M${arrows.x1},96 L${arrows.x3},96`")
 
-        PulsesMeasurements(v-bind="{pulses: pulses, pulsesStore, viewStore}")
-      canvas(
+        PulsesMeasurements(v-bind="{pulses, viewStore}")
+
+      PulsesCanvas(v-bind="{pulses, viewStore, pulsesStore, wrapperBounds, targetIsVisible}")
+      //- canvas(
         class="absolute pointer-events-none"
         ref="canvas"
         :width="wrapperBounds.width.value"
         :height="wrapperBounds.height.value")
 
-      div(
-        class="top-0 absolute will-change-auto"
-        v-for="m in pulses.measurements"
-        :key="m.id"
-        :style="{width: `${m.scaledWidth * ZT.k}px`, transform: `translate3d(${m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset}px, 0px, 0px)`}")
-        Transition(
-          enter-active-class="transition-opacity duration-300"
-          leave-active-class="transition-opacity duration-300"
-          enter-from-class="opacity-0"
-          leave-to-class="opacity-0")
-          div(class="text-right p-2" v-if="m.decoder.analyzerWorker?.isRunning")
-            div(class="loading")
+      div(class="overflow-hidden relative h-full pointer-events-none")
+        div(
+          class="top-0 absolute will-change-auto inset-0"
+          v-for="m in pulses.measurements"
+          :key="m.id"
+          :style="{width: `${m.scaledWidth * ZT.k}px`, transform: `translate3d(${m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset}px, 0px, -1px)`}")
+          //- pre(class="pointer-events-auto" v-hover="(s) => m.isHovered = s.hovering")
+            button.btn.btn-sm(
+              @click.prevent.stop.capture="(e) => { console.log(e) }"
+            ) asdasd
+          Transition(
+            enter-active-class="transition-opacity duration-300"
+            leave-active-class="transition-opacity duration-300"
+            enter-from-class="opacity-0"
+            leave-to-class="opacity-0")
+            div(class="h-full flex items-center justify-center" v-if="m.decoder.analyzerWorker?.isRunning")
+              div(class="loading")
 </template>
 
 <script setup lang="jsx">
-  import { bisector } from "d3-array"
-  import paper from "paper/dist/paper-core"
+  import { vOnClickOutside } from "@vueuse/components"
   import { useGesture } from "@vueuse/gesture"
-  import { scaleLinear } from "d3-scale"
 
   import useSessionStore from "@/stores/sessions"
   import useConfigStore from "@/stores/config"
 
-  import { PulsesMeasurements } from "@/components/PulsesViewer/Measurements"
   import { usePulsesStore } from "@/models"
-  import { colors, getColor, mode, darkColors, lightColors } from "@/stores/colors"
-  import { average } from "simple-statistics"
 
   const props = defineProps({
     pulses: {
@@ -176,7 +178,6 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
   // const { pulses } = props
 
   const wrapper = ref(null)
-  const canvas = ref(null)
   const chartEl = ref(null)
   const wrapperBounds = useElementBounding(wrapper)
 
@@ -285,187 +286,4 @@ div(class="chart relative" :class="pulses.isSelected && `rounded outline-offset-
     })
   })
 
-  const bitsHintsSource = computed(() => {
-    return pulses.measurements
-      .toSorted((a, b) => a.minXWithXOffset - b.minXWithXOffset)
-      .filter((m) => !m.decoder.analyzerWorker.isRunning)
-      .reduce((acc, m) => {
-        return [...acc, ...(m.decoder?.bitsHints || [])]
-      }, [])
-  })
-
-  const bitsHints = computed(() => {
-    let n = -props.viewStore.xScale(0)
-    n += props.pulses.scaledXOffset / ZT.k
-    return bitsHintsSource.value.filter((h) => {
-      const scaleConstraint = (h[4] - h[3]) * ZT.k > 10
-      const viewportConstraint = props.viewStore.isRangeInView(n + h[3], n + h[4])
-      return scaleConstraint && viewportConstraint
-    })
-  })
-
-  const transformPath = (path, matrix) => {
-    const copy = new Path2D()
-    copy.addPath(path, matrix)
-    return copy
-  }
-
-  const bitsHintsSourcePath = computed(() => {
-    return bitsHintsSource.value.reduce((acc, h) => {
-      acc += `M${h[3]} 94 V108 M${h[4]} 94 V108 `
-      return acc
-    }, "")
-  })
-
-  const pulsesPath = computed(() => {
-    let o = pulses.reduce((acc, d, i) => {
-      const t = i % 2 === 0
-      let x = viewStore.xScale(d.time)
-      let w = x + viewStore.xScale(d.width + pulsesStore.minOffset)
-      return (acc += `M${x},${t ? 22 : 90} V${t ? 90 : 22} H${w}`)
-    }, "")
-    return new Path2D(o)
-  })
-
-  const bitsHintsSourceViewportIDs = computed(() => {
-    let l = viewStore.state.viewportLeft - pulses.scaledXOffset / ZT.k
-    let r = viewStore.state.viewportRight - pulses.scaledXOffset / ZT.k
-    // return [arr.bisector(h=>h[3])(bitsHints.value, l).left(arr, l)]
-    let ids = [bisector((h) => h[3]).left(bitsHintsSource.value, l), bisector((h) => h[4]).left(bitsHintsSource.value, r)]
-    return ids
-  })
-
-  let ctx, ctx__, sprites
-  let scope = new paper.PaperScope()
-
-  watch(wrapperBounds.width, () => {
-    canvas.value.width = wrapperBounds.width.value
-    canvas.value.height = wrapperBounds.height.value
-  })
-
-  // const measurementsForWatch
-
-  watch(
-    () => [
-      ZT.k,
-      ZT.x,
-      bitsHintsSource.value,
-      pulses.scaledXOffset,
-      mode.value,
-      pulses.raw_data,
-      targetIsVisible.value,
-      wrapperBounds.width.value,
-      wrapperBounds.height.value,
-      pulses.measurements.map((m) => [m.x1, m.x2]),
-    ],
-    () => {
-      if (targetIsVisible.value === false) return
-      window.requestAnimationFrame(draw)
-    },
-    { immediate: true },
-  )
-
-  let a = []
-  function draw() {
-    if (!ctx) return
-    ctx.clearRect(0, 0, wrapperBounds.width.value, wrapperBounds.height.value)
-    ctx.reset()
-    pulses.measurements.forEach((m) => {
-      const pattern = getPattern(m.color + "40")
-      ctx.fillStyle = pattern
-      ctx.fillRect(m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset, 0, m.scaledWidth * ZT.k, 120)
-    })
-    ctx.strokeStyle = getColor(["accent", "base-content"], [1, 0.4]).value
-    ctx.stroke(transformPath(pulsesPath.value, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
-
-    drawBitsHints()
-    drawBytesHints()
-  }
-
-  function drawBytesHints() {
-    let bytesRangesPath = new Path2D()
-    let bytesRangesPathErr = new Path2D()
-    ctx.fillStyle = getColor(["base-content", "base-content"], [0.8, 0.8]).value
-    ctx.strokeStyle = getColor(["base-100", "base-100"], [0.8, 0.8]).value
-    ctx.lineWidth = 3
-    ctx.textAlign = "center"
-    ctx.font = "bold 10px monospace"
-    // return
-    pulses.measurements.forEach((m) => {
-      if (m.decoder.analyzerWorker.isRunning) return
-      m.decoder.bytesHints.forEach((group) => {
-        for (let i = group.viewportRangeIDs.value[0] - 1; i <= group.viewportRangeIDs.value[1]; i++) {
-          let b = group.bytes[i]
-          if (!b) continue
-          bytesRangesPath.moveTo(b[3], 70)
-          bytesRangesPath.lineTo(b[3], 110)
-          bytesRangesPath.moveTo(b[4], 70)
-          bytesRangesPath.lineTo(b[4], 110)
-          let w = b[4] - b[3]
-          if (w * ZT.k < 30) return
-          let args = [b[2].toString(16).padStart(2, "0").toUpperCase(), (b[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 85, w * ZT.k]
-          ctx.strokeText(...args)
-          ctx.fillText(...args)
-        }
-        bytesRangesPathErr.moveTo(group.scaledRange[0], 0)
-        bytesRangesPathErr.lineTo(group.scaledRange[0], 110)
-        bytesRangesPathErr.moveTo(group.scaledRange[1], 0)
-        bytesRangesPathErr.lineTo(group.scaledRange[1], 110)
-      })
-    })
-    ctx.lineWidth = 1
-    ctx.strokeStyle = getColor(["error", "error"], [0.9, 0.9]).value
-    ctx.stroke(transformPath(bytesRangesPathErr, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
-    ctx.strokeStyle = getColor(["info", "info"], [0.9, 0.9]).value
-    ctx.stroke(transformPath(bytesRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
-  }
-
-  function drawBitsHints() {
-    let bitsRangesPath = new Path2D()
-    ctx.fillStyle = getColor(["base-content", "base-content"], [0.6, 0.5]).value
-    ctx.textAlign = "center"
-    ctx.font = "10px monospace"
-
-    pulses.measurements.forEach((m) => {
-      if (m.decoder.analyzerWorker.isRunning) return
-      let w = viewStore.xScale(m.decoder.guess?.short)
-      if (w && w * ZT.k < 5) return
-
-      for (let i = m.decoder.bitsHintsViewportRangeIDs[0] - 1; i <= m.decoder.bitsHintsViewportRangeIDs[1]; i++) {
-        let h = m.decoder.bitsHints[i]
-        if (!h) continue
-        w = h[4] - h[3]
-        if (w * ZT.k < 10) continue
-        ctx.fillText(h[2], (h[3] + w / 2) * ZT.k + ZT.x + pulses.scaledXOffset, 105, w * ZT.k)
-        bitsRangesPath.moveTo(h[3], 94)
-        bitsRangesPath.lineTo(h[3], 108)
-        bitsRangesPath.moveTo(h[4], 94)
-        bitsRangesPath.lineTo(h[4], 108)
-      }
-    })
-    ctx.strokeStyle = getColor(["base-content", "base-content"], [0.4, 0.3]).value
-    ctx.stroke(transformPath(bitsRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
-  }
-
-  const getPattern = useMemoize((color = "#fec") => {
-    const patternCanvas = document.createElement("canvas")
-    const patternContext = patternCanvas.getContext("2d", { alpha: true })
-
-    patternCanvas.width = 4
-    patternCanvas.height = 4
-    patternContext.strokeStyle = color
-    patternContext.beginPath()
-    patternContext.moveTo(0, 0)
-    patternContext.lineTo(4, 4)
-    patternContext.stroke()
-    const pattern = ctx.createPattern(patternCanvas, "repeat")
-    return pattern
-  })
-
-  onMounted(() => {
-    ctx = canvas.value.getContext("2d", {
-      alpha: true,
-    })
-    ctx.textRendering = "optimizeSpeed"
-  })
 </script>
