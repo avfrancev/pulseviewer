@@ -82,22 +82,23 @@ div(class="relative mt-8 mb-12")
             class="stroke-base-content/20"
             stroke-dasharray="8 10"
             stroke-width="1"
-            :d="`M ${viewStore.xScale(tick) * ZT.k} 20 V${viewStore.wrapperBounds.height || 0}`")
+            :style="`transform: translate3d(${viewStore.xScale(tick) * ZT.k}px,0px,-1px)`"
+            :d="`M ${0} 20 V${viewStore.wrapperBounds.height || 0}`")
           text(
+            :style="`transform: translate(${viewStore.xScale(tick) * ZT.k}px,0px) translateZ(-1px) `"
             class="fill-base-content text-xs"
-            :x="viewStore.xScale(tick) * ZT.k"
-            :transform-origin="`${viewStore.xScale(tick)} 0`"
             dy="0"
-            :transform="`scale(${1},1)`"
             dominant-baseline="hanging"
             text-anchor="middle") {{tick / 1000}}
       path(
         class="stroke-1 stroke-base-content/60"
-        :d="`M ${viewStore.state.cursor.xCom} 0 V${viewStore.wrapperBounds.height || 0}`"
+        :style="`transform: translate3d(${viewStore.state.cursor.xCom}px,0px,-1px)`"
+        :d="`M ${0} 0 V${viewStore.wrapperBounds.height || 0}`"
         stroke-dasharray="8 10")
+      //- :x="viewStore.state.cursor.xCom"
       foreignObject(
         class="overflow-visible"
-        :x="viewStore.state.cursor.xCom"
+        :style="`transform: translate3d(${viewStore.state.cursor.xCom}px,0px,-1px)`"
         y="-29"
         width="100%"
         height="100%")
