@@ -19,28 +19,34 @@ g(
     stroke-width="1"
     :stroke="m.isSelected ? m.color + 'ff' : 'transparent'"
     :fill="m.isHovered ? m.color + '20' : 'transparent'"
-    :d="`M${m.scaledX1},0 L${m.scaledX2},0 L${m.scaledX2},118 L${m.scaledX1},118 z`")
+    :transform="`matrix(${m.scaledMaxX - m.scaledMinX},0,0,1,${m.scaledMinX},0)`"
+    :d="`M${0},0 L${1},0 L${1},118 L${0},118 z`")
   path(
     stroke-width="1"
     :stroke="m.color"
-    :d="`M${m.scaledX1},0 V${120}`")
+    :transform="`matrix(1,0,0,1,${m.scaledX1},0)`"
+    :d="`M${0},0 V${120}`")
   path(
     stroke-width="1"
     :stroke="m.color"
-    :d="`M${m.scaledX2},0 V${120}`")
+    :transform="`matrix(1,0,0,1,${m.scaledX2},0)`"
+    :d="`M${0},0 V${120}`")
   path(
     class="stroke-transparent cursor-ew-resize"
     stroke-width="10"
-    :d="`M${m.scaledX1},0 V${120}`"
-    v-drag="(s) => { s.event.stopImmediatePropagation(); m['x1'] += (viewStore.pixelRatio * s.delta[0]) / ZT.k }")
+    :transform="`matrix(1,0,0,1,${m.scaledX1},0)`"
+    :d="`M${0},0 V${120}`"
+    v-drag="resizeHandleHandler.bind(null,m,'x1')")
   path(
     class="stroke-transparent cursor-ew-resize"
     stroke-width="10"
-    :d="`M${m.scaledX2},0 V${120}`"
-    v-drag="(s) => { s.event.stopImmediatePropagation(); m['x2'] += (viewStore.pixelRatio * s.delta[0]) / ZT.k }")
+    :transform="`matrix(1,0,0,1,${m.scaledX2},0)`"
+    :d="`M${0},0 V${120}`"
+    v-drag="resizeHandleHandler.bind(null,m,'x2')")
 </template>
 
 <script setup>
+  import { bisector } from 'd3-array';
  const props = defineProps({
     pulses: {
       type: Array,
@@ -56,6 +62,21 @@ g(
     },
   })
 
+  const { pulses, viewStore } = props
   const { ZT } = props.viewStore.state
+
+  const resizeHandleHandler = (m, key, s) => {
+    s.event.stopImmediatePropagation()
+    const b = bisector((d) => d.time).center
+    let x = (viewStore.pixelRatio * s.delta[0]) / ZT.k + m[key]
+    let _x = s.event.clientX - viewStore.wrapperBounds.left - pulses.scaledXOffset
+        // v-drag="(s) => { s.event.stopImmediatePropagation(); m['x1'] += (viewStore.pixelRatio * s.delta[0]) / ZT.k }")
+
+    let x2 = viewStore.xScale.invert((_x - ZT.x) / ZT.k) 
+    let id = b(pulses, x2)
+    let t = pulses[id].time
+    let cond = Math.abs(t-x2)/viewStore.pixelRatio*ZT.k < 7
+    m[key] = cond ? t : x2
+  }
   
 </script>

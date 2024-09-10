@@ -65,6 +65,7 @@ canvas(
       ZT.k,
       ZT.x,
       pulses.scaledXOffset,
+      viewStore.xScale,
       mode.value,
       pulses.raw_data,
       targetIsVisible.value,
@@ -106,7 +107,7 @@ canvas(
     pulses.measurements.forEach((m) => {
       if (m.decoder.analyzerWorker.isRunning) return
       m.decoder.bytesHints.forEach((group) => {
-        for (let i = group.viewportRangeIDs.value[0] - 1; i <= group.viewportRangeIDs.value[1]; i++) {
+        for (let i = group.viewportRangeIDs.value[0]; i <= group.viewportRangeIDs.value[1]; i++) {
           let b = group.bytes[i]
           if (!b) continue
           let w = b[4] - b[3]
@@ -143,7 +144,7 @@ canvas(
       let w = viewStore.xScale(m.decoder.guess?.short)
       if (w && w * ZT.k < 5) return
 
-      for (let i = m.decoder.bitsHintsViewportRangeIDs[0] - 1; i <= m.decoder.bitsHintsViewportRangeIDs[1]; i++) {
+      for (let i = m.decoder.bitsHintsViewportRangeIDs[0]; i <= m.decoder.bitsHintsViewportRangeIDs[1]; i++) {
         let h = m.decoder.bitsHints[i]
         if (!h) continue
         w = h[4] - h[3]
@@ -163,12 +164,12 @@ canvas(
     const patternCanvas = document.createElement("canvas")
     const patternContext = patternCanvas.getContext("2d", { alpha: true })
 
-    patternCanvas.width = 4
-    patternCanvas.height = 4
+    patternCanvas.width = 5
+    patternCanvas.height = 5
     patternContext.strokeStyle = color
     patternContext.beginPath()
     patternContext.moveTo(0, 0)
-    patternContext.lineTo(4, 4)
+    patternContext.lineTo(5, 5)
     patternContext.stroke()
     const pattern = ctx.createPattern(patternCanvas, "repeat")
     return pattern

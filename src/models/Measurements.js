@@ -89,7 +89,7 @@ export function getDecoder(m, viewStore, pulses) {
   const bitsHintsViewportRangeIDs = computed(() => {
     let l = viewStore.state.viewportLeft - pulses.scaledXOffset / viewStore.state.ZT.k
     let r = viewStore.state.viewportRight - pulses.scaledXOffset / viewStore.state.ZT.k
-    let ids = [bisector((h) => h[3]).left(bitsHints.value, l), bisector((h) => h[4]).left(bitsHints.value, r)]
+    let ids = [bisector((h) => h[4]).left(bitsHints.value, l), bisector((h) => h[3]).right(bitsHints.value, r)]
     return ids
   })
 
@@ -122,7 +122,7 @@ export function getDecoder(m, viewStore, pulses) {
       g.viewportRangeIDs = computed(() => {
         let l = viewStore.state.viewportLeft - pulses.scaledXOffset / viewStore.state.ZT.k
         let r = viewStore.state.viewportRight - pulses.scaledXOffset / viewStore.state.ZT.k
-        let ids = [bisector((h) => h[3]).left(g.bytes, l), bisector((h) => h[4]).left(g.bytes, r)]
+        let ids = [bisector((h) => h[4]).left(g.bytes, l), bisector((h) => h[3]).right(g.bytes, r)]
         return ids
       })
     })
