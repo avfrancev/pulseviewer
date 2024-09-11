@@ -84,11 +84,11 @@ canvas(
     if (!ctx) return
     ctx.clearRect(0, 0, wrapperBounds.width.value, wrapperBounds.height.value)
     ctx.reset()
-    pulses.measurements.forEach((m) => {
-      const pattern = getPattern(m.color + "40")
-      ctx.fillStyle = pattern
-      ctx.fillRect(m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset, 0, m.scaledWidth * ZT.k, 120)
-    })
+    // pulses.measurements.forEach((m) => {
+    //   const pattern = getPattern(m.color + "40")
+    //   ctx.fillStyle = pattern
+    //   ctx.fillRect(m.scaledMinX * ZT.k + ZT.x + pulses.scaledXOffset, 0, m.scaledWidth * ZT.k, 120)
+    // })
     ctx.strokeStyle = getColor(["accent", "base-content"], [1, 0.4]).value
     ctx.stroke(transformPath(pulsesPath.value, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
 
@@ -143,7 +143,6 @@ canvas(
       if (m.decoder.analyzerWorker.isRunning) return
       let w = viewStore.xScale(m.decoder.guess?.short)
       if (w && w * ZT.k < 5) return
-
       for (let i = m.decoder.bitsHintsViewportRangeIDs[0]; i <= m.decoder.bitsHintsViewportRangeIDs[1]; i++) {
         let h = m.decoder.bitsHints[i]
         if (!h) continue
@@ -159,21 +158,6 @@ canvas(
     ctx.strokeStyle = getColor(["base-content", "base-content"], [0.4, 0.3]).value
     ctx.stroke(transformPath(bitsRangesPath, { a: ZT.k, e: ZT.x + pulses.scaledXOffset }))
   }
-
-  const getPattern = useMemoize((color = "#fec") => {
-    const patternCanvas = document.createElement("canvas")
-    const patternContext = patternCanvas.getContext("2d", { alpha: true })
-
-    patternCanvas.width = 5
-    patternCanvas.height = 5
-    patternContext.strokeStyle = color
-    patternContext.beginPath()
-    patternContext.moveTo(0, 0)
-    patternContext.lineTo(5, 5)
-    patternContext.stroke()
-    const pattern = ctx.createPattern(patternCanvas, "repeat")
-    return pattern
-  })
 
   onMounted(() => {
     ctx = canvas.value.getContext("2d", {

@@ -12,36 +12,32 @@ g(
   @keydown.esc="(e) => { e.currentTarget.blur() }"
   @keydown.left="(e) => { let d = (viewStore.pixelRatio * 10) / ZT.k; m.x1 -= d; m.x2 -= d }"
   @keydown.right="(e) => { let d = (viewStore.pixelRatio * 10) / ZT.k; m.x1 += d; m.x2 += d }"
-  @keydown.delete="(e) => { m.remove() }"
+  @keydown.delete.d="(e) => { m.remove() }"
   @keydown.space.prevent="(e) => { m.locate() }"
+  :transform="`matrix(${Math.max(1/ZT.k,m.scaledMaxX - m.scaledMinX)},0,0,1,${m.scaledMinX},0)`"
   )
   path(
     stroke-width="1"
     :stroke="m.isSelected ? m.color + 'ff' : 'transparent'"
-    :fill="m.isHovered ? m.color + '20' : 'transparent'"
-    :transform="`matrix(${m.scaledMaxX - m.scaledMinX},0,0,1,${m.scaledMinX},0)`"
+    :fill="m.isHovered ? m.color + '20' : m.color + '10'"
     :d="`M${0},0 L${1},0 L${1},118 L${0},118 z`")
   path(
     stroke-width="1"
     :stroke="m.color"
-    :transform="`matrix(1,0,0,1,${m.scaledX1},0)`"
     :d="`M${0},0 V${120}`")
   path(
     stroke-width="1"
     :stroke="m.color"
-    :transform="`matrix(1,0,0,1,${m.scaledX2},0)`"
-    :d="`M${0},0 V${120}`")
+    :d="`M${1},0 V${120}`")
   path(
     class="stroke-transparent cursor-ew-resize"
     stroke-width="10"
-    :transform="`matrix(1,0,0,1,${m.scaledX1},0)`"
-    :d="`M${0},0 V${120}`"
+    :d="`M${m.x1 >= m.x2 ? 1 : 0},0 V${120}`"
     v-drag="resizeHandleHandler.bind(null,m,'x1')")
   path(
     class="stroke-transparent cursor-ew-resize"
     stroke-width="10"
-    :transform="`matrix(1,0,0,1,${m.scaledX2},0)`"
-    :d="`M${0},0 V${120}`"
+    :d="`M${m.x1 < m.x2 ? 1 : 0},0 V${120}`"
     v-drag="resizeHandleHandler.bind(null,m,'x2')")
 </template>
 
@@ -70,8 +66,6 @@ g(
     const b = bisector((d) => d.time).center
     let x = (viewStore.pixelRatio * s.delta[0]) / ZT.k + m[key]
     let _x = s.event.clientX - viewStore.wrapperBounds.left - pulses.scaledXOffset
-        // v-drag="(s) => { s.event.stopImmediatePropagation(); m['x1'] += (viewStore.pixelRatio * s.delta[0]) / ZT.k }")
-
     let x2 = viewStore.xScale.invert((_x - ZT.x) / ZT.k) 
     let id = b(pulses, x2)
     let t = pulses[id].time
