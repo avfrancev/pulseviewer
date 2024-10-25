@@ -179,21 +179,35 @@ div.relative.mt-2(
         v-if="pulses.rssi"
         ) RSSI: [ {{ pulses.rssi }} dBm]
 
-  svg.w-full(
-    v-drag="onItemDrag"
-    class="h-[100px]"
-    :viewBox="`${props.pulses.viewBox.value.x} 0 ${props.pulses.viewBox.value.w} 100`"
-    preserveAspectRatio="none"
-    )
-    //- :viewBox="`${viewStore.view.viewportLeft.value - pulses.scaledXOffset.value} 0 ${viewStore.view.viewportWidth.value} 100`"
-    path.fill-none(
-      class="stroke-base-content/60"
-      :d="linePath"
-      stroke-width="1"
-      vector-effect="non-scaling-stroke"
+  //- g.pointer-events-none(v-if="m.isHovered.value")
+  //- g.pointer-events-none
+    foreignObject(
+      :width="m.scaledWidth.value * ZT.k"
+      :height="bottom - top"
+      :transform="`matrix(${1 / ZT.k},0,0,1,0,0)`"
       )
-    PulsesViewMeasurementsRects(v-bind="{ pulses }")
-    PulsesViewWidthMeasure( v-bind="{ pulses }")
-    //- path(d="M0,0 L10,0 L10,10 L0,10 z")
+      .pointer-events-autos.h-full
+        PulsesViewMeasurementMenu(:m="m")
+  div(
+    class="h-[100px] relative pointer-events-none"
+    )
+    svg.w-full.h-full(
+      v-drag="onItemDrag"
+      :viewBox="`${pulses.viewBox.value.x} 0 ${pulses.viewBox.value.w} 100`"
+      preserveAspectRatio="none"
+      )
+      //- :viewBox="`${viewStore.view.viewportLeft.value - pulses.scaledXOffset.value} 0 ${viewStore.view.viewportWidth.value} 100`"
+      path.fill-none(
+        class="stroke-base-content/60"
+        :d="linePath"
+        stroke-width="1"
+        vector-effect="non-scaling-stroke"
+        )
+      PulsesViewMeasurementsRects(v-bind="{ pulses }")
+      PulsesViewWidthMeasure( v-bind="{ pulses }")
+
+    PulsesViewMeasurementMenu(v-bind="{ measurements: pulses.measurements }")
+    //- pre {{ props.pulses.viewBox.value.x }}
+
   PulsesViewMeasurementsDecoders(v-bind="{ pulses: props.pulses }")
 </template>

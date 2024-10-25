@@ -86,6 +86,7 @@ div(
       button(
         class="btn btn-xs"
         :class="{ ' btn-accent btn-outline': null === m.decoder.state.pickedSlicer }"
+        :disabled="m.decoder.state.pickedSlicer === null"
         @click="m.decoder.state.pickedSlicer = null"
         ) Auto
       button(

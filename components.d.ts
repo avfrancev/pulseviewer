@@ -92,6 +92,7 @@ declare module 'vue' {
     PulsesViewEditPulsesDialog: typeof import('./src/modules/PulsesViewer/components/PulsesViewEditPulsesDialog.vue')['default']
     PulsesViewer: typeof import('./src/modules/PulsesViewer/index.vue')['default']
     PulsesViewItem: typeof import('./src/modules/PulsesViewer/components/PulsesViewItem.vue')['default']
+    PulsesViewMeasurementMenu: typeof import('./src/modules/PulsesViewer/components/PulsesViewMeasurementMenu.vue')['default']
     PulsesViewMeasurementsDecoders: typeof import('./src/modules/PulsesViewer/components/PulsesViewMeasurementsDecoders.vue')['default']
     PulsesViewMeasurementsMeta: typeof import('./src/modules/PulsesViewer/components/PulsesViewMeasurementsMeta.vue')['default']
     PulsesViewMeasurementsMetaCard: typeof import('./src/modules/PulsesViewer/components/PulsesViewMeasurementsMetaCard.vue')['default']
