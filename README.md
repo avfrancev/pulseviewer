@@ -8,7 +8,6 @@ Demo available at: [https://avfrancev.github.io/pulseviewer/](https://avfrancev.
 ## Features
 - **Interactive Visualizations**. Users can create dynamic plots that allow for zooming and panning, making it easier to analyze specific segments of the data.
 - **Data Handling**. Supports various formats of input data which makes it versatile for different datasets.
-- compatible for ESP32 with CC1101
 - **Data Analysis**. Provides advanced analytics that can be used to identify trends and patterns in the data.
 - **Data Storage**. Supports local storage to store and retrieve data for future analysis.
 - **Responsive**. The app is designed to be responsive and work on all devices.
@@ -16,10 +15,8 @@ Demo available at: [https://avfrancev.github.io/pulseviewer/](https://avfrancev.
 
 ## Installation
 
-1. Clone the repository: `git clone https://github.com/your-username/project-name.git`
+1. Clone the repository: `git clone https://github.com/avfrancev/pulseviewer.git`
 2. Install dependencies: `npm install`
-3. Set up environment variables (if necessary): `cp .env.example .env`
-4. Start the project: `npm start`
 
 ## Usage
 

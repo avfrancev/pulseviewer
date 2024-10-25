@@ -3,32 +3,63 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,vue}"],
   theme: {
     extend: {
+      colors: {
+        muted: "oklch(var(--bc) / 50%)",
+      },
       keyframes: {
-        slideDown: {
-          from: { height: 0 },
-          to: { height: "var(--radix-accordion-content-height)" },
+        slideDownAndFade: {
+          from: { opacity: 0, transform: "translateY(-5px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
         },
-        slideUp: {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+        slideLeftAndFade: {
+          from: { opacity: 0, transform: "translateX(5px)" },
+          to: { opacity: 1, transform: "translateX(0)" },
+        },
+        slideUpAndFade: {
+          from: { opacity: 0, transform: "translateY(5px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
+        },
+        slideRightAndFade: {
+          from: { opacity: 0, transform: "translateX(-5px)" },
+          to: { opacity: 1, transform: "translateX(0)" },
+        },
+        overlayShow: {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        },
+        contentShow: {
+          from: { opacity: 0, transform: "translate(-50%, -48%) scale(0.96)" },
+          to: { opacity: 1, transform: "translate(-50%, -50%) scale(1)" },
         },
       },
       animation: {
-        slideDown: "slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1)",
-        slideUp: "slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1)",
+        slideDownAndFade: "slideDownAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        slideLeftAndFade: "slideLeftAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        slideUpAndFade: "slideUpAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        slideRightAndFade: "slideRightAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        overlayShow: "overlayShow 250ms cubic-bezier(0.16, 1, 0.3, 1)",
+        contentShow: "contentShow 250ms cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },
-  darkMode: ['selector', '[data-theme="dark"]'],
+  darkMode: ["selector", "[data-theme=\"dark\"]"],
   plugins: [require("daisyui")],
   daisyui: {
-    themes: ["cupcake", "dracula"], // false: only light + dark | true: all themes | array: specific themes like this ["light", "dark", "cupcake"]
-    darkTheme: "dracula", // name of one of the included themes for dark mode
+    themes: [
+      {
+        light: {
+          ...require("daisyui/src/theming/themes").cupcake,
+        },
+        dark: {
+          ...require("daisyui/src/theming/themes").dracula,
+        },
+      },
+    ],
     base: true, // applies background color and foreground color for root element by default
     styled: true, // include daisyUI colors and design decisions for all components
     utils: true, // adds responsive and modifier utility classes
     prefix: "", // prefix for daisyUI classnames (components, modifiers and responsive class names. Not colors)
-    logs: true, // Shows info about daisyUI version and used config in the console when building your CSS
+    logs: false, // Shows info about daisyUI version and used config in the console when building your CSS
     themeRoot: ":root", // The element that receives theme color CSS variables
   },
 }

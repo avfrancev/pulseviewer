@@ -1,0 +1,35 @@
+{
+  "vueCompilerOptions": {
+    "plugins": ["@vue/language-plugin-pug"]
+  },
+  "compilerOptions": {
+    "target": "ES2017",
+    "jsx": "preserve",
+    "lib": ["DOM", "ESNext"],
+    "experimentalDecorators": true,
+    "baseUrl": "./",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "~/*": ["src/*"]
+    },
+    "resolveJsonModule": true,
+    "types": [
+      "./auto-imports.d.ts",
+      "vite/client",
+      "unplugin-vue-macros/macros-global",
+      "unplugin-vue-router/client"
+    ],
+    "allowJs": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true
+  },
+  "exclude": [
+    "dist",
+    "node_modules",
+    "eslint.config.js",
+    "postcss.config.js",
+    "tailwind.config.js"
+  ]
+}
