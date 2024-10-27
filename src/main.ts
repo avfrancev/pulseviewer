@@ -18,3 +18,7 @@ const app = createApp(App)
 // app.use(router)
 app.use(GesturePlugin)
 app.mount("#app")
+
+window.addEventListener("mousewheel", (e) => {
+  e.preventDefault()
+}, { passive: false })
