@@ -10,6 +10,10 @@ const emit = defineEmits<{
 
 const tmp = ref(value)
 
+watch(() => value, () => {
+  tmp.value = value
+})
+
 function cancelSave() {
   tmp.value = value
 }
