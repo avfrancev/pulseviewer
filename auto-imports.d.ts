@@ -20,7 +20,7 @@ declare global {
   const PulseBuilder: typeof import('./node_modules/pulseplot/lib/builder.js')['PulseBuilder']
   const Pulseplot: typeof import('./node_modules/pulseplot/lib/pulseplot.js')['Pulseplot']
   const Pulses: typeof import('./src/modules/PulsesViewer/models/Pulses')['Pulses']
-  const PulsesStore: typeof import('./src/modules/PulsesViewer/store/pulses.store')['PulsesStore']
+  const PulsesStore: typeof import('./src/modules/PulsesViewer/models/PulseStore')['PulsesStore']
   const RfRaw: typeof import('./node_modules/pulseplot/lib/rfraw.js')['RfRaw']
   const ZoomTransform: typeof import('./src/composables/usePanZoom')['ZoomTransform']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
@@ -373,7 +373,7 @@ declare module 'vue' {
     readonly FormatType: UnwrapRef<typeof import('./src/modules/PulsesViewer/parserHelpers')['FormatType']>
     readonly Measurement: UnwrapRef<typeof import('./src/modules/PulsesViewer/models/Measurements')['Measurement']>
     readonly Pulses: UnwrapRef<typeof import('./src/modules/PulsesViewer/models/Pulses')['Pulses']>
-    readonly PulsesStore: UnwrapRef<typeof import('./src/modules/PulsesViewer/store/pulses.store')['PulsesStore']>
+    readonly PulsesStore: UnwrapRef<typeof import('./src/modules/PulsesViewer/models/PulseStore')['PulsesStore']>
     readonly ZoomTransform: UnwrapRef<typeof import('./src/composables/usePanZoom')['ZoomTransform']>
     readonly asyncComputed: UnwrapRef<typeof import('@vueuse/core')['asyncComputed']>
     readonly autoResetRef: UnwrapRef<typeof import('@vueuse/core')['autoResetRef']>

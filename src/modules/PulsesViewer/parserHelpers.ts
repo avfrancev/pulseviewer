@@ -45,18 +45,18 @@ export function getFromObject(s: string): Partial<PulsesStorage> | undefined {
 }
 
 export function getFromArray(s: string) {
-  console.log(s);
-  
+  // console.log(s);
+
   const regex = /\s*,\s*|\s+/g
-  
-//   const p = s.split(regex).map(Number).filter(Boolean)
-//   if (Array.isArray(p) && p.length)
-//     return p
-// }
+
+  //   const p = s.split(regex).map(Number).filter(Boolean)
+  //   if (Array.isArray(p) && p.length)
+  //     return p
+  // }
   // const p = s.split(",").map(Number).filter(Boolean)
   const p = s.split(regex).map(Number).filter(Boolean)
-  console.log(p);
-  
+  // console.log(p);
+
   if (Array.isArray(p) && p.length)
     return p
   return undefined

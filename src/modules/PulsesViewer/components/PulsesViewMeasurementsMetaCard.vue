@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Measurement } from "../models/Measurements"
-import { extent, mean, quantile } from "d3-array"
+import { extent, quantile } from "d3-array"
 
 const config = useConfig()
 
@@ -64,10 +64,9 @@ div(
       pre N#[sub rising]
       pre: b {{ Nrising }}
       pre #[i &#402;]#[sub min]
-      pre: b {{ minmaxFreq[0] }} µs
+      pre: b {{ minmaxFreq[0] || '---' }} µs
       pre #[i &#402;]#[sub max]
-      pre: b {{ minmaxFreq[1] }} µs
-      //- pre {{ averageTime }}
+      pre: b {{ minmaxFreq[1] || '---' }} µs
       pre #[i &#402;]#[sub baud]
       pre: b {{ baud }}
 

@@ -189,7 +189,7 @@ div.relative.mt-2(
       .pointer-events-autos.h-full
         PulsesViewMeasurementMenu(:m="m")
   div(
-    class="h-[100px] relative pointer-events-none"
+    class="h-[100px] relative"
     )
     svg.w-full.h-full(
       v-drag="onItemDrag"
@@ -206,7 +206,7 @@ div.relative.mt-2(
       PulsesViewMeasurementsRects(v-bind="{ pulses }")
       PulsesViewWidthMeasure( v-bind="{ pulses }")
 
-    PulsesViewMeasurementMenu(v-bind="{ measurements: pulses.measurements }")
+    PulsesViewMeasurementMenu.pointer-events-none(v-bind="{ measurements: pulses.measurements }")
     //- pre {{ props.pulses.viewBox.value.x }}
 
   PulsesViewMeasurementsDecoders(v-bind="{ pulses: props.pulses }")
