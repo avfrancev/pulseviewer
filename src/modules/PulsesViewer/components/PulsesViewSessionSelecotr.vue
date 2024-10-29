@@ -11,6 +11,8 @@ const config = useConfig()
 
 function removeSession(session: string) {
   _removeSession(session)
+  window.localStorage.removeItem(`viewStoreZT-${session}`)
+  window.localStorage.removeItem(`pulsesStore-${session}`)
   nextTick(() => {
     if (currentSession.value === session) {
       currentSession.value = [...sessions.value][0]

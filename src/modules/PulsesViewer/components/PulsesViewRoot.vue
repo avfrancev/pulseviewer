@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { Pulses } from "../models/Pulses"
 import type { IParsedPulses } from "../parserHelpers"
 
 const viewEl = ref()
@@ -26,15 +27,21 @@ watchEffect(() => {
 const ESP32Store = useESP32()
 // console.log(ESP32Store, ESP32PulsesStore.allMeasurements.value)
 
+let lastPulses: Pulses | undefined
+
 ESP32Store.onRMTMessage((data) => {
-  console.log(data)
+  // console.log(data)
   if (useSessionsStore().currentSession.value !== "ESP32")
     return
-  pulsesStore.add({ raw_data: data.parsed_buf, rssi: data.rssi })
+  if (data.delta > 200_000) {
+    lastPulses = pulsesStore.add({ raw_data: data.parsed_buf, rssi: data.rssi })
+  }
+  else if (lastPulses) {
+    const raw_data = [...lastPulses.raw_data]
+    raw_data.pop()
+    lastPulses.setRawData([...raw_data, data.delta, ...data.parsed_buf])
+  }
 })
-// watchEffect(() => {
-//   console.log(ESP32Store.wsData)
-// })
 </script>
 
 <template lang="pug">
@@ -78,7 +85,7 @@ div(class="flex-1 flex flex-col h-full relative")
 
   div(
     ref="viewEl"
-    class="viewEl mb-20"
+    class="viewEl mb-20 mt-4"
     )
     div(
       v-if="pulsesStore.data.size > 0"

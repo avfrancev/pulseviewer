@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        muted: "oklch(var(--bc) / 50%)",
+        muted: "oklch(var(--bc) / 40%)",
       },
       keyframes: {
         slideDownAndFade: {

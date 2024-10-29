@@ -32,7 +32,7 @@ svg(
     stroke-width="1"
     :d="ticks.reduce((acc: string, t: number) => `${acc}M ${pulsesStore?.xScale.value(t)},0 V${height} `, '')"
     )
-  foreignObject.pointer-events-nones(
+  foreignObject.pointer-events-none(
     :transform="`matrix(${1 / ZT.k},0,0,1,${0},0)`"
     :width="width * ZT.k"
     height="100"
