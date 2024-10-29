@@ -174,10 +174,13 @@ div.relative.mt-2(
       //- span
       i-ph:check-circle-bold
       b Copied
-    div.ml-auto.text-xs.text-muted
+    div.ml-auto.text-xs.text-muted.text-right
       div(
         v-if="pulses.rssi"
         ) RSSI: [ {{ pulses.rssi }} dBm]
+      div(
+        v-if="pulses.rssi"
+        ) Created at: {{ pulses.created_at.toLocaleString() }} {{ useTimeAgo(pulses.created_at).value }}
 
   //- g.pointer-events-none(v-if="m.isHovered.value")
   //- g.pointer-events-none

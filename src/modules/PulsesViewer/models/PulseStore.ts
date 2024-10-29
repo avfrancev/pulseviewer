@@ -41,6 +41,7 @@ export class PulsesStore {
       raw_data: [],
       xOffset: 0,
       rssi: 0,
+      created_at: new Date(),
       measurements: [],
     }, obj)
   }

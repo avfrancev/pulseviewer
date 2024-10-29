@@ -1,8 +1,9 @@
+import type { PulsesStore } from "./PulseStore"
 import { bisector, extent, sum } from "d3-array"
 import { v4 as uuidv4 } from "uuid"
 import { Measurement } from "./Measurements"
 // import { pick } from "~/utils"
-import type { PulsesStore } from "../store/pulses.store"
+// import type { PulsesStore } from "../store/pulses.store"
 // import { PulsesStore } from "../store"
 // import { currentPulsesStore } from "../stores/pulses.store"
 
@@ -22,12 +23,16 @@ export class Pulses {
   xOffset = ref(0)
   isHovered = ref(false)
   rssi: number | null = null
+  created_at = new Date()
   pulsesStore: PulsesStore
   measurements = shallowReactive(new Set<Measurement>())
 
   constructor(pulsesStore: PulsesStore, p: PulsesStorage) {
     this.pulsesStore = pulsesStore
     Object.assign(this.raw_data, p.raw_data)
+    if (p.created_at) {
+      this.created_at = new Date(p.created_at)
+    }
     this.xOffset.value = p.xOffset
     if (p.rssi)
       this.rssi = p.rssi
@@ -104,7 +109,7 @@ export class Pulses {
       raw_data: this.raw_data,
       xOffset: toValue(this.xOffset),
       rssi: this.rssi,
-      // measurements: Array.from(this.measurements as unknown as MeasurementStorage[]),
+      created_at: this.created_at,
       measurements: Array.from(this.measurements, m => m.toJSON()),
     }
   }
