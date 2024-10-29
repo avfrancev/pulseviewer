@@ -4,7 +4,7 @@
   "packageManager": "pnpm@9.9.0",
   "scripts": {
     "build": "vite build",
-    "build-gh": "vite build --base=/aaa2/",
+    "build-gh": "vite build --base=/pulseviewer/",
     "build:esp32": "ESP32=true vite build",
     "dev": "vite --port 3333 --host",
     "lint": "eslint . --fix",
