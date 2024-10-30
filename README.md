@@ -1,7 +1,7 @@
 # :raccoon:  RF Pulse Viewer
 App for visualizing and analyzing pulse data. Based on Vue 3, vitejs and [Pulseplot](https://github.com/triq-org/pulseplot-js/)
 
-[preview](https://github.com/user-attachments/assets/9371978a-fb8f-41b4-bc63-c6ed3ba7c0fc)
+![Снимок экрана 2024-10-30 в 09 56 24](https://github.com/user-attachments/assets/ea90f348-5ed8-4099-bff7-77badf1e2d07)
 
 Demo available at: [https://avfrancev.github.io/pulseviewer/](https://avfrancev.github.io/pulseviewer/)
 
