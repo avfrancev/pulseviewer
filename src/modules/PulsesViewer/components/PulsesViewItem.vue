@@ -13,7 +13,7 @@ const { ZT } = view
 
 const pulsesStore = usePulsesStore()
 
-const itemEl = ref<HTMLElement | null>(null)
+// const itemEl = ref<HTMLElement | null>(null)
 
 const genLine = line(
   (d: PulsesItem) => d.scaledTime,
@@ -35,8 +35,6 @@ const clipboard = useClipboard({ source: clipboardSource })
 function copyAs(type: "RFRAW" | "JSON" | "ARRAY") {
   switch (type) {
     case "RFRAW":{
-      console.log("RFRAW")
-
       break
     }
     case "JSON": {
@@ -47,7 +45,6 @@ function copyAs(type: "RFRAW" | "JSON" | "ARRAY") {
       break
     }
     case "ARRAY": {
-      console.log("ARRAY")
       clipboardSource.value = props.pulses.raw_data.toString()
       clipboard.copy()
       break
@@ -100,7 +97,6 @@ function onPulsesSave(val: IParsedPulses) {
 <template>
   <!-- prettier-ignore -->
   <div
-    ref="itemEl"
     v-hover="(s: any) => { !isDropDownMoreOpen && pulses.setIsHovered(s.hovering) }"
     class="relative mt-2"
   >

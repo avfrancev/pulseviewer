@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { PulsesStorage } from "../models/Pulses"
-import type { IParsedPulses } from "../parserHelpers"
+import { templateRef } from "@vueuse/core"
+import { FormatType, getParsedInputString, type IParsedPulses } from "../parserHelpers"
 
 const { value, title = "Edit pulses", clearOnSave = false } = defineProps<{ value: string, title?: string, clearOnSave?: boolean }>()
 
@@ -18,7 +19,7 @@ function cancelSave() {
   tmp.value = value
 }
 
-const textareaEl = ref<HTMLTextAreaElement>()
+const textareaEl = templateRef<HTMLTextAreaElement>("textareaEl")
 useFocus(textareaEl, { initialValue: true })
 
 const parsed = ref<IParsedPulses>()

@@ -2,6 +2,7 @@
 
 import path from "node:path"
 import process from "node:process"
+import tailwindcss from "@tailwindcss/vite"
 import Vue from "@vitejs/plugin-vue"
 import RadixVueResolver from "radix-vue/resolver"
 // import UnoCSS from 'unocss/vite'
@@ -32,6 +33,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    tailwindcss(),
     // vueDevTools(),
     buildForESP32 && compression(),
     buildForESP32 && viteSingleFile({

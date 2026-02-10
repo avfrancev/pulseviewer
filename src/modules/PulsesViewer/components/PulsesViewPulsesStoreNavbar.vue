@@ -83,7 +83,7 @@ const pulsesStoreDataClipboard = useClipboard({ source: pulsesStoreDataString })
     <div class="flex w-full">
       <button
         class="ml-auto join-item btn btn-sm"
-        :class="[config.pinMeasurements && 'btn-active bg-opacity-100']"
+        :class="[config.pinMeasurements && 'btn-active']"
         title="Pin measurements"
         @click="config.pinMeasurements = !config.pinMeasurements"
       >

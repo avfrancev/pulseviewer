@@ -1,54 +1,90 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-.animated {
-  @apply data-[side=bottom]:animate-slideUpAndFade data-[side=right]:animate-slideLeftAndFade data-[side=left]:animate-slideRightAndFade data-[side=top]:animate-slideDownAndFade;
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: cupcake --default, dracula --prefersdark;
 }
 
-.PopoverContent {
-  @apply bg-base-300 rounded p-2 text-sm animated;
+@theme {
+  --color-muted: oklch(var(--color-base-content) / 40%);
+
+  --animate-slideDownAndFade: slideDownAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slideLeftAndFade: slideLeftAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slideUpAndFade: slideUpAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slideRightAndFade: slideRightAndFade 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-overlayShow: overlayShow 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-contentShow: contentShow 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownAndFade {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeftAndFade {
+  from { opacity: 0; transform: translateX(5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideUpAndFade {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRightAndFade {
+  from { opacity: 0; transform: translateX(-5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes overlayShow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes contentShow {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
-@layer components {
-  .SelectContent {
-    @apply bg-base-300 rounded z-[100];
-    @apply will-change-[opacity,transform] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade
-  }
-  .SelectItem {
-    @apply cursor-pointer data-[highlighted]:text-primary text-sm leading-none flex items-center h-8 pr-8 relative select-none rounded-[3px] pl-[25px] data-[disabled]:pointer-events-none data-[highlighted]:outline-none
-  }
-  .SelectScrollButton {
-    @apply flex items-center justify-center bg-base-300 text-base-content cursor-default h-[25px]
-  }
-  .DialogOverlay {
-    @apply bg-black/60 data-[state=open]:animate-overlayShow fixed inset-0 z-30
-  }
-  .DialogContent {
-    @apply z-[100] data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] max-h-[85vh] w-[95vw] max-w-3xl translate-x-[-50%] translate-y-[-50%] rounded bg-base-300 p-4 shadow-2xl focus:outline-none
-  }
-  .DropdownMenuContent {
-    @apply z-[100] min-w-[100px] outline-none bg-base-300 rounded-md p-[5px] shadow-lg will-change-[opacity,transform] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade;
-  }
-  .DropdownMenuItem {
-    @apply leading-none text-base-content rounded-[3px] flex items-center p-1.5 text-xs relative select-none outline-none data-[disabled]:text-muted data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-content
-  }
+/* Custom classes for Radix Vue components */
+.PopoverContent {
+  @apply bg-base-300 rounded p-2 text-sm;
+  @apply data-[side=bottom]:animate-slideUpAndFade data-[side=right]:animate-slideLeftAndFade data-[side=left]:animate-slideRightAndFade data-[side=top]:animate-slideDownAndFade;
+}
+
+.SelectContent {
+  @apply bg-base-300 rounded z-[100];
+  @apply will-change-[opacity,transform] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade;
+}
+
+.SelectItem {
+  @apply cursor-pointer data-[highlighted]:text-primary text-sm leading-none flex items-center h-8 pr-8 relative select-none rounded-[3px] pl-[25px] data-[disabled]:pointer-events-none data-[highlighted]:outline-none;
+}
+
+.SelectScrollButton {
+  @apply flex items-center justify-center bg-base-300 text-base-content cursor-default h-[25px];
+}
+
+.DialogOverlay {
+  @apply bg-black/60 data-[state=open]:animate-overlayShow fixed inset-0 z-30;
+}
+
+.DialogContent {
+  @apply z-[100] data-[state=open]:animate-contentShow fixed top-[50%] left-[50%] max-h-[85vh] w-[95vw] max-w-3xl translate-x-[-50%] translate-y-[-50%] rounded bg-base-300 p-4 shadow-2xl focus:outline-none;
+}
+
+.DropdownMenuContent {
+  @apply z-[100] min-w-[100px] outline-none bg-base-300 rounded-md p-[5px] shadow-lg will-change-[opacity,transform] data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade;
+}
+
+.DropdownMenuItem {
+  @apply leading-none text-base-content rounded-[3px] flex items-center p-1.5 text-xs relative select-none outline-none data-[disabled]:text-muted data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-content;
 }
