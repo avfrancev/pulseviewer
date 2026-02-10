@@ -2,6 +2,6 @@
 
 </script>
 
-<template lang="pug">
-PulsesViewRoot
+<template>
+  <PulsesViewRoot />
 </template>

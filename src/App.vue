@@ -2,11 +2,12 @@
 
 </script>
 
-<template lang="pug">
-//- main(class="container mx-auto px-2 min-h-svh grid")
-main(class="container mx-auto px-2 min-h-svh flex flex-col max-sm:max-w-[100svw]")
-  Navbar
-  PulsesViewer
+<template>
+  <!-- main(class="container grid px-2 mx-auto min-h-svh") -->
+  <main class="container mx-auto px-2 min-h-svh flex flex-col max-sm:max-w-[100svw]">
+    <Navbar />
+    <PulsesViewer />
+  </main>
 </template>
 
 <style lang="sass">

@@ -96,7 +96,7 @@ const bitsRombPathes = computed(() => {
   for (const d of hintsBitsFiltered.value) {
     s += rombPath(d.scaledX1, d.scaledWidth, 20, 5 / ZT.k)
     // m.flatMap(d => d.bits).forEach((d) => {
-    //   s += rombPath(d.scaledX1, d.scaledWidth, 20, 5 / ZT.k)
+    //   s +=rombPath(d.scaledX1, d.scaledWidth, 20, 5 / ZT.k)
     // })
   }
   return s
@@ -117,37 +117,54 @@ function rombPath(s: number, w: number, h = 20, p = 5) {
 }
 </script>
 
-<template lang="pug">
-div(class="h-[20px] w-full pointer-events-none select-none")
-  svg(
-    v-if="isRootVisible"
-    preserveAspectRatio="none"
-    class="h-[20px] w-full font-mono text-xs"
-    :viewBox="`${props.pulses.viewBox.value.x} 0 ${props.pulses.viewBox.value.w} 20`"
-    @click="() => console.log(hintsBitsFiltered)"
-    )
-    path.stroke-2.stroke-accent(:d="groupsRangePathes")
-    path(:d="bytesRombPathes" class="stroke-1 stroke-secondary-content/70 fill-secondary/70")
-    path(:d="bitsRombPathes" class="stroke-1 stroke-secondary-content/70 fill-secondary/70")
-    text(
-      y="15"
-      :transform="`matrix(${1 / ZT.k},0,0,1,0,0)`"
-      text-anchor="middle"
-      )
-      tspan.fill-secondary-content(
-        v-for="d, i in hintsBytesFilteredVisible"
-        :key="d.id + i"
-        :x="(d.scaledX1 + d.scaledWidth / 2) * ZT.k"
-        ) {{ d.label }}
-    text(
-      y="15"
-      :transform="`matrix(${1 / ZT.k},0,0,1,0,0)`"
-      text-anchor="middle"
-      )
-      tspan.fill-secondary-content(
-        v-for="d, i in hintsBitsFiltered"
-        :key="d.id + i"
-        :x="(d.scaledX1 + d.scaledWidth / 2) * ZT.k"
-        :text-length="20"
-        ) {{ d.label }}
+<template>
+  <div class="h-[20px] w-full pointer-events-none select-none">
+    <svg
+      v-if="isRootVisible"
+      preserveAspectRatio="none"
+      class="h-[20px] w-full font-mono text-xs"
+      :viewBox="`${props.pulses.viewBox.value.x} 0 ${props.pulses.viewBox.value.w} 20`"
+      @click="() => console.log(hintsBitsFiltered)"
+    >
+      <path
+        stroke-2
+        stroke-accent
+        class="stroke-2 stroke-accent"
+        :d="groupsRangePathes"
+      />
+      <path
+        :d="bytesRombPathes"
+        class="stroke-1 stroke-secondary-content/70 fill-secondary/70"
+      />
+      <path
+        :d="bitsRombPathes"
+        class="stroke-1 stroke-secondary-content/70 fill-secondary/70"
+      />
+      <text
+        y="15"
+        :transform="`matrix(${1 / ZT.k},0,0,1,0,0)`"
+        text-anchor="middle"
+      >
+        <tspan
+          v-for="d, i in hintsBytesFilteredVisible"
+          :key="d.id + i"
+          :x="(d.scaledX1 + d.scaledWidth / 2) * ZT.k"
+          fill="secondary-content"
+        >{{ d.label }}</tspan>
+      </text>
+      <text
+        y="15"
+        :transform="`matrix(${1 / ZT.k},0,0,1,0,0)`"
+        text-anchor="middle"
+      >
+        <tspan
+          v-for="d, i in hintsBitsFiltered"
+          :key="d.id + i"
+          :x="(d.scaledX1 + d.scaledWidth / 2) * ZT.k"
+          :text-length="20"
+          fill="secondary-content"
+        >{{ d.label }}</tspan>
+      </text>
+    </svg>
+  </div>
 </template>

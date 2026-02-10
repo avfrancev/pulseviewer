@@ -13,24 +13,26 @@ const measurementsSorted = computed(() => {
 })
 </script>
 
-<template lang="pug">
-//- div Measurements Meta Card [ {{ measurementsSorted.length }} ]
-  //- div(
-  //-   class="pt-2 top-2 z-20 inline-flex self-start max-w-full"
-  //-   )
-//- div(class="scroll-ml-6 flex w-auto space-x-3 p-2 overflow-y-auto -ml-2")
-div(class="scroll-ml-6 flex w-auto space-x-3 p-2 overflow-y-auto -ml-2")
-  template(
-    v-for="(_m, i) in measurementsSorted"
-    :key="_m.id"
-    )
-    PulsesViewMeasurementsMetaCard(
-      v-model="measurementsSorted[i]"
-      )
-  //- div(class="scroll-ml-6 flex w-auto space-x-3 p-2 overflow-y-auto -ml-2")
-    PulsesViewMeasurementsMetaCard(
-      v-for="m in measurements"
-      :key="m.id"
-      v-model="m"
-      )
+<template>
+  <!-- div Measurements Meta Card [ {{ measurementsSorted.length }} ] -->
+  <!-- div( -->
+  <!--   class="z-20 inline-flex self-start max-w-full pt-2 top-2" -->
+  <!-- ) -->
+  <!-- div(class="flex w-auto p-2 -ml-2 space-x-3 overflow-y-auto scroll-ml-6") -->
+  <div class="flex w-auto p-2 -ml-2 space-x-3 overflow-y-auto scroll-ml-6">
+    <template
+      v-for="(_m, i) in measurementsSorted"
+      :key="_m.id"
+    >
+      <PulsesViewMeasurementsMetaCard
+        v-model="measurementsSorted[i]"
+      />
+    </template>
+    <!-- div(class="flex w-auto p-2 -ml-2 space-x-3 overflow-y-auto scroll-ml-6") -->
+    <!-- PulsesViewMeasurementsMetaCard( -->
+    <!-- v-for="m in measurements" -->
+    <!-- :key="m.id" -->
+    <!-- v-model="m" -->
+    <!-- ) -->
+  </div>
 </template>

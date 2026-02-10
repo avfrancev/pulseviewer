@@ -56,28 +56,38 @@ function save() {
 }
 </script>
 
-<template lang="pug">
-AlertDialogRoot
-  AlertDialogTrigger(:as-child="true")
-    slot
-      button(class="btn btn-sm btn-ghost")
-        i-ph:ambulance-light
-  AlertDialogPortal
-    AlertDialogOverlay(class="DialogOverlay")
-    AlertDialogContent(class="DialogContent flex flex-col" @escape-key-down="cancelSave")
-      AlertDialogTitle.mb-2: b {{ title }}
-      AlertDialogDescription(class="text-muted text-sm")
-      textarea.textarea.w-full.my-4(
-        ref="textareaEl"
-        v-model="tmp"
-        placeholder="AA B1 03 00C8 02DA 1D2E 28190909090908181909081818181908190909090819081818 55"
-        class="h-[400px]"
-        :class="parsed ? 'textarea-success' : 'textarea-error'")
-      div(class="flex justify-end items-center gap-6")
-        div.text-muted.mr-auto(v-if="parsed") Type: {{ parsed?.type }} | Total pulses: {{ totalPulses }}
-        AlertDialogCancel(class="btn btn-xs btn-ghost" @click="cancelSave") Cancel
-        AlertDialogAction(
-          class="btn btn-sm btn-success font-bold"
-          :disabled="!parsed"
-          @click="save") Save
+<template>
+  <AlertDialogRoot>
+    <AlertDialogTrigger :as-child="true">
+      <slot>
+        <button class="btn btn-sm btn-ghost">
+          <i-ph:ambulance-light />
+        </button>
+      </slot>
+    </AlertDialogTrigger>
+    <AlertDialogPortal>
+      <AlertDialogOverlay class="DialogOverlay" />
+      <AlertDialogContent class="flex flex-col DialogContent" @escape-key-down="cancelSave">
+        <AlertDialogTitle class="mb-2"><b>{{ title }}</b></AlertDialogTitle>
+        <AlertDialogDescription class="text-sm text-muted">
+          <textarea
+            ref="textareaEl"
+            v-model="tmp"
+            placeholder="AA B1 03 00C8 02DA 1D2E 28190909090908181909081818181908190909090819081818 55"
+            class="h-[400px] textarea w-full my-4"
+            :class="parsed ? 'textarea-success' : 'textarea-error'"
+          />
+        </AlertDialogDescription>
+        <div class="flex items-center justify-end gap-6">
+          <div v-if="parsed" class="mr-auto text-muted">Type: {{ parsed?.type }} | Total pulses: {{ totalPulses }}</div>
+          <AlertDialogCancel class="btn btn-xs btn-ghost" @click="cancelSave">Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            class="font-bold btn btn-sm btn-success"
+            :disabled="!parsed"
+            @click="save"
+          >Save</AlertDialogAction>
+        </div>
+      </AlertDialogContent>
+    </AlertDialogPortal>
+  </AlertDialogRoot>
 </template>

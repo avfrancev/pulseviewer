@@ -44,57 +44,69 @@ ESP32Store.onRMTMessage((data) => {
 })
 </script>
 
-<template lang="pug">
-PulsesViewPulsesStoreNavbar.PulsesViewPulsesStoreNavbar(
-  v-if="pulsesStore.data.size > 0"
-  class="sticky top-2 z-20 bg-base-300/80 backdrop-blur")
+<template>
+  <PulsesViewPulsesStoreNavbar
+    v-if="pulsesStore.data.size > 0"
+    class="sticky z-20 top-2 bg-base-300/80 backdrop-blur"
+  />
 
-.MeasurementsMetaWrapper(
-  v-if="pulsesStore.data.size > 0"
-  class=" inline-flex self-start max-w-full"
-  :class="config.pinMeasurements && ['sticky top-10 z-30']")
-  PulsesViewMeasurementsMeta
+  <div
+    v-if="pulsesStore.data.size > 0"
+    class="inline-flex self-start max-w-full MeasurementsMetaWrapper"
+    :class="config.pinMeasurements && ['sticky top-10 z-30']"
+  >
+    <PulsesViewMeasurementsMeta />
+  </div>
 
-div(
-  v-if="pulsesStore.data.size > 0"
-  class="container fixed bottom-0 px-2 -ml-2 z-10")
-  div(class="flex w-full bg-base-300 mb-4 ring-4 ring-base-300 rounded-box")
-    div(
-      v-drag="(e: any) => { view.translateBy(-e.delta[0] * view.ZT.k, 0) }"
-      class="h-2 text-xs text-secondary-content text-center rounded-box bg-base-content/20 active:ring-1 ring-base-content/50 cursor-grab active:cursor-grabbing"
-      :style="{ width: `${Math.max(view.elBounds.width.value / view.ZT.k, 10)}px`, transform: `translateX(${-view.ZT.x / view.ZT.k}px)` }")
+  <div
+    v-if="pulsesStore.data.size > 0"
+    class="container fixed bottom-0 z-10 px-2 -ml-2"
+  >
+    <div class="flex w-full mb-4 bg-base-300 ring-4 ring-base-300 rounded-box">
+      <div
+        v-drag="(e: any) => { view.translateBy(-e.delta[0] * view.ZT.k, 0) }"
+        class="h-2 text-xs text-center text-secondary-content rounded-box bg-base-content/20 active:ring-1 ring-base-content/50 cursor-grab active:cursor-grabbing"
+        :style="{ width: `${Math.max(view.elBounds.width.value / view.ZT.k, 10)}px`, transform: `translateX(${-view.ZT.x / view.ZT.k}px)` }"
+      />
+    </div>
+  </div>
 
-div(class="flex-1 flex flex-col h-full relative")
+  <div class="relative flex flex-col flex-1 h-full">
+    <div
+      v-if="pulsesStore.data.size < 1"
+      class="flex flex-col items-center self-center justify-center flex-1 my-auto sm:flex-row sm:gap-12"
+    >
+      <PulsesViewEditPulsesDialog
+        value=""
+        title="Create new pulses"
+        :clear-on-save="true"
+        @save="onPulsesSave"
+      >
+        <button class="btn md:btn-wide">
+          Create new pulses
+        </button>
+      </PulsesViewEditPulsesDialog>
+      <div class="divider sm:divider-horizontal sm:h-[100px] self-center">OR</div>
+      <button
+        class="btn md:btn-wide"
+        @click="loadSamplePulses()"
+      >Add sample pulses</button>
+    </div>
 
-  div(
-    v-if="pulsesStore.data.size < 1"
-    class="justify-center self-center my-auto flex-1 flex flex-col items-center sm:flex-row sm:gap-12"
-    )
-    PulsesViewEditPulsesDialog(
-      value=""
-      title="Create new pulses"
-      :clear-on-save="true"
-      @save="onPulsesSave"
-      )
-      button(class="btn md:btn-wide")
-        | Create new pulses
-    div(class="divider sm:divider-horizontal sm:h-[100px] self-center") OR
-    button(
-      class="btn md:btn-wide"
-      @click="loadSamplePulses()") Add sample pulses
-
-  div(
-    ref="viewEl"
-    class="viewEl mb-20 mt-4"
-    )
-    div(
-      v-if="pulsesStore.data.size > 0"
-      class=""
-      )
-      PulsesViewItem(
-        v-for="p in pulsesStore.data"
-        :key="p.id"
-        v-bind="{ pulses: p }"
-        )
-      PulsesViewTicks
+    <div
+      ref="viewEl"
+      class="mt-4 mb-20 viewEl"
+    >
+      <div
+        v-if="pulsesStore.data.size > 0"
+      >
+        <PulsesViewItem
+          v-for="p in pulsesStore.data"
+          :key="p.id"
+          v-bind="{ pulses: p }"
+        />
+        <PulsesViewTicks />
+      </div>
+    </div>
+  </div>
 </template>

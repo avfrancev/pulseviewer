@@ -97,120 +97,148 @@ function onPulsesSave(val: IParsedPulses) {
 }
 </script>
 
-<template lang="pug">
-div.relative.mt-2(
-  ref="itemEl"
-  v-hover="(s: any) => { !isDropDownMoreOpen && pulses.setIsHovered(s.hovering) }"
-  )
-  //- pre {{ 20/view.ZT.k }}
-  //- pre {{ pulses.isHovered }}
-  .h-8.flex.items-center
-    .actions.relative(
-      v-show="pulses.isHovered.value"
-      class="join *:btn *:btn-sm *:text-md")
-      button.join-item.btn-square
-        i-ph:dots-six-vertical-bold
-      //- PulsesViewEditPulsesDialog(
-        :model-value="props.pulses.raw_data"
-        @update:model-value="onPulsesSave"
-        )
-      PulsesViewEditPulsesDialog(
-        :value="props.pulses.raw_data.toString()"
-        @save="onPulsesSave"
-        )
-        button(class="join-item btn-square")
-          i-ph:pencil-simple
-        button(class="join-item btn-square hover:btn-error" @click="pulsesStore.remove(props.pulses)")
-          i-ph:trash
+<template>
+  <!-- prettier-ignore -->
+  <div
+    ref="itemEl"
+    v-hover="(s: any) => { !isDropDownMoreOpen && pulses.setIsHovered(s.hovering) }"
+    class="relative mt-2"
+  >
+    <!-- pre {{ 20/view.ZT.k }} -->
+    <!-- pre {{ pulses.isHovered }} -->
+    <div class="flex items-center h-8">
+      <div
+        v-show="pulses.isHovered.value"
+        class="actions relative join *:btn *:btn-sm *:text-md"
+      >
+        <button class="join-item btn-square">
+          <i-ph:dots-six-vertical-bold />
+        </button>
+        <!-- PulsesViewEditPulsesDialog( -->
+        <!-- :model-value="props.pulses.raw_data" -->
+        <!-- @update:model-value="onPulsesSave" -->
+        <!-- ) -->
+        <PulsesViewEditPulsesDialog
+          :value="props.pulses.raw_data.toString()"
+          @save="onPulsesSave"
+        >
+          <button class="join-item btn-square">
+            <i-ph:pencil-simple />
+          </button>
+        </PulsesViewEditPulsesDialog>
+        <button class="join-item btn-square hover:btn-error" @click="pulsesStore.remove(props.pulses)">
+          <i-ph:trash />
+        </button>
 
-      DropdownMenuRoot(v-model:open="isDropDownMoreOpen" :default-open="false")
-        DropdownMenuTrigger.btn-square.join-item
-          i-ph:dots-three-outline-fill
-        DropdownMenuPortal
-          DropdownMenuContent.DropdownMenuContent
-            DropdownMenuArrow(class="fill-base-300")
-            DropdownMenuItem.DropdownMenuItem(:disabled="pulses.xOffset.value === 0" @click="pulses.setXOffset(0)")
-              i-ph:align-left-simple-fill.mr-2
-              | Reset offset
-            DropdownMenuSub
-              DropdownMenuSubTrigger.DropdownMenuItem(value="more copy")
-                i-ph:align-left-simple-fill.mr-2
-                | Copy to
-                DropdownMenuPortal
-                  DropdownMenuSubContent.DropdownMenuContent
-                    DropdownMenuItem.DropdownMenuItem(
-                      v-if="config.useESP32"
-                      @click="copyToSession('ESP32', pulses.toJSON())"
-                      ) {{ currentSession === "ESP32" ? "Current" : "ESP32" }}
-                    DropdownMenuItem.DropdownMenuItem(
-                      v-for="(s, id) in sessions"
-                      :key="s"
-                      @click="copyToSession(s, pulses.toJSON())"
-                      ) {{ currentSession === s ? "Current" : `Session #${id + 1}` }}
-                      //- @click="console.log(pulses.toJSON())"
-            DropdownMenuSub(v-if="clipboard.isSupported")
-              DropdownMenuSubTrigger.DropdownMenuItem(value="more copy")
-                i-ph:align-left-simple-fill.mr-2
-                | Copy as
-                DropdownMenuPortal
-                  DropdownMenuSubContent.DropdownMenuContent
-                    //- DropdownMenuItem.DropdownMenuItem(@click="copyAs('RFRAW')")
-                    //-   | RFRaw
-                    DropdownMenuItem.DropdownMenuItem(@click="copyAs('JSON')")
-                      | JSON
-                    DropdownMenuItem.DropdownMenuItem(@click="copyAs('ARRAY')")
-                      | Array
-            DropdownMenuItem.DropdownMenuItem(
-              @click="pulses.addMeasurement(pulses.data.value.at(0)?.time || 0, pulses.data.value.at(-1)?.time || 0)"
-              )
-              i-ph:brackets-square-duotone.mr-2
-              | Measure all
-            DropdownMenuItem.DropdownMenuItem(class="hover:bg-error hover:text-error-content" @click="pulsesStore.remove(props.pulses)")
-              i-ph:trash.mr-2
-              | Delete
-    div(
-      v-if="clipboard.copied.value"
-      class="whitespace-nowrap flex gap-1 items-center mt-2 ml-2 text-success text-sm")
-      //- span
-      i-ph:check-circle-bold
-      b Copied
-    div.ml-auto.text-xs.text-muted.text-right
-      div(
-        v-if="pulses.rssi"
-        ) RSSI: [ {{ pulses.rssi }} dBm]
-      div(
-        v-if="pulses.rssi"
-        ) Created at: {{ pulses.created_at.toLocaleString() }} {{ useTimeAgo(pulses.created_at).value }}
+        <DropdownMenuRoot v-model:open="isDropDownMoreOpen" :default-open="false">
+          <DropdownMenuTrigger class="btn-square join-item">
+            <i-ph:dots-three-outline-fill />
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent class="DropdownMenuContent">
+              <DropdownMenuArrow class="fill-base-300" />
+              <DropdownMenuItem class="DropdownMenuItem" :disabled="pulses.xOffset.value === 0" @click="pulses.setXOffset(0)">
+                <i-ph:align-left-simple-fill class="mr-2" />
+                Reset offset
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger class="DropdownMenuItem" value="more copy">
+                  <i-ph:align-left-simple-fill class="mr-2" />
+                  Copy to
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent class="DropdownMenuContent">
+                      <DropdownMenuItem
+                        v-if="config.useESP32"
+                        class="DropdownMenuItem"
+                        @click="copyToSession('ESP32', pulses.toJSON())"
+                      >{{ currentSession === "ESP32" ? "Current" : "ESP32" }}</DropdownMenuItem>
+                      <DropdownMenuItem
+                        v-for="(s, id) in sessions"
+                        :key="s"
+                        class="DropdownMenuItem"
+                        @click="copyToSession(s, pulses.toJSON())"
+                      >{{ currentSession === s ? "Current" : `Session #${id + 1}` }}</DropdownMenuItem>
+                      <!-- @click="console.log(pulses.toJSON())" -->
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSubTrigger>
+              </DropdownMenuSub>
+              <DropdownMenuSub v-if="clipboard.isSupported">
+                <DropdownMenuSubTrigger class="DropdownMenuItem" value="more copy">
+                  <i-ph:align-left-simple-fill class="mr-2" />
+                  Copy as
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent class="DropdownMenuContent">
+                      <!-- DropdownMenuItem.DropdownMenuItem(@click="copyAs('RFRAW')") -->
+                      <!-- RFRaw -->
+                      <DropdownMenuItem class="DropdownMenuItem" @click="copyAs('JSON')">
+                        JSON
+                      </DropdownMenuItem>
+                      <DropdownMenuItem class="DropdownMenuItem" @click="copyAs('ARRAY')">
+                        Array
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSubTrigger>
+              </DropdownMenuSub>
+              <DropdownMenuItem
+                class="DropdownMenuItem"
+                @click="pulses.addMeasurement(pulses.data.value.at(0)?.time || 0, pulses.data.value.at(-1)?.time || 0)"
+              >
+                <i-ph:brackets-square-duotone class="mr-2" />
+                Measure all
+              </DropdownMenuItem>
+              <DropdownMenuItem class="DropdownMenuItem hover:bg-error hover:text-error-content" @click="pulsesStore.remove(props.pulses)">
+                <i-ph:trash class="mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenuRoot>
+      </div>
+      <div
+        v-if="clipboard.copied.value"
+        class="flex items-center gap-1 mt-2 ml-2 text-sm whitespace-nowrap text-success"
+      >
+        <!-- span -->
+        <i-ph:check-circle-bold />
+        <b>Copied</b>
+      </div>
+      <div class="ml-auto text-xs text-right text-muted">
+        <div
+          v-if="pulses.rssi"
+        >RSSI: [ {{ pulses.rssi }} dBm]</div>
+        <div
+          v-if="pulses.rssi"
+        >Created at: {{ pulses.created_at.toLocaleString() }} {{ useTimeAgo(pulses.created_at).value }}</div>
+      </div>
+    </div>
 
-  //- g.pointer-events-none(v-if="m.isHovered.value")
-  //- g.pointer-events-none
-    foreignObject(
-      :width="m.scaledWidth.value * ZT.k"
-      :height="bottom - top"
-      :transform="`matrix(${1 / ZT.k},0,0,1,0,0)`"
-      )
-      .pointer-events-autos.h-full
-        PulsesViewMeasurementMenu(:m="m")
-  div(
-    class="h-[100px] relative"
-    )
-    svg.w-full.h-full(
-      v-drag="onItemDrag"
-      :viewBox="`${pulses.viewBox.value.x} 0 ${pulses.viewBox.value.w} 100`"
-      preserveAspectRatio="none"
-      )
-      //- :viewBox="`${viewStore.view.viewportLeft.value - pulses.scaledXOffset.value} 0 ${viewStore.view.viewportWidth.value} 100`"
-      path.fill-none(
-        class="stroke-base-content/60"
-        :d="linePath"
-        stroke-width="1"
-        vector-effect="non-scaling-stroke"
-        )
-      PulsesViewMeasurementsRects(v-bind="{ pulses }")
-      PulsesViewWidthMeasure( v-bind="{ pulses }")
+    <div
+      class="h-[100px] relative"
+    >
+      <svg
+        v-drag="onItemDrag"
+        :viewBox="`${pulses.viewBox.value.x} 0 ${pulses.viewBox.value.w} 100`"
+        preserveAspectRatio="none"
+        class="w-full h-full"
+      >
+        <!-- :viewBox="`${viewStore.view.viewportLeft.value - pulses.scaledXOffset.value} 0 ${viewStore.view.viewportWidth.value} 100`" -->
+        <path
+          fill="none"
+          class="stroke-base-content/60"
+          :d="linePath"
+          stroke-width="1"
+          vector-effect="non-scaling-stroke"
+        />
+        <PulsesViewMeasurementsRects v-bind="{ pulses }" />
+        <PulsesViewWidthMeasure v-bind="{ pulses }" />
+      </svg>
+    </div>
 
-    PulsesViewMeasurementMenu.pointer-events-none(v-bind="{ measurements: pulses.measurements }")
-    //- pre {{ props.pulses.viewBox.value.x }}
+    <PulsesViewMeasurementMenu v-bind="{ measurements: pulses.measurements }" class="pointer-events-none" />
+    <!-- pre {{ props.pulses.viewBox.value.x }} -->
 
-  PulsesViewMeasurementsDecoders(v-bind="{ pulses: props.pulses }")
+    <PulsesViewMeasurementsDecoders v-bind="{ pulses: props.pulses }" />
+  </div>
 </template>

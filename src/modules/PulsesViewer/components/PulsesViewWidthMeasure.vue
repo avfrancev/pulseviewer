@@ -52,37 +52,54 @@ const metaData = computed(() => {
 })
 </script>
 
-<template lang="pug">
-g(v-if="pulses.isHovered.value && (metaData.l1.w > 10 / view.ZT.k) && (metaData.l2 && metaData.l2.w > 10 / view.ZT.k)" class="pointer-events-none select-none")
-  path.stroke-1.stroke-base-content(:d="`M${metaData.l1.x1},${top} H${metaData.l1.x2}`")
-  path.stroke-1.stroke-base-content(
-    v-if="metaData.l2"
-    :d="`M${metaData.l2.x1},${bottom} H${metaData.l2.x2}`")
-  path.fill-base-content(
-    v-if="metaData.l1.label"
-    :d="`M${metaData.l1.x1},${top} l${4 / view.ZT.k},-3 l0,6 z`")
-  path.fill-base-content(
-    v-if="metaData.l1.label"
-    :d="`M${metaData.l1.x2},${top} l${-4 / view.ZT.k},-3 l0,6 z`")
-  path.fill-base-content(
-    v-if="metaData.l2 && metaData.l2.label"
-    :d="`M${metaData.l2.x1},${bottom} l${4 / view.ZT.k},-3 l0,6 z`")
-  path.fill-base-content(
-    v-if="metaData.l2 && metaData.l2.label"
-    :d="`M${metaData.l2.x2},${bottom} l${-4 / view.ZT.k},-3 l0,6 z`")
-  text(
-    :transform="`matrix(${1 / view.ZT.k},0,0,1,0,0)`"
-    class="fill-base-content text-xs"
-    text-anchor="middle"
-    )
-    tspan(
-      :x="metaData.l1.labelPos * view.ZT.k"
-      :y="top - 2"
-      ) {{ metaData.l1.label }}
-    tspan(
+<template>
+  <g v-if="pulses.isHovered.value && (metaData.l1.w > 10 / view.ZT.k) && (metaData.l2 && metaData.l2.w > 10 / view.ZT.k)" class="pointer-events-none select-none">
+    <path
+      stroke-1
+      stroke-base-content
+      :d="`M${metaData.l1.x1},${top} H${metaData.l1.x2}`"
+    />
+    <path
       v-if="metaData.l2"
-      :x="metaData.l2.labelPos * view.ZT.k"
-      :y="bottom + 2"
-      dominant-baseline="hanging"
-      ) {{ metaData.l2.label }}
+      stroke-1
+      stroke-base-content
+      :d="`M${metaData.l2.x1},${bottom} H${metaData.l2.x2}`"
+    />
+    <path
+      v-if="metaData.l1.label"
+      fill-base-content
+      :d="`M${metaData.l1.x1},${top} l${4 / view.ZT.k},-3 l0,6 z`"
+    />
+    <path
+      v-if="metaData.l1.label"
+      fill-base-content
+      :d="`M${metaData.l1.x2},${top} l${-4 / view.ZT.k},-3 l0,6 z`"
+    />
+    <path
+      v-if="metaData.l2 && metaData.l2.label"
+      fill-base-content
+      :d="`M${metaData.l2.x1},${bottom} l${4 / view.ZT.k},-3 l0,6 z`"
+    />
+    <path
+      v-if="metaData.l2 && metaData.l2.label"
+      fill-base-content
+      :d="`M${metaData.l2.x2},${bottom} l${-4 / view.ZT.k},-3 l0,6 z`"
+    />
+    <text
+      :transform="`matrix(${1 / view.ZT.k},0,0,1,0,0)`"
+      class="text-xs fill-base-content"
+      text-anchor="middle"
+    >
+      <tspan
+        :x="metaData.l1.labelPos * view.ZT.k"
+        :y="top - 2"
+      >{{ metaData.l1.label }}</tspan>
+      <tspan
+        v-if="metaData.l2"
+        :x="metaData.l2.labelPos * view.ZT.k"
+        :y="bottom + 2"
+        dominant-baseline="hanging"
+      >{{ metaData.l2.label }}</tspan>
+    </text>
+  </g>
 </template>
