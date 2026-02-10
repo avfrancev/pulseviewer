@@ -29,7 +29,7 @@ watch(() => config.useESP32, () => {
 
 <template>
   <SelectRoot v-model="currentSession">
-    <SelectTrigger class="inline-flex items-center h-8 mx-4 space-x-3 bg-transparent whitespace-nowrap input input-bordered hover:input-primary" aria-label="Select session">
+    <SelectTrigger class="inline-flex items-center h-8 mx-4 space-x-3 bg-transparent whitespace-nowrap input input-bordered hover:input-primary w-fit" aria-label="Select session">
       <SelectValue placeholder="Select session..." />
       <i-radix-icons:chevron-down />
     </SelectTrigger>

@@ -8,13 +8,16 @@
     <Navbar />
     <PulsesViewer />
   </main>
+
+  <!-- Toast notifications -->
+  <ToastContainer />
 </template>
 
 <style lang="sass">
   html, body
     scroll-behavior: smooth
     height: 100%
-    display: grid
+    width: 100%
     &[data-theme='light']
       background-image: url("/corrugation.png")
     &[data-theme='dark']

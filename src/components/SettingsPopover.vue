@@ -3,46 +3,65 @@ const config = useConfig()
 </script>
 
 <template>
-  <PopoverRoot>
-    <PopoverTrigger :as-child="true">
+  <div class="dropdown dropdown-end">
+    <!-- Trigger button -->
+    <div tabindex="0" role="button" class="cursor-pointer">
       <slot />
-    </PopoverTrigger>
-    <PopoverPortal>
-      <PopoverContent class="flex flex-col gap-2 p-4">
-        <PopoverArrow class="fill-base-300" />
-        <!-- .divider.divider-start.h-0: b ESP32 -->
-        <fieldset>
-          <label>Use ESP32</label>
+    </div>
+
+    <!-- Dropdown content -->
+    <ul
+      tabindex="-1"
+      class="dropdown-content bg-base-200/95 backdrop-blur-sm rounded-box z-50 w-64 p-1 shadow-2xl border border-base-300/50 text-xs"
+    >
+      <!-- Header -->
+      <li class="menu-title px-3 py-2">
+        <span class="font-bold text-xs uppercase tracking-wide text-base-content/60">Settings</span>
+      </li>
+
+      <!-- ESP32 Settings -->
+      <li>
+        <label class="label cursor-pointer justify-start gap-3 px-3 py-2">
           <input
             v-model="config.useESP32"
-            class="toggle toggle-primary toggle-sm"
             type="checkbox"
+            class="toggle toggle-primary toggle-sm"
           />
-        </fieldset>
-        <fieldset>
-          <label>ESP32 WS Endpoint</label>
+          <span class="label-text text-xs">Use ESP32</span>
+        </label>
+      </li>
+
+      <li v-if="config.useESP32" class="px-3 pb-2">
+        <label class="label py-1 px-0">
+          <span class="label-text text-xs font-medium">WS Endpoint</span>
+        </label>
+        <input
+          v-model.lazy="config.esp32WSEndpoint"
+          class="input input-bordered input-sm w-full"
+          type="text"
+          placeholder="ws://192.168.1.x:81"
+        />
+      </li>
+
+      <!-- Divider -->
+      <li class="my-1">
+        <div class="h-px bg-base-300/50 mx-3"></div>
+      </li>
+
+      <!-- Measurements Settings -->
+      <li>
+        <label class="label cursor-pointer justify-start gap-3 px-3 py-2">
           <input
-            v-model.lazy="config.esp32WSEndpoint"
-            class="input input-sm"
-            type="text"
+            v-model="config.pinMeasurements"
+            type="checkbox"
+            class="toggle toggle-primary toggle-sm"
           />
-        </fieldset>
-        <!-- .divider.divider-start.h-0: b Measurements -->
-        <!-- fieldset -->
-        <!--   label Pin mea -->
-        <!--   input( -->
-        <!--     v-model="config.pinMeasurements" -->
-        <!--     class="toggle toggle-primary toggle-sm" type="checkbox") -->
-      </PopoverContent>
-    </PopoverPortal>
-  </PopoverRoot>
+          <span class="label-text text-xs">Pin measurements</span>
+        </label>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <style lang="sass" scoped>
-fieldset
-  @apply flex justify-between gap-2 items-center text-sm
-  label
-    // @apply text-muted
-  // @apply grid grid-cols-2 gap-2 items-center text-sm
-  // input
 </style>

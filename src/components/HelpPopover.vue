@@ -2,48 +2,100 @@
 </script>
 
 <template>
-  <PopoverRoot>
-    <PopoverTrigger :as-child="true">
+  <div class="dropdown dropdown-end">
+    <!-- Trigger button -->
+    <div tabindex="0" role="button" class="cursor-pointer">
       <slot />
-    </PopoverTrigger>
-    <PopoverPortal>
-      <PopoverContent class="flex flex-col gap-2 p-4 text-sm">
-        <PopoverArrow class="fill-base-300" />
-        <div class="h-0 divider divider-start"><b>Pulses</b></div>
-        <div class="shortcut">
-          <span><kbd>ctrl</kbd> + <kbd>scroll</kbd> zoom view</span>
+    </div>
+
+    <!-- Dropdown content -->
+    <ul
+      tabindex="-1"
+      class="dropdown-content bg-base-200/95 backdrop-blur-sm rounded-box z-50 w-64 p-1 shadow-2xl border border-base-300/50 text-xs"
+    >
+      <!-- Pulses Section -->
+      <li class="menu-title px-3 py-2">
+        <span class="font-bold text-xs uppercase tracking-wide text-base-content/60">Pulses</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5 ">
+          <span class="flex items-center gap-0.5">
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">ctrl</kbd> +
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">scroll</kbd>
+          </span>
+          <span class="text-xs text-base-content/70">Zoom view</span>
         </div>
-        <div class="shortcut">
-          <span><kbd>alt</kbd> + <kbd>drag</kbd> change offset</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5">
+          <span class="flex items-center gap-0.5">
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">alt</kbd> +
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">drag</kbd>
+          </span>
+          <span class="text-xs text-base-content/70">Change offset</span>
         </div>
-        <div class="shortcut">
-          <span><kbd>shift</kbd> + <kbd>drag</kbd> create new measurement</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5">
+          <span class="flex items-center gap-0.5">
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">shift</kbd> +
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">drag</kbd>
+          </span>
+          <span class="text-xs text-base-content/70">Create measurement</span>
         </div>
-        <div class="h-0 divider divider-start"><b>Measurements</b></div>
-        <div class="shortcut">
-          <span><kbd>del</kbd> or <kbd>d</kbd> delete measurement</span>
+      </li>
+
+      <!-- Divider -->
+      <li class="my-1">
+        <div class="h-px bg-base-300/50 mx-3"></div>
+      </li>
+
+      <!-- Measurements Section -->
+      <li class="menu-title px-3 py-2">
+        <span class="font-bold text-xs uppercase tracking-wide text-base-content/60">Measurements</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5">
+          <span class="flex items-center gap-0.5">
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">del</kbd> or
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">d</kbd>
+          </span>
+          <span class="text-xs text-base-content/70">Delete</span>
         </div>
-        <div class="shortcut">
-          <kbd>c</kbd>
-          <span>change color</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5">
+          <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">c</kbd>
+          <span class="text-xs text-base-content/70">Change color</span>
         </div>
-        <div class="shortcut">
-          <span><kbd>&#8592;</kbd> or <kbd>&#8594;</kbd> move measurement</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5">
+          <span class="flex items-center gap-0.5">
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">←</kbd>
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">→</kbd>
+          </span>
+          <span class="text-xs text-base-content/70">Move</span>
         </div>
-        <div class="shortcut">
-          <span><kbd>alt</kbd> + <kbd>drag resize handler</kbd> snap to pulses</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5">
+          <span class="flex items-center gap-0.5">
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">alt</kbd> +
+            <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">drag</kbd>
+          </span>
+          <span class="text-xs text-base-content/70">Snap to pulses</span>
         </div>
-        <div class="shortcut">
-          <span><kbd>space</kbd> scroll to measurement card</span>
+      </li>
+      <li>
+        <div class="flex items-center gap-2 px-3 py-1.5">
+          <kbd class="kbd kbd-xs bg-base-300 border-base-content/20">space</kbd>
+          <span class="text-xs text-base-content/70">Scroll to card</span>
         </div>
-      </PopoverContent>
-    </PopoverPortal>
-  </PopoverRoot>
+      </li>
+    </ul>
+  </div>
 </template>
 
-<style lang="sass" scoped>
-.shortcut
-  @apply flex items-center gap-2
-  kbd
-    @apply kbd kbd-sm text-xs mx-1
+<style scoped>
 </style>

@@ -4,7 +4,7 @@ import { extent, quantile } from "d3-array"
 
 const config = useConfig()
 
-const descOpened = ref(true)
+const descOpened = ref(false)
 
 const m = defineModel<Measurement>({ required: true })
 

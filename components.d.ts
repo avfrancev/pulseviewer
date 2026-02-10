@@ -43,6 +43,7 @@ declare module 'vue' {
     'IPh:check': typeof import('~icons/ph/check')['default']
     'IPh:checkCircleBold': typeof import('~icons/ph/check-circle-bold')['default']
     'IPh:clipboardText': typeof import('~icons/ph/clipboard-text')['default']
+    'IPh:copy': typeof import('~icons/ph/copy')['default']
     'IPh:dotsSixVerticalBold': typeof import('~icons/ph/dots-six-vertical-bold')['default']
     'IPh:dotsThreeOutlineFill': typeof import('~icons/ph/dots-three-outline-fill')['default']
     'IPh:filePlusBold': typeof import('~icons/ph/file-plus-bold')['default']
@@ -50,8 +51,11 @@ declare module 'vue' {
     'IPh:githubLogoFill': typeof import('~icons/ph/github-logo-fill')['default']
     'IPh:pencilSimple': typeof import('~icons/ph/pencil-simple')['default']
     'IPh:plus': typeof import('~icons/ph/plus')['default']
+    'IPh:question': typeof import('~icons/ph/question')['default']
+    'IPh:scissors': typeof import('~icons/ph/scissors')['default']
     'IPh:trash': typeof import('~icons/ph/trash')['default']
     'IPh:x': typeof import('~icons/ph/x')['default']
+    'IPh:xBold': typeof import('~icons/ph/x-bold')['default']
     'IRadixIcons:check': typeof import('~icons/radix-icons/check')['default']
     'IRadixIcons:chevronDown': typeof import('~icons/radix-icons/chevron-down')['default']
     'IRadixIcons:chevronUp': typeof import('~icons/radix-icons/chevron-up')['default']
@@ -91,5 +95,6 @@ declare module 'vue' {
     SelectValue: typeof import('radix-vue')['SelectValue']
     SelectViewport: typeof import('radix-vue')['SelectViewport']
     SettingsPopover: typeof import('./src/components/SettingsPopover.vue')['default']
+    ToastContainer: typeof import('./src/components/ToastContainer.vue')['default']
   }
 }
