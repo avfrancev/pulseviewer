@@ -4,7 +4,7 @@ import path from "node:path"
 import process from "node:process"
 import tailwindcss from "@tailwindcss/vite"
 import Vue from "@vitejs/plugin-vue"
-import RadixVueResolver from "radix-vue/resolver"
+// import RadixVueResolver from "radix-vue/resolver"
 // import UnoCSS from 'unocss/vite'
 import AutoImport from "unplugin-auto-import/vite"
 import IconsResolver from "unplugin-icons/resolver"
@@ -27,19 +27,19 @@ export default defineConfig({
   },
   css: {
     preprocessorOptions: {
-      sass: {
-        api: "modern-compiler", // or "modern"
-      },
+      // sass: {
+      //   api: "modern-compiler", // or "modern"
+      // },
     },
   },
   plugins: [
     tailwindcss(),
     // vueDevTools(),
-    buildForESP32 && compression(),
-    buildForESP32 && viteSingleFile({
-      // useRecommendedBuildConfig: false,
-      // removeViteModuleLoader: true,
-    }),
+    // buildForESP32 && compression(),
+    // buildForESP32 && viteSingleFile({
+    //   // useRecommendedBuildConfig: false,
+    //   // removeViteModuleLoader: true,
+    // }),
     VueMacros({
       defineOptions: false,
       defineModels: false,
@@ -86,7 +86,7 @@ export default defineConfig({
         "./src/modules/**/*",
       ],
       resolvers: [
-        RadixVueResolver(),
+        // RadixVueResolver(),
         IconsResolver(),
       ],
     }),
@@ -101,9 +101,9 @@ export default defineConfig({
   ],
 
   // https://github.com/vitest-dev/vitest
-  test: {
-    environment: "jsdom",
-  },
+  // test: {
+  //   environment: "jsdom",
+  // },
   // optimizeDeps: {
   //   include: [
   //     './node_modules/pulseplot/lib/*.js',
