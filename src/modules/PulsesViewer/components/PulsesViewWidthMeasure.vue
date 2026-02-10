@@ -55,34 +55,32 @@ const metaData = computed(() => {
 <template>
   <g v-if="pulses.isHovered.value && (metaData.l1.w > 10 / view.ZT.k) && (metaData.l2 && metaData.l2.w > 10 / view.ZT.k)" class="pointer-events-none select-none">
     <path
-      stroke-1
-      stroke-base-content
+      class="stroke-1 stroke-base-content"
       :d="`M${metaData.l1.x1},${top} H${metaData.l1.x2}`"
-    />
-    <path
+      />
+      <path
       v-if="metaData.l2"
-      stroke-1
-      stroke-base-content
+      class="stroke-1 stroke-base-content"
       :d="`M${metaData.l2.x1},${bottom} H${metaData.l2.x2}`"
     />
     <path
       v-if="metaData.l1.label"
-      fill-base-content
+      class="fill-base-content"
       :d="`M${metaData.l1.x1},${top} l${4 / view.ZT.k},-3 l0,6 z`"
     />
     <path
       v-if="metaData.l1.label"
-      fill-base-content
+      class="fill-base-content"
       :d="`M${metaData.l1.x2},${top} l${-4 / view.ZT.k},-3 l0,6 z`"
     />
     <path
       v-if="metaData.l2 && metaData.l2.label"
-      fill-base-content
+      class="fill-base-content"
       :d="`M${metaData.l2.x1},${bottom} l${4 / view.ZT.k},-3 l0,6 z`"
     />
     <path
       v-if="metaData.l2 && metaData.l2.label"
-      fill-base-content
+      class="fill-base-content"
       :d="`M${metaData.l2.x2},${bottom} l${-4 / view.ZT.k},-3 l0,6 z`"
     />
     <text

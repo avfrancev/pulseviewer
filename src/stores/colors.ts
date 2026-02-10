@@ -64,43 +64,43 @@ watch(
   { immediate: true },
 )
 
-// Hardcoded theme colors for daisyUI v5
-// These are the actual color values from daisyUI themes
+// Tokyo Night dark theme colors (v5)
 type ThemeColors = Record<string, string>
 
-const cupcakeColors: ThemeColors = {
-  p: "59 130 246", // #3b82f6 - primary
-  pf: "30 64 175", // #1e40ab - primary-content
-  s: "244 114 182", // #f14c99 - secondary
-  sf: "190 18 60", // #be123c - secondary-content
-  a: "192 132 252", // #c084fc - accent
-  af: "126 34 206", // #7e22ce - accent-content
-  b1: "255 255 255", // base-100
-  b2: "248 250 252", // base-200
-  b3: "226 232 240", // base-300
-  bc: "30 41 59", // base-content
-  n: "148 163 184", // neutral
-  nc: "30 41 59", // neutral-content
+const tokyonightColors: ThemeColors = {
+  p: "60% 0.2 250", // #7aa2f7 - primary
+  pf: "15% 0.02 250", // primary-content
+  s: "65% 0.15 280", // #bb9af7 - secondary
+  sf: "15% 0.02 280", // secondary-content
+  a: "70% 0.15 210", // #7dcfff - accent
+  af: "15% 0.02 210", // accent-content
+  b1: "12% 0.03 255", // #1a1b26 - base-100
+  b2: "18% 0.04 255", // #24283b - base-200
+  b3: "28% 0.05 255", // #414868 - base-300
+  bc: "85% 0.03 255", // #c0caf5 - base-content
+  n: "40% 0.05 255", // #565f89 - neutral
+  nc: "90% 0.02 255", // neutral-content
 }
 
-const draculaColors: ThemeColors = {
-  p: "82 148 226", // #5294e2 - primary
-  pf: "255 255 255",
-  s: "189 147 249", // #bd93f9 - secondary
-  sf: "255 255 255",
-  a: "80 250 123", // #50fa7b - accent
-  af: "0 0 0",
-  b1: "40 42 54", // #282a36 - base-100
-  b2: "68 71 90", // #44475a - base-200
-  b3: "98 114 164", // #6272a4 - base-300
-  bc: "248 248 242", // #f8f8f2 - base-content
-  n: "98 114 164", // neutral
-  nc: "248 248 242", // neutral-content
+// Tokyo Night Light theme colors (inverted)
+const tokyonightLightColors: ThemeColors = {
+  p: "60% 0.2 250", // #7aa2f7 - primary (same as dark)
+  pf: "98% 0.02 250", // primary-content
+  s: "65% 0.15 280", // #bb9af7 - secondary (same as dark)
+  sf: "98% 0.02 280", // secondary-content
+  a: "70% 0.15 210", // #7dcfff - accent (same as dark)
+  af: "98% 0.02 210", // accent-content
+  b1: "92% 0.02 255", // #e1e2e7 - base-100 (inverted)
+  b2: "85% 0.03 255", // #c0caf5 - base-200 (inverted)
+  b3: "75% 0.04 255", // #a9b1d6 - base-300 (inverted)
+  bc: "12% 0.03 255", // #1a1b26 - base-content (inverted)
+  n: "40% 0.05 255", // #565f89 - neutral (same as dark)
+  nc: "98% 0.02 255", // neutral-content
 }
 
-// Combine themes (daisyUI v4 style - later themes override earlier)
-const darkColors: ThemeColors = { ...draculaColors }
-const lightColors: ThemeColors = { ...darkColors, ...cupcakeColors }
+// Combine themes (daisyUI v5 style - later themes override earlier)
+const darkColors: ThemeColors = { ...tokyonightColors }
+const lightColors: ThemeColors = { ...darkColors, ...tokyonightLightColors }
 
 function getColor([k1, k2]: [string, string], [a1, a2] = [1, 1]) {
   return computed(() => {
