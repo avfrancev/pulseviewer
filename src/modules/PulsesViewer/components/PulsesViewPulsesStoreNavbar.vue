@@ -56,12 +56,11 @@ async function copyPulses() {
 
 function togglePinMeasurements() {
   config.pinMeasurements = !config.pinMeasurements
-  toast.info(config.pinMeasurements ? "Measurements pinned" : "Measurements unpinned")
 }
 </script>
 
 <template>
-  <div class="mb-4 join join-horizontal flex-wrap ">
+  <div class="mb-4 join join-horizontal flex-wrap sticky z-20 top-2 bg-base-300/80 backdrop-blur rounded">
     <!-- New Pulses -->
     <PulsesViewEditPulsesDialog
       ref="_newPulsesDialog"
@@ -70,7 +69,7 @@ function togglePinMeasurements() {
       :clear-on-save="true"
       @save="onPulsesSave"
     >
-      <button class="join-item btn btn-sm hover:btn-info" title="Add new pulses" @click="openNewPulsesDialog">
+      <button class="join-item btn btn-ghost btn-sm hover:btn-info" title="Add new pulses" @click="openNewPulsesDialog">
         <i-ph:file-plus-bold class="size-4" />
         <span class="hidden sm:inline">New</span>
       </button>
@@ -87,7 +86,7 @@ function togglePinMeasurements() {
               <button class="btn btn-ghost">Cancel</button>
             </form>
             <button
-              class="btn btn-error"
+              class="btn  btn-error"
               :disabled="loading"
               @click="onRemoveAllPulses"
             >
@@ -103,7 +102,7 @@ function togglePinMeasurements() {
     </Teleport>
 
     <button
-      class="join-item btn btn-sm hover:btn-error tooltip"
+      class="join-item btn btn-ghost btn-sm hover:btn-error tooltip"
       data-tip="Clear all"
       @click="removeModal?.showModal()"
     >
@@ -112,7 +111,7 @@ function togglePinMeasurements() {
 
     <!-- Remove Measurements -->
     <button
-      class="join-item btn btn-sm hover:btn-warning tooltip"
+      class="join-item btn btn-ghost btn-sm hover:btn-warning tooltip"
       data-tip="Remove all measurements"
       :disabled="pulsesStore.allMeasurements.value.size === 0"
       @click="onRemoveAllMeasurements"
@@ -148,7 +147,7 @@ function togglePinMeasurements() {
       <!-- Pin Measurements -->
       <button
         class="btn btn-sm tooltip"
-        :class="[config.pinMeasurements ? 'btn-primary btn-active' : 'btn-ghost']"
+        :class="[config.pinMeasurements ? ' btn-soft' : 'btn-ghost']"
         data-tip="Pin measurements"
         @click="togglePinMeasurements"
       >

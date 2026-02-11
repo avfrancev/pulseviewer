@@ -27,6 +27,7 @@
     "daisyui": "^5.5.18",
     "popmotion": "^11.0.5",
     "pulseplot": "^1.0.13",
+    "radix-vue": "^1.9.17",
     "uuid": "^13.0.0",
     "vue": "^3.5.28",
     "vue-router": "^5.0.2"

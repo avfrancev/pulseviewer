@@ -93,9 +93,8 @@ ESP32Store.onRMTMessage((data) => {
 
 <template>
   <PulsesViewPulsesStoreNavbar
-v-if="pulsesStore.data.size > 0"
-    class="sticky z-20 top-2 bg-base-300/80 backdrop-blur"
-/>
+    v-if="pulsesStore.data.size > 0"
+  />
 
   <div
 v-if="pulsesStore.data.size > 0" class="inline-flex self-start max-w-full MeasurementsMetaWrapper"

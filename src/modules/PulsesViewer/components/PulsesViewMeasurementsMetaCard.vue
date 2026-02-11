@@ -70,12 +70,12 @@ div(
       pre #[i &#402;]#[sub baud]
       pre: b {{ baud }}
 
-    div(class="join flex mt-2")
-      button(class="join-item btn-xs border-none btn flex-1" @click="m.locateRectRef")
+    div(class="join flex mt-2 rounded shadow-xs")
+      button(class="join-item btn-xs btn-ghost border-none btn flex-1" @click="m.locateRectRef")
         i-lucide:locate-fixed
-      button(class="join-item btn-xs border-none btn flex-1 hover:btn-error" @click="m.remove")
+      button(class="join-item btn-xs btn-ghost border-none btn flex-1 hover:btn-error" @click="m.remove")
         i-tabler:trash
-      button(class="join-item btn-xs btn flex-1" @click="descOpened = !descOpened")
+      button(class="join-item btn-xs btn-ghost btn flex-1" @click="descOpened = !descOpened")
         i-mingcute:right-fill(v-if="!descOpened")
         i-mingcute:left-fill(v-if="descOpened")
 

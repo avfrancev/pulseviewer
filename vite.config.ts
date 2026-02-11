@@ -4,7 +4,7 @@ import path from "node:path"
 import process from "node:process"
 import tailwindcss from "@tailwindcss/vite"
 import Vue from "@vitejs/plugin-vue"
-// import RadixVueResolver from "radix-vue/resolver"
+import RadixVueResolver from "radix-vue/resolver"
 // import UnoCSS from 'unocss/vite'
 import AutoImport from "unplugin-auto-import/vite"
 import IconsResolver from "unplugin-icons/resolver"
@@ -86,7 +86,7 @@ export default defineConfig({
         "./src/modules/**/*",
       ],
       resolvers: [
-        // RadixVueResolver(),
+        RadixVueResolver(),
         IconsResolver(),
       ],
     }),
